@@ -1,0 +1,67 @@
+.toolbarbutton-bold
+{
+  font-weight: bold !important;
+  -moz-appearance: none;
+  color: #222222 !important;
+  border: 1px solid;
+  -moz-border-bottom-colors: ThreeDShadow ThreeDDarkShadow;
+  -moz-border-left-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-top-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-right-colors: ThreeDShadow ThreeDDarkShadow;
+  -moz-border-radius: 14px;
+  background-color: #eeeeec;
+  background-position: top right;
+  background-image: url("chrome://global/skin/icons/white-gray-gradient.gif") !important;
+  background-repeat: repeat-x;
+  padding: 2px 20px !important;
+}
+
+.toolbarbutton-bold:hover {
+  background-color: #fefefc;
+}
+
+.toolbarbutton-bold > .toolbarbutton-icon {
+  display: none;
+}
+.toolbarbutton-bold > .toolbarbutton-text {
+  letter-spacing: 4px;
+
+}
+
+toolbox { 
+  -moz-appearance: toolbox;
+}
+
+toolbar {
+  -moz-appearance: none;
+  min-width: 1px;
+  min-height: 1px;
+  padding: 8px 4px;
+  background-color: -moz-Dialog;
+}
+
+#button-getmsg2 {
+  list-style-image: url(chrome://mozapps/skin/downloads/downloadIcon.png);
+  line-height: 0px;
+  height: 18px;
+}
+
+toolbarspacer.mail-search-bar-spacer {
+  width: 32px;
+}
+
+#searchInput2 {
+  font-size: 125%;
+  font-weight: bold;
+  color: #aaaaaa;
+}
+#searchInput2 > .textbox-input-box {
+
+}
+#searchInput2:hover:active, 
+#searchInput2:active, 
+#searchInput2:focus, 
+#searchInput2:focus:hover,
+#searchInput2:focus:active {
+  color: #222222;
+}

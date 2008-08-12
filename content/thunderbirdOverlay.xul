@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -   Version: MPL 1.1/GPL 2.0/LGPL 2.1
+  -
+  - The contents of this file are subject to the Mozilla Public License Version
+  - 1.1 (the "License"); you may not use this file except in compliance with
+  - the License. You may obtain a copy of the License at
+  - http://www.mozilla.org/MPL/
+  - 
+  - Software distributed under the License is distributed on an "AS IS" basis,
+  - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+  - for the specific language governing rights and limitations under the
+  - License.
+  -
+  - The Original Code is Experimental Toolbar.
+  -
+  - The Initial Developer of the Original Code is
+  - Bryan Clark.
+  - Portions created by the Initial Developer are Copyright (C) 2008
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - Alternatively, the contents of this file may be used under the terms of
+  - either the GNU General Public License Version 2 or later (the "GPL"), or
+  - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+  - in which case the provisions of the GPL or the LGPL are applicable instead
+  - of those above. If you wish to allow use of your version of this file only
+  - under the terms of either the GPL or the LGPL, and not to allow others to
+  - use your version of this file under the terms of the MPL, indicate your
+  - decision by deleting the provisions above and replace them with the notice
+  - and other provisions required by the GPL or the LGPL. If you do not delete
+  - the provisions above, a recipient may use your version of this file under
+  - the terms of any one of the MPL, the GPL or the LGPL.
+  - 
+  - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://experimentaltoolbar/skin/overlay.css" type="text/css"?>
+<!DOCTYPE overlay SYSTEM "chrome://experimentaltoolbar/locale/experimentaltoolbar.dtd">
+<overlay id="experimentaltoolbar-overlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="overlay.js"/>
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="experimentaltoolbar-strings" src="chrome://experimentaltoolbar/locale/experimentaltoolbar.properties"/>
+  </stringbundleset>
+
+  <toolbox id="mail-toolbox">
+    <toolbar id="mail-bar2" collapsed="true"/>
+    
+      <toolbar id="mail-search-bar" class="toolbar-nuevo" toolbarname="Mail Toolbar" accesskey="o" fullscreentoolbar="true" mode="full" customizable="true" context="toolbar-context-menu" 
+    defaultset="button-getmsg2,button-newmsg2,search-container2" collapsed="false">
+
+      <toolbarbutton id="button-getmsg2" type="menu-button" class="" tooltiptext="Get new messages" oncommand="MsgGetMessagesForAccount(event.target._folder)" observes="button_getNewMessages">
+        <menupopup id="button-getMsgPopup" onpopupshowing="getMsgToolbarMenu_init();" type="folder" expandFolders="false" mode="getMail">
+          <menuitem id="button-getAllNewMsg" label="Get All New Messages" accesskey="G" command="cmd_getMsgsForAuthAccounts"/>
+          <menuseparator id="button-getAllNewMsgSeparator"/>
+        </menupopup>
+      </toolbarbutton>
+
+      <toolbarspacer class="mail-search-bar-spacer"/>
+
+      <toolbarbutton id="button-newmsg2" class="toolbarbutton-bold" label="Write" oncommand="MsgNewMessage(event)" />
+
+      <toolbarspacer class="mail-search-bar-spacer"/>
+
+      <toolbaritem id="search-container2" title="Quick Search" class="" flex="1">
+        <textbox id="searchInput2" timeout="800" flex="1" onfocus="" onclick="" onmousedown="" onblur="experimentaltoolbar.onBlurSearchInput(event);" oncommand="onEnterInSearchBar();" onkeypress="" chromedir="ltr" searchCriteria="true">
+        </textbox>
+      </toolbaritem>
+
+    </toolbar>
+
+  </toolbox>
+</overlay>

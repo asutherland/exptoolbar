@@ -1,0 +1,4 @@
+content	experimentaltoolbar	content/
+locale	experimentaltoolbar	en-US	locale/en-US/
+skin	experimentaltoolbar	classic/1.0	skin/
+overlay	chrome://messenger/content/messenger.xul	chrome://experimentaltoolbar/content/thunderbirdOverlay.xul
