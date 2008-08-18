@@ -44,6 +44,11 @@
     <stringbundle id="experimentaltoolbar-strings" src="chrome://experimentaltoolbar/locale/experimentaltoolbar.properties"/>
   </stringbundleset>
 
+  <popupset>
+    <panel type="autocomplete-richlistbox" chromedir="ltr"
+           id="PopupGlodaAutocomplete" noautofocus="true" />
+  </popupset>
+
   <toolbox id="mail-toolbox">
     <toolbar id="mail-bar2" collapsed="true"/>
     
@@ -72,6 +77,7 @@
                  searchCriteria="true"
                  type="autocomplete"
                  autocompletesearch="gloda"
+                 autocompletepopup="PopupGlodaAutocomplete"
                  >
         </textbox>
       </toolbaritem>

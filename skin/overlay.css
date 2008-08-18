@@ -28,13 +28,16 @@
 
 }
 
-.gloda-contact {
-  background-color: #ccccff;
-  color: #ffeeee;
+richlistitem[type="gloda-contact"] {
+  background-color: #eeeeff;
 }
 
-.gloda-conversation {
-  background-color: #ccffcc;
+richlistitem[type="gloda-identity"] {
+  background-color: #f6f6ff;
+}
+
+richlistitem[type="gloda-conversation"] {
+  background-color: #eeffee;
 }
 
 toolbox { 
