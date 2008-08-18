@@ -47,14 +47,17 @@ var experimentaltoolbar = {
 
 //    var expMailToolbar = document.getElementById("exp-mail-toolbar");
 //    expMailToolbar.setAttribute("collapsed", "false");
-    var searchInput = document.getElementById("searchInput2");
-    searchInput.value = this.SEARCH_INPUT_HELPER_TEXT;
-
   },
   onBlurSearchInput : function(event) {
     var searchInput = document.getElementById("searchInput2");
     if (searchInput.value == "") {
       searchInput.value = this.SEARCH_INPUT_HELPER_TEXT;
+    }
+  },
+  onFocusSearchInput : function(event) {
+    var searchInput = document.getElementById("searchInput2");
+    if (searchInput.value == this.SEARCH_INPUT_HELPER_TEXT) {
+      searchInput.value = "";
     }
   },
   getMailBar: function() {

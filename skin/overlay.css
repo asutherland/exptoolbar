@@ -28,6 +28,15 @@
 
 }
 
+.gloda-contact {
+  background-color: #ccccff;
+  color: #ffeeee;
+}
+
+.gloda-conversation {
+  background-color: #ccffcc;
+}
+
 toolbox { 
   -moz-appearance: toolbox;
 }
@@ -51,17 +60,10 @@ toolbarspacer.mail-search-bar-spacer {
 }
 
 #searchInput2 {
+  color: #222222;
   font-size: 125%;
   font-weight: bold;
+}
+#searchInput2[empty=true] {
   color: #aaaaaa;
-}
-#searchInput2 > .textbox-input-box {
-
-}
-#searchInput2:hover:active, 
-#searchInput2:active, 
-#searchInput2:focus, 
-#searchInput2:focus:hover,
-#searchInput2:focus:active {
-  color: #222222;
 }

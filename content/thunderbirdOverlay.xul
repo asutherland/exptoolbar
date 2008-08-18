@@ -64,7 +64,15 @@
       <toolbarspacer class="mail-search-bar-spacer"/>
 
       <toolbaritem id="search-container2" title="Quick Search" class="" flex="1">
-        <textbox id="searchInput2" timeout="800" flex="1" onfocus="" onclick="" onmousedown="" onblur="experimentaltoolbar.onBlurSearchInput(event);" oncommand="onEnterInSearchBar();" onkeypress="" chromedir="ltr" searchCriteria="true">
+        <textbox id="searchInput2" timeout="800" flex="1"
+                 onclick="" onmousedown=""
+                 onkeypress=""
+                 emptytext="Search messages, events, people..."
+                 chromedir="ltr"
+                 searchCriteria="true"
+                 type="autocomplete"
+                 autocompletesearch="gloda"
+                 >
         </textbox>
       </toolbaritem>
 
