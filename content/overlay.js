@@ -266,6 +266,8 @@ var experimentaltoolbar = {
   },
   onTextEntered : function() {
     dump("Text entered!\n");
+
+    this.applyConstraints();
     
     dump("Text value: " + this.searchInput.textValue + "\n");
   },
