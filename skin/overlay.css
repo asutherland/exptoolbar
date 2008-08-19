@@ -31,8 +31,8 @@
 .contact-bubble {
   background-color: #ddddff;
   -moz-border-radius: 4px;
-  margin: 2px 2px 0px 0px;
-  padding: 0px 0px 0px 0px;
+  margin: 0px 2px 0px 0px;
+  padding: 0px 3px;
 }
 
 input.bubble-spacer {

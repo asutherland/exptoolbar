@@ -88,15 +88,12 @@ var experimentaltoolbar = {
   // ======= the stuff below here should all end up in XBL bindings, likely.
   // (bubble logic)
   observe: function(aSubject, aTopic, aData) {
-dump("OBSERVE: " + aSubject + ", " + aTopic + ", " + aData + "\n");
     if (aTopic == "autocomplete-will-enter-text") {
     }
     else if (aTopic == "autocomplete-did-enter-text") {
       let [obj, startsFrom] = this.glodaCompleter.getObjectForController(
                    this.searchInput.controller,
                    this.searchInput.popup.selectedIndex);
-      dump("Object noun:" + obj.NOUN_ID + " id: " + obj.id + " stringified: "+
-           obj + "\n");
       
       let contact = null;
       if (obj.NOUN_ID == Gloda.NOUN_CONTACT)
@@ -134,14 +131,39 @@ dump("OBSERVE: " + aSubject + ", " + aTopic + ", " + aData + "\n");
           this.searchInput.inputField);
         this.searchInput.value = "";
         
+        bubble.constraint = contact;
+        
         if (textSpacer)
           textSpacer.nextBubble = bubble;
         
         this.searchInput.prevTextSpacer = textSpacer;
         this.searchInput.prevBubble = bubble;
+        
+        this.applyConstraints();
       }
     }
-dump("  leave observe\n");
+  },
+  applyConstraints: function () {
+    let query = Gloda.newQuery(Gloda.NOUN_MESSAGE);
+    
+    let textSpacer = this.searchInput;
+    while (textSpacer.prevBubble) {
+      let bubble = textSpacer.prevBubble;
+      if (bubble.constraint.NOUN_ID == Gloda.NOUN_CONTACT)
+        query.involves.apply(query, bubble.constraint.identities);
+    
+      textSpacer = textSpacer.prevTextSpacer;
+    }
+   
+   if (this.searchInput.value) {
+     query.bodyMatches(this.searchInput.value);
+   }
+   
+   // this requires Andrew's patented glmsgdbview-for-everything hackjob.
+   let glView = gDBView.wrappedJSObject;
+   
+   let collection = query.getAllSync();
+   glView.absorbNewCollection(collection);
   },
   spacerOnKeyPress: function (aEvent) {
     let target = aEvent.target;
@@ -169,6 +191,7 @@ dump("  leave observe\n");
         else
           target.nextTextSpacer.focus();
       }
+      experimentaltoolbar.applyConstraints();
       aEvent.stopPropagation();
     }
     else if (aEvent.keyCode == aEvent.DOM_VK_RIGHT) {
@@ -189,6 +212,7 @@ dump("  leave observe\n");
       
       target.nextTextSpacer.focus();
       
+      experimentaltoolbar.applyConstraints();
       aEvent.stopPropagation();
     }
     else if (aEvent.charCode) {
@@ -223,6 +247,7 @@ dump("  leave observe\n");
           // update the link of the new previous text spacer to point to us
           if (this.searchInput.prevTextSpacer)
             this.searchInput.prevTextSpacer.nextTextSpacer = this.searchInput;
+          this.applyConstraints();
         }
         else
           this.searchInput.prevBubble = null;
