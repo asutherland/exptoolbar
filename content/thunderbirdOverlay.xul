@@ -39,7 +39,7 @@
 <!DOCTYPE overlay SYSTEM "chrome://experimentaltoolbar/locale/experimentaltoolbar.dtd">
 <overlay id="experimentaltoolbar-overlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script src="overlay.js"/>
+  <script src="overlay.js" type="application/javascript;version=1.8"/>
   <stringbundleset id="stringbundleset">
     <stringbundle id="experimentaltoolbar-strings" src="chrome://experimentaltoolbar/locale/experimentaltoolbar.properties"/>
   </stringbundleset>
@@ -69,15 +69,17 @@
       <toolbarspacer class="mail-search-bar-spacer"/>
 
       <toolbaritem id="search-container2" title="Quick Search" class="" flex="1">
-        <textbox id="searchInput2" timeout="800" flex="1"
-                 onclick="" onmousedown=""
-                 onkeypress=""
+        <textbox id="searchInput2" timeout="200" flex="1"
                  emptytext="Search messages, events, people..."
                  chromedir="ltr"
                  searchCriteria="true"
                  type="autocomplete"
                  autocompletesearch="gloda"
                  autocompletepopup="PopupGlodaAutocomplete"
+                 oninput="experimentaltoolbar.onInput();"
+                 ontextentered="experimentaltoolbar.onTextEntered();"
+                 ontextreverted="experimentaltoolbar.onTextReverted();"
+                 onkeypress="experimentaltoolbar.onKeyPress(event);"
                  >
         </textbox>
       </toolbaritem>

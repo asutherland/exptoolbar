@@ -28,15 +28,41 @@
 
 }
 
-richlistitem[type="gloda-contact"] {
+.contact-bubble {
+  background-color: #ddddff;
+  -moz-border-radius: 4px;
+  margin: 2px 2px 0px 0px;
+  padding: 0px 0px 0px 0px;
+}
+
+input.bubble-spacer {
+  margin: 0px;
+  padding: 0px;
+  border: 0px;
+  width: 6px;
+  min-width: 6px;
+  max-width: 6px;
+}
+
+.autocomplete-richlistitem[selected] {
+  background-color: Highlight !important;
+}
+
+.autocomplete-richlistitem[type="gloda-contact"] {
   background-color: #eeeeff;
 }
 
-richlistitem[type="gloda-identity"] {
+.autocomplete-richlistitem[type="gloda-identity"] {
   background-color: #f6f6ff;
 }
 
-richlistitem[type="gloda-conversation"] {
+.autocomplete-richlistitem[type="gloda-identity"] .ac-site-icon {
+  width: 32px;
+  height: 32px;
+  margin: 0 5px -3px 3px;
+}
+
+.autocomplete-richlistitem[type="gloda-conversation"] {
   background-color: #eeffee;
 }
 
