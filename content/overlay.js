@@ -95,6 +95,10 @@ var experimentaltoolbar = {
                    this.searchInput.controller,
                    this.searchInput.popup.selectedIndex);
       
+      if (obj == null) {
+        this.applyConstraints();
+      }
+      
       let contact = null;
       if (obj.NOUN_ID == Gloda.NOUN_CONTACT)
         contact = obj;
@@ -143,10 +147,55 @@ var experimentaltoolbar = {
       }
     }
   },
+  /* stolen from searchBar.js, changing to use search view from quicksearch */
+  createSearchView: function()
+  {
+    let viewType;
+    try {
+      // this may throw an exception for now because nsMsgSearchDBView fails
+      //  to implement GetViewType and the fall-through gets angry.
+      // (which is exac
+      dump("ignore an exception if it happens:\n");
+      viewType = gDBView.viewType;
+    }
+    catch (ex) {
+      // and this should only happen for search
+      viewType = nsMsgViewType.eShowSearch;
+    }
+    dump("stop ignoring the exception now.\n");
+    //if not already in quick search view 
+    if (viewType != nsMsgViewType.eShowSearch)  
+    {
+      var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);  //clear selection
+      if (treeView && treeView.selection)
+        treeView.selection.clearSelection();
+      gPreQuickSearchView = gDBView;
+      if (viewType == nsMsgViewType.eShowVirtualFolderResults)
+      {
+        // remove the view as a listener on the search results
+        var saveViewSearchListener = gDBView.QueryInterface(Components.interfaces.nsIMsgSearchNotify);
+        gSearchSession.unregisterListener(saveViewSearchListener);
+      }
+      // if grouped by sort, turn that off, as well as threaded, since we don't
+      // group quick search results yet.
+      var viewFlags = gDBView.viewFlags;
+      if (viewFlags & nsMsgViewFlagsType.kGroupBySort)
+        viewFlags &= ~(nsMsgViewFlagsType.kGroupBySort | nsMsgViewFlagsType.kThreadedDisplay);
+      CreateDBView(null, nsMsgViewType.eShowSearch, viewFlags, gDBView.sortType, gDBView.sortOrder);
+    }
+  },
   applyConstraints: function () {
+dump("APPLY CONSTRAINTS\n");
     let query = Gloda.newQuery(Gloda.NOUN_MESSAGE);
     
     let textSpacer = this.searchInput;
+    
+    if ((textSpacer.prevBubble === null) && !this.searchInput.value.length) {
+      dump("restoring previous search\n");
+      restorePreSearchView();
+      return;
+    }
+    
     while (textSpacer.prevBubble) {
       let bubble = textSpacer.prevBubble;
       if (bubble.constraint.NOUN_ID == Gloda.NOUN_CONTACT)
@@ -156,15 +205,30 @@ var experimentaltoolbar = {
     }
    
    if (this.searchInput.value) {
+     dump("adding fulltext search on: " + this.searchInput.value + "\n");
      query.bodyMatches(this.searchInput.value);
    }
    
-   // this requires Andrew's patented glmsgdbview-for-everything hackjob.
-   let glView = gDBView.wrappedJSObject;
-   
+   this.createSearchView();
+
+   ClearThreadPaneSelection();
+   ClearMessagePane();
+
    let collection = query.getAllSync();
-   glView.absorbNewCollection(collection);
+   let searchView = gDBView.QueryInterface(
+                      Components.interfaces.nsIMsgSearchNotify);
+   searchView.onNewSearch();
+   
+   for (let iItem=0; iItem < collection.items.length; iItem++) {
+     let message = collection.items[iItem];
+     let folderMessage = message.folderMessage;
+     if (folderMessage !== null)
+       searchView.onSearchHit(folderMessage, folderMessage.folder);
+   }
+
+   RerootThreadPane();
   },
+  
   spacerOnKeyPress: function (aEvent) {
     let target = aEvent.target;
     if (aEvent.keyCode == aEvent.DOM_VK_LEFT) {
