@@ -39,6 +39,7 @@ Components.utils.import("resource://gloda/modules/gloda.js")
 var experimentaltoolbar = {
   SEARCH_INPUT_HELPER_TEXT : "Search messages, events, people...",
   
+  _textMayHaveChanged: false,
 
   onLoad: function() {
     // initialization code
@@ -91,12 +92,17 @@ var experimentaltoolbar = {
     if (aTopic == "autocomplete-will-enter-text") {
     }
     else if (aTopic == "autocomplete-did-enter-text") {
+      if (!this._textMayHaveChanged)
+        return;
+      this._textMayHaveChanged = false;
+    
       let [obj, startsFrom] = this.glodaCompleter.getObjectForController(
                    this.searchInput.controller,
                    this.searchInput.popup.selectedIndex);
       
       if (obj == null) {
         this.applyConstraints();
+        return;
       }
       
       let contact = null;
@@ -150,19 +156,7 @@ var experimentaltoolbar = {
   /* stolen from searchBar.js, changing to use search view from quicksearch */
   createSearchView: function()
   {
-    let viewType;
-    try {
-      // this may throw an exception for now because nsMsgSearchDBView fails
-      //  to implement GetViewType and the fall-through gets angry.
-      // (which is exac
-      dump("ignore an exception if it happens:\n");
-      viewType = gDBView.viewType;
-    }
-    catch (ex) {
-      // and this should only happen for search
-      viewType = nsMsgViewType.eShowSearch;
-    }
-    dump("stop ignoring the exception now.\n");
+    let viewType = gDBView.viewType;
     //if not already in quick search view 
     if (viewType != nsMsgViewType.eShowSearch)  
     {
@@ -179,7 +173,7 @@ var experimentaltoolbar = {
       // if grouped by sort, turn that off, as well as threaded, since we don't
       // group quick search results yet.
       var viewFlags = gDBView.viewFlags;
-      if (viewFlags & nsMsgViewFlagsType.kGroupBySort)
+      if (viewFlags & (nsMsgViewFlagsType.kGroupBySort | nsMsgViewFlagsType.kThreadedDisplay))
         viewFlags &= ~(nsMsgViewFlagsType.kGroupBySort | nsMsgViewFlagsType.kThreadedDisplay);
       CreateDBView(null, nsMsgViewType.eShowSearch, viewFlags, gDBView.sortType, gDBView.sortOrder);
     }
@@ -214,18 +208,26 @@ dump("APPLY CONSTRAINTS\n");
    ClearThreadPaneSelection();
    ClearMessagePane();
 
-   let collection = query.getAllSync();
    let searchView = gDBView.QueryInterface(
                       Components.interfaces.nsIMsgSearchNotify);
    searchView.onNewSearch();
-   
-   for (let iItem=0; iItem < collection.items.length; iItem++) {
-     let message = collection.items[iItem];
-     let folderMessage = message.folderMessage;
-     if (folderMessage !== null)
-       searchView.onSearchHit(folderMessage, folderMessage.folder);
-   }
 
+   let collection = query.getCollection({
+     onItemsAdded: function (aItems) {
+       dump("collection is seeing results!\n");
+       for each (let message in aItems) {
+         dump("adding " + message + "\n");
+         let folderMessage = message.folderMessage;
+         if (folderMessage !== null)
+           searchView.onSearchHit(folderMessage, folderMessage.folder);
+       }
+     },
+     onItemsModified: function () {
+     },
+     onItemsRemoved: function () {
+     }
+   });
+   
    RerootThreadPane();
   },
   
@@ -326,6 +328,7 @@ dump("APPLY CONSTRAINTS\n");
     }
   },
   onInput: function() {
+    this._textMayHaveChanged = true;
     dump("on input\n");
   },
   onTextEntered : function() {
