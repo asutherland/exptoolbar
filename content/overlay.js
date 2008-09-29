@@ -96,20 +96,34 @@ var experimentaltoolbar = {
         return;
       this._textMayHaveChanged = false;
     
-      let [obj, startsFrom] = this.glodaCompleter.getObjectForController(
-                   this.searchInput.controller,
-                   this.searchInput.popup.selectedIndex);
+      let row = this.glodaCompleter.curResult.getObjectAt(
+        this.searchInput.popup.selectedIndex);
       
-      if (obj == null) {
+      if (row == null) {
         this.applyConstraints();
         return;
       }
       
-      let contact = null;
-      if (obj.NOUN_ID == Gloda.NOUN_CONTACT)
-        contact = obj;
-      else if (obj.NOUN_ID == Gloda.NOUN_IDENTITY)
-        contact = obj.contact;
+      let contact, display;
+      if (row.multi) {
+        display = row.nounMeta.name + "s " + 
+          row.criteriaType + "ed " + row.criteria;
+        
+        let identities = [];
+        for each (let contact in row.collection.items) {
+          identities.push.apply(identities, contact.identities);
+        }
+        contact = {NOUN_ID: Gloda.NOUN_CONTACT, identities: identities};
+      }
+      else {
+        let obj = row.item;
+        if (obj.NOUN_ID == Gloda.NOUN_CONTACT)
+          contact = obj;
+        else if (obj.NOUN_ID == Gloda.NOUN_IDENTITY)
+          contact = obj.contact;
+        
+        display = contact.name;
+      }
       
       if (contact) {
         // always create a magic text spacer...
@@ -135,7 +149,7 @@ var experimentaltoolbar = {
         let bubble = document.createElementNS(
           "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
           "label");
-        bubble.setAttribute("value", contact.name);
+        bubble.setAttribute("value", display);
         bubble.setAttribute("class", "contact-bubble");
         this.searchInput.inputField.parentNode.insertBefore(bubble,
           this.searchInput.inputField);
@@ -178,7 +192,7 @@ var experimentaltoolbar = {
       CreateDBView(null, nsMsgViewType.eShowSearch, viewFlags, gDBView.sortType, gDBView.sortOrder);
     }
   },
-  applyConstraints: function () {
+  applyConstraints: function applyConstraints() {
 dump("APPLY CONSTRAINTS\n");
     let query = Gloda.newQuery(Gloda.NOUN_MESSAGE);
     
