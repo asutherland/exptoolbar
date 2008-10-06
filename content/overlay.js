@@ -36,21 +36,58 @@
 
 Components.utils.import("resource://gloda/modules/gloda.js")
 
+var searchTabType = {
+  name: "search",
+  perTabPanel: "iframe",
+  modes: {
+    searchAll: {
+      type: "search",
+      
+    },
+  },
+  openTab: function (aTab, aConstraints) {
+    aTab.panel.contentWindow.addEventListener("load",
+      function(e) { experimentaltoolbar.applyConstraints(); }, false);
+    aTab.constraints = aConstraints;
+    aTab.panel.setAttribute("src",
+      "chrome://experimentaltoolbar/content/searchResults.xhtml");
+    aTab.title = "Search";
+  },
+  closeTab: function (aTab) {
+  },
+  saveTabState: function (aTab) {
+    aTab.constraints = experimentaltoolbar.serializeConstraints();
+  },
+  showTab: function (aTab) {
+  }
+};
+
+var searchTabMonitor = {
+  onTabTitleChanged: function(aTab) {
+    if (aTab.mode.name == "folder") {
+      aTab.constraints = [Gloda.getFolderForFolder(gMsgFolderSelected)];
+      experimentaltoolbar.clearConstraints();
+      experimentaltoolbar.deserializeConstraints(aTab.constraints);
+    }
+  },
+  onTabSwitched: function(aTab, aOldTab) {
+    experimentaltoolbar.clearConstraints();
+
+    if (aTab.constraints) {
+      experimentaltoolbar.deserializeConstraints(aTab.constraints);
+    }
+  },
+};
+
 var experimentaltoolbar = {
   SEARCH_INPUT_HELPER_TEXT : "Search messages, events, people...",
   
-  _textMayHaveChanged: false,
-
   onLoad: function() {
     // initialization code
     this.initialized = true;
     this.strings = document.getElementById("experimentaltoolbar-strings");
-
+    
     var mailToolbar = experimentaltoolbar.getMailBar();
-//    mailToolbar.setAttribute("collapsed", "true");
-
-//    var expMailToolbar = document.getElementById("exp-mail-toolbar");
-//    expMailToolbar.setAttribute("collapsed", "false");
 
     // ====== hacky bubble logic, destined for being hidden ugliness in XBL.
     this.searchInput = document.getElementById("searchInput2");
@@ -67,6 +104,13 @@ var experimentaltoolbar = {
     observerSvc.addObserver(this,
                             "autocomplete-did-enter-text", false);
     // end bubble logic until more of it below...
+
+    this.tabmail = document.getElementById("tabmail");
+    this.tabmail.registerTabType(searchTabType);
+    this.tabmail.tabMonitors.push(searchTabMonitor);
+    if (this.tabmail.currentTabInfo) {
+      searchTabMonitor.onTabTitleChanged(this.tabmail.currentTabInfo);
+    }
   },
   onBlurSearchInput : function(event) {
     var searchInput = document.getElementById("searchInput2");
@@ -87,15 +131,14 @@ var experimentaltoolbar = {
   
   
   // ======= the stuff below here should all end up in XBL bindings, likely.
+  _activeSearchText: '',
+  _constraintsChanged: false,
+  
   // (bubble logic)
   observe: function(aSubject, aTopic, aData) {
     if (aTopic == "autocomplete-will-enter-text") {
     }
     else if (aTopic == "autocomplete-did-enter-text") {
-      if (!this._textMayHaveChanged)
-        return;
-      this._textMayHaveChanged = false;
-    
       let row = this.glodaCompleter.curResult.getObjectAt(
         this.searchInput.popup.selectedIndex);
       
@@ -104,69 +147,73 @@ var experimentaltoolbar = {
         return;
       }
       
-      let contact, display;
+      let item;
       if (row.multi) {
-        display = row.nounMeta.name + "s " + 
-          row.criteriaType + "ed " + row.criteria;
-        
-        let identities = [];
-        for each (let contact in row.collection.items) {
-          identities.push.apply(identities, contact.identities);
-        }
-        contact = {NOUN_ID: Gloda.NOUN_CONTACT, identities: identities};
+        row.collection.explanation = row.nounMeta.name + "s " + 
+          row.criteriaType + "ged " + row.criteria;
+        item = row.collection;
       }
       else {
         let obj = row.item;
         if (obj.NOUN_ID == Gloda.NOUN_CONTACT)
-          contact = obj;
+          item = obj;
         else if (obj.NOUN_ID == Gloda.NOUN_IDENTITY)
-          contact = obj.contact;
-        
-        display = contact.name;
+          item = obj.contact;
       }
       
-      if (contact) {
-        // always create a magic text spacer...
-        let textSpacer = null;
-        
-        textSpacer = document.createElementNS(
-          "http://www.w3.org/1999/xhtml", "html:input");
-        textSpacer.setAttribute("value", "");
-        textSpacer.setAttribute("class", "bubble-spacer");
-        textSpacer.onkeypress = this.spacerOnKeyPress;
-        
-        // (prevBubble may be null)
-        textSpacer.prevBubble = this.searchInput.prevBubble;
-        textSpacer.prevTextSpacer = this.searchInput.prevTextSpacer;
-        if (textSpacer.prevTextSpacer)
-          textSpacer.prevTextSpacer.nextTextSpacer = textSpacer;
-        textSpacer.nextTextSpacer = this.searchInput;
-        
-        this.searchInput.inputField.parentNode.insertBefore(textSpacer,
-          this.searchInput.inputField);
-        
-        // create the bubble
-        let bubble = document.createElementNS(
-          "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-          "label");
-        bubble.setAttribute("value", display);
-        bubble.setAttribute("class", "contact-bubble");
-        this.searchInput.inputField.parentNode.insertBefore(bubble,
-          this.searchInput.inputField);
-        this.searchInput.value = "";
-        
-        bubble.constraint = contact;
-        
-        if (textSpacer)
-          textSpacer.nextBubble = bubble;
-        
-        this.searchInput.prevTextSpacer = textSpacer;
-        this.searchInput.prevBubble = bubble;
-        
-        this.applyConstraints();
-      }
+      this.addBubble(item);
+      this.applyConstraints();
     }
   },
+  
+  addBubble: function (aItem) {
+    // always create a magic text spacer...
+    let textSpacer = null;
+    
+    textSpacer = document.createElementNS(
+      "http://www.w3.org/1999/xhtml", "html:input");
+    textSpacer.setAttribute("value", "");
+    textSpacer.setAttribute("class", "bubble-spacer");
+    textSpacer.onkeypress = this.spacerOnKeyPress;
+    
+    // (prevBubble may be null)
+    textSpacer.prevBubble = this.searchInput.prevBubble;
+    textSpacer.prevTextSpacer = this.searchInput.prevTextSpacer;
+    if (textSpacer.prevTextSpacer)
+      textSpacer.prevTextSpacer.nextTextSpacer = textSpacer;
+    textSpacer.nextTextSpacer = this.searchInput;
+    
+    this.searchInput.inputField.parentNode.insertBefore(textSpacer,
+      this.searchInput.inputField);
+    
+    // create the bubble
+    let bubble = document.createElementNS(
+      "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+      "label");
+    bubble.setAttribute("value", aItem.explanation || aItem.toString());
+    bubble.setAttribute("class", "bubble");
+    // the following is a little hacky and uses private knowledge because we
+    //  are assuming this framework will have justifiable private usage...
+    let typeName;
+    if (aItem.NOUN_ID)
+      typeName = Gloda._nounIDToMeta[aItem.NOUN_ID].name;
+    else
+      typeName = aItem._nounMeta.name + "-collection";
+    bubble.setAttribute("type", typeName);
+    this.searchInput.inputField.parentNode.insertBefore(bubble,
+      this.searchInput.inputField);
+    this.searchInput.value = "";
+    
+    bubble.constraint = aItem;
+    
+    textSpacer.nextBubble = bubble;
+    
+    this.searchInput.prevTextSpacer = textSpacer;
+    this.searchInput.prevBubble = bubble;
+    
+    this._constraintsChanged = true;
+  },
+  
   /* stolen from searchBar.js, changing to use search view from quicksearch */
   createSearchView: function()
   {
@@ -192,60 +239,186 @@ var experimentaltoolbar = {
       CreateDBView(null, nsMsgViewType.eShowSearch, viewFlags, gDBView.sortType, gDBView.sortOrder);
     }
   },
+  serializeConstraints: function () {
+    let constraintObjects = [];
+    
+    let textSpacer = this.searchInput;
+    while (textSpacer && textSpacer.prevBubble) {
+      let bubble = textSpacer.prevBubble;
+      constraintObjects.push(bubble.constraint);
+      textSpacer = textSpacer.prevTextSpacer;
+    }
+    
+    constraintObjects.reverse();
+    
+    let trimmedValue = this.searchInput.value.trim();
+    if (trimmedValue)
+      constraintObjects.push(trimmedValue);
+
+    return constraintObjects;
+  },
+  deserializeConstraints: function (aConstraints) {
+    for each (let item in aConstraints) {
+      if (typeof(item) == "string")
+        this.searchInput.value = item;
+      else
+        this.addBubble(item);
+    }
+  },
+  applyQueryToView: function (aQuery) {
+    this.createSearchView();
+
+    ClearThreadPaneSelection();
+    ClearMessagePane();
+
+    let searchView = gDBView.QueryInterface(
+                       Components.interfaces.nsIMsgSearchNotify);
+    searchView.onNewSearch();
+
+    let collection = aQuery.getCollection({
+      onItemsAdded: function (aItems) {
+        dump("collection is seeing results!\n");
+        for each (let message in aItems) {
+          let folderMessage = message.folderMessage;
+          if (folderMessage !== null)
+            searchView.onSearchHit(folderMessage, folderMessage.folder);
+        }
+      },
+      onItemsModified: function () {
+      },
+      onItemsRemoved: function () {
+      }
+    });
+   
+    RerootThreadPane();
+  },
+  applyQueryToDocument: function applyQueryToDocument (aQuery) {
+    let doc = this.tabmail.currentTabInfo.panel.contentDocument;
+    let results = doc.getElementById("results");
+    while (results.firstChild) {
+      results.removeChild(results.firstChild);
+    }
+    
+    // do not allow us to issue an empty query, or we will explode!
+    if (!aQuery.constraintCount)
+      return;
+  
+    let collection = aQuery.getCollection({
+      onItemsAdded: function (aItems) {
+        dump("collection is seeing results!\n");
+        for each (let message in aItems) {
+          let node = doc.createElementNS("http://www.w3.org/1999/xhtml", "div");
+          node.textContent = message.conversation.subject;
+          
+          results.appendChild(node);
+        }
+      },
+      onItemsModified: function () {
+      },
+      onItemsRemoved: function () {
+      }
+    });
+  },
+  clearViewQuery: function () {
+    restorePreSearchView();
+  },
   applyConstraints: function applyConstraints() {
+    if (!this._constraintsChanged &&
+        this.searchInput.value == this._activeSearchText)
+      return;
+    if (this._suppress)
+      return;
+  
 dump("APPLY CONSTRAINTS\n");
     let query = Gloda.newQuery(Gloda.NOUN_MESSAGE);
     
     let textSpacer = this.searchInput;
     
     if ((textSpacer.prevBubble === null) && !this.searchInput.value.length) {
+      this.clearViewQuery();
       dump("restoring previous search\n");
-      restorePreSearchView();
       return;
     }
     
     while (textSpacer.prevBubble) {
       let bubble = textSpacer.prevBubble;
+      
+      // XXX this should all be generalized, of course...
       if (bubble.constraint.NOUN_ID == Gloda.NOUN_CONTACT)
         query.involves.apply(query, bubble.constraint.identities);
+      else if (bubble.constraint.NOUN_ID == Gloda.NOUN_FOLDER) {
+        // don't do anything with this for now...
+      }
+      else { // it must be a contact collection
+        let identities = [];
+        for each (let contact in bubble.constraint.items) {
+          identities.push.apply(identities, contact.identities);
+        }
+        query.involves.apply(query, identities);
+      }
     
       textSpacer = textSpacer.prevTextSpacer;
     }
    
-   if (this.searchInput.value) {
-     dump("adding fulltext search on: " + this.searchInput.value + "\n");
-     query.bodyMatches(this.searchInput.value);
-   }
-   
-   this.createSearchView();
+    if (this.searchInput.value) {
+      dump("adding fulltext search on: " + this.searchInput.value + "\n");
+      query.bodyMatches(this.searchInput.value);
+    }
 
-   ClearThreadPaneSelection();
-   ClearMessagePane();
+    if (this.tabmail.currentTabInfo.mode.tabType.name == "search")
+      this.applyQueryToDocument(query);
+    
+    this._activeSearchText = this.searchInput.value;
+    this._constraintsChanged = false;   
+  },
+  makeSearchTab: function makeSearchTab() {
+    this._suppress = true;
+    let constraints = this.serializeConstraints();
+    this.clearConstraints();
+    this.tabmail.openTab("searchAll", constraints);
+    this._suppress = false;
+  },
 
-   let searchView = gDBView.QueryInterface(
-                      Components.interfaces.nsIMsgSearchNotify);
-   searchView.onNewSearch();
-
-   let collection = query.getCollection({
-     onItemsAdded: function (aItems) {
-       dump("collection is seeing results!\n");
-       for each (let message in aItems) {
-         dump("adding " + message + "\n");
-         let folderMessage = message.folderMessage;
-         if (folderMessage !== null)
-           searchView.onSearchHit(folderMessage, folderMessage.folder);
-       }
-     },
-     onItemsModified: function () {
-     },
-     onItemsRemoved: function () {
-     }
-   });
-   
-   RerootThreadPane();
+  clearConstraints: function clearConstraints() {
+    while (this.searchInput.prevBubble) {
+      this.destroyPreviousBubble(this.searchInput);
+    }
+    this.searchInput.value = '';
+    this._constraintsChanged = true;
   },
   
-  spacerOnKeyPress: function (aEvent) {
+  destroyPreviousBubble: function destroyPreviousBubble(aTextSpacer) {
+    let prevBubble = aTextSpacer.prevBubble;
+    let prevTextSpacer = aTextSpacer.prevTextSpacer;
+    
+    if (!prevBubble)
+      return;
+    
+    // remove the previous bubble
+    prevBubble.parentNode.removeChild(prevBubble);
+
+    // remove the spacer to the bubble's left (must exist)
+    prevTextSpacer.parentNode.removeChild(prevTextSpacer);
+    aTextSpacer.prevBubble = prevTextSpacer.prevBubble;
+    aTextSpacer.prevTextSpacer = prevTextSpacer.prevTextSpacer;
+    if (aTextSpacer.prevTextSpacer)
+      aTextSpacer.prevTextSpacer.nextTextSpacer = aTextSpacer;
+  },
+  
+  destroySpacerAndNextBubble: function destroySpacerAndNextBubble(aTextSpacer) {
+    // kill the (next) bubble
+    aTextSpacer.nextBubble.parentNode.removeChild(aTextSpacer.nextBubble);
+    // kill the (current) spacer
+    aTextSpacer.parentNode.removeChild(aTextSpacer);
+
+    aTextSpacer.nextTextSpacer.prevBubble = aTextSpacer.prevBubble;
+    aTextSpacer.nextTextSpacer.prevTextSpacer = aTextSpacer.prevTextSpacer;
+    
+    if (aTextSpacer.prevTextSpacer)
+      aTextSpacer.prevTextSpacer.nextTextSpacer = aTextSpacer.nextTextSpacer;
+  },
+  
+  spacerOnKeyPress: function spaceOnKeyPress(aEvent) {
     let target = aEvent.target;
     if (aEvent.keyCode == aEvent.DOM_VK_LEFT) {
       if (target.prevTextSpacer) {
@@ -256,20 +429,8 @@ dump("APPLY CONSTRAINTS\n");
     else if (aEvent.keyCode == aEvent.DOM_VK_BACK_SPACE) {
       // there's only something to do if there's a previous bubble
       if (target.prevBubble) {
-        // remove the bubble to our left, and ourselves because there may not
-        //  actually be another text spacer to the left
-        target.prevBubble.parentNode.removeChild(target.prevBubble);
-        target.parentNode.removeChild(target);
-
-        target.nextTextSpacer.prevTextSpacer = target.prevTextSpacer;
-        
-        if (target.prevTextSpacer) {
-          target.prevTextSpacer.nextBubble = target.nextBubble;
-          target.prevTextSpacer.nextTextSpacer = target.nextTextSpacer;
-          target.prevTextSpacer.focus();
-        }
-        else
-          target.nextTextSpacer.focus();
+        experimentaltoolbar.destroyPreviousBubble(target);
+        // we don't need to do anything about focus; we still exist
       }
       experimentaltoolbar.applyConstraints();
       aEvent.stopPropagation();
@@ -279,17 +440,8 @@ dump("APPLY CONSTRAINTS\n");
       aEvent.stopPropagation();
     }
     else if (aEvent.keyCode == aEvent.DOM_VK_DELETE) {
-      // delete the bubble to our right, and ourselves, because the spacer to
-      //  our right may be the auto-complete.
-      target.nextBubble.parentNode.removeChild(target.nextBubble);
-      target.parentNode.removeChild(target);
-
-      target.nextTextSpacer.prevBubble = target.prevBubble;
-      target.nextTextSpacer.prevTextSpacer = target.prevTextSpacer;
-      
-      if (target.prevTextSpacer)
-        target.prevTextSpacer.nextTextSpacer = target.nextTextSpacer;
-      
+      experimentaltoolbar.destroySpacerAndNextBubble(target);
+      // we do need to re-focus to the right
       target.nextTextSpacer.focus();
       
       experimentaltoolbar.applyConstraints();
@@ -310,27 +462,10 @@ dump("APPLY CONSTRAINTS\n");
         this.searchInput.selectionEnd == 0) {
       if (aEvent.keyCode == aEvent.DOM_VK_BACK_SPACE) {
         // delete the previous bubble...
-        if (this.searchInput.prevBubble)
-          this.searchInput.prevBubble.parentNode.removeChild(
-            this.searchInput.prevBubble); 
-
-        // and if there was a previous text spacer, delete him too.
-        if (this.searchInput.prevTextSpacer) {
-          // delete
-          this.searchInput.prevTextSpacer.parentNode.removeChild(
-            this.searchInput.prevTextSpacer);
-          // update our links to the previous things
-          this.searchInput.prevBubble =
-            this.searchInput.prevTextSpacer.prevBubble;
-          this.searchInput.prevTextSpacer =
-            this.searchInput.prevTextSpacer.prevTextSpacer;
-          // update the link of the new previous text spacer to point to us
-          if (this.searchInput.prevTextSpacer)
-            this.searchInput.prevTextSpacer.nextTextSpacer = this.searchInput;
+        if (this.searchInput.prevBubble) {
+          this.destroyPreviousBubble(this.searchInput);
           this.applyConstraints();
         }
-        else
-          this.searchInput.prevBubble = null;
         aEvent.stopPropagation();
       }
       // jump to the previous text spacer, if one exists...
@@ -342,13 +477,17 @@ dump("APPLY CONSTRAINTS\n");
     }
   },
   onInput: function() {
-    this._textMayHaveChanged = true;
     dump("on input\n");
   },
   onTextEntered : function() {
     dump("Text entered!\n");
 
-    this.applyConstraints();
+    if (this.tabmail.currentTabInfo.mode.tabType.name != "search") {
+      this.makeSearchTab();
+    }
+    else {
+      this.applyConstraints();
+    }
     
     dump("Text value: " + this.searchInput.textValue + "\n");
   },

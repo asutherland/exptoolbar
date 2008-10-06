@@ -65,7 +65,7 @@
 
       <toolbarspacer class="mail-search-bar-spacer"/>
 
-      <toolbarbutton id="button-newmsg2" class="toolbarbutton-bold" label="Write" oncommand="MsgNewMessage(event)" />
+      <toolbarbutton id="button-newmsg2" label="Writ" class="toolbarbutton-bold" oncommand="MsgNewMessage(event)">Write</toolbarbutton>
 
       <toolbarspacer class="mail-search-bar-spacer"/>
 

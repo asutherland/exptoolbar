@@ -1,7 +1,7 @@
 .toolbarbutton-bold
 {
   font-weight: bold !important;
-  -moz-appearance: none;
+  -moz-appearance: button;
   color: #222222 !important;
   border: 1px solid;
   -moz-border-bottom-colors: ThreeDShadow ThreeDDarkShadow;
@@ -23,16 +23,26 @@
 .toolbarbutton-bold > .toolbarbutton-icon {
   display: none;
 }
-.toolbarbutton-bold > .toolbarbutton-text {
+.toolbarbutton-bold {
   letter-spacing: 4px;
-
 }
 
-.contact-bubble {
-  background-color: #ddddff;
+.bubble {
   -moz-border-radius: 4px;
   margin: 0px 2px 0px 0px;
   padding: 0px 3px;
+}
+
+.bubble[type="contact"] {
+  background-color: #ddddff;
+}
+
+.bubble[type="contact-collection"] {
+  background-color: #ffddff;
+}
+
+.bubble[type="folder"] {
+  background-color: #ddffdd;
 }
 
 input.bubble-spacer {
