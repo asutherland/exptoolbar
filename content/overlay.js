@@ -112,6 +112,10 @@ var experimentaltoolbar = {
       searchTabMonitor.onTabTitleChanged(this.tabmail.currentTabInfo);
     }
   },
+  focusSearchInput : function(event) {
+    this.searchInput.select();
+    this.searchInput.focus();
+  },
   onBlurSearchInput : function(event) {
     var searchInput = document.getElementById("searchInput2");
     if (searchInput.value == "") {
@@ -446,6 +450,12 @@ dump("APPLY CONSTRAINTS\n");
       
       experimentaltoolbar.applyConstraints();
       aEvent.stopPropagation();
+    }
+    else if (aEvent.keyCode == DOM_VK_HOME) {
+
+    }
+    else if (aEvent.keyCode == DOM_VK_END) {
+
     }
     else if (aEvent.charCode) {
       // force the focus to the auto-complete guy.

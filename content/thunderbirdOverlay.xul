@@ -45,6 +45,15 @@
     <stringbundle id="experimentaltoolbar-strings" src="chrome://experimentaltoolbar/locale/experimentaltoolbar.properties"/>
   </stringbundleset>
 
+  <commandset>
+    <command id="Toolbar:FocusSearch" oncommand="experimentaltoolbar.focusSearchInput(event)"/>    
+  </commandset>
+  
+  <keyset>
+    <key id="key_thundersearch" key="&experimentaltoolbar.key;"
+         command="Toolbar:FocusSearch" modifiers="accel"/>
+  </keyset>
+  
   <popupset>
     <panel type="glodacomplete-richlistbox" chromedir="ltr"
            id="PopupGlodaAutocomplete" noautofocus="true" />
@@ -65,13 +74,13 @@
 
       <toolbarspacer class="mail-search-bar-spacer"/>
 
-      <toolbarbutton id="button-newmsg2" label="Writ" class="toolbarbutton-bold" oncommand="MsgNewMessage(event)">Write</toolbarbutton>
+      <toolbarbutton id="button-write" label="Write" oncommand="MsgNewMessage(event)">Write</toolbarbutton>
 
       <toolbarspacer class="mail-search-bar-spacer"/>
 
-      <toolbaritem id="search-container2" title="Quick Search" class="" flex="1">
+      <toolbaritem id="search-container2" title="Thunder-Search" class="" flex="1">
         <textbox id="searchInput2" timeout="200" flex="1"
-                 emptytext="Search messages, events, people..."
+                 emptytext="Search messages, events, people... (ctrl-j)"
                  chromedir="ltr"
                  searchCriteria="true"
                  type="glodacomplete"

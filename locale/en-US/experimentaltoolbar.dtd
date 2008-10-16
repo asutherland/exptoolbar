@@ -1,1 +1,2 @@
-<!ENTITY experimentaltoolbar.label "Your localized menuitem">
+<!-- XXX I really wanted the "k" key, but it wasn't working for some reason -->
+<!ENTITY experimentaltoolbar.key "j">

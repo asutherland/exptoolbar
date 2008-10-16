@@ -1,36 +1,17 @@
-.toolbarbutton-bold
+#button-write
 {
-  font-weight: bold !important;
+  font-family: sans-serif;
+  font-weight: bold;
   -moz-appearance: button;
-  color: #222222 !important;
-  border: 1px solid;
-  -moz-border-bottom-colors: ThreeDShadow ThreeDDarkShadow;
-  -moz-border-left-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-top-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-right-colors: ThreeDShadow ThreeDDarkShadow;
-  -moz-border-radius: 14px;
-  background-color: #eeeeec;
-  background-position: top right;
-  background-image: url("chrome://global/skin/icons/white-gray-gradient.gif") !important;
-  background-repeat: repeat-x;
-  padding: 2px 20px !important;
-}
-
-.toolbarbutton-bold:hover {
-  background-color: #fefefc;
-}
-
-.toolbarbutton-bold > .toolbarbutton-icon {
-  display: none;
-}
-.toolbarbutton-bold {
-  letter-spacing: 4px;
+  font-size: 125%;
+  padding: 0em 1.5em;
+  letter-spacing: 2px;
 }
 
 .bubble {
   -moz-border-radius: 4px;
   margin: 0px 2px 0px 0px;
-  padding: 0px 3px;
+  padding: 0.1em 0.5em;
 }
 
 .bubble[type="contact"] {
