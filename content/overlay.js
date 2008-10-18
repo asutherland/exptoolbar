@@ -35,6 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 Components.utils.import("resource://gloda/modules/gloda.js")
+Components.utils.import("resource://gloda/modules/mimemsg.js")
 
 var searchTabType = {
   name: "search",
@@ -298,23 +299,34 @@ var experimentaltoolbar = {
   },
   applyQueryToDocument: function applyQueryToDocument (aQuery) {
     let doc = this.tabmail.currentTabInfo.panel.contentDocument;
-    let results = doc.getElementById("results");
-    while (results.firstChild) {
-      results.removeChild(results.firstChild);
+    let conversationsNode = doc.getElementById("conversations");
+    while (conversationsNode.firstChild) {
+      conversationsNode.removeChild(conversationsNode.firstChild);
     }
     
     // do not allow us to issue an empty query, or we will explode!
     if (!aQuery.constraintCount)
       return;
   
+    let conversations = [];
+
     let collection = aQuery.getCollection({
       onItemsAdded: function (aItems) {
-        dump("collection is seeing results!\n");
+        
+        // extract conversations
+        
         for each (let message in aItems) {
-          let node = doc.createElementNS("http://www.w3.org/1999/xhtml", "div");
-          node.textContent = message.conversation.subject;
-          
-          results.appendChild(node);
+          let conv = message.conversation;
+          conversations.push(conv)
+          let convid = 'conv'+conv.id.toString();
+          let node = doc.getElementById(convid);
+          if (node == undefined) {
+            node = doc.createElementNS("http://www.w3.org/1999/xhtml", "conversation");
+            conversationsNode.appendChild(node);
+            node.id = 'conv' + conv.id.toString()
+            dump("SETTING CONVERSATION OBJECT __ OUTSIDE\n");
+            node.obj = conv;
+          }
         }
       },
       onItemsModified: function () {
@@ -506,3 +518,44 @@ dump("APPLY CONSTRAINTS\n");
   },
 };
 window.addEventListener("load", function(e) { experimentaltoolbar.onLoad(e); }, false);
+
+
+
+// TODO, remove after debugging
+function ddump(text)
+{
+    dump(text + "\n");
+}
+function ddumpObject(obj, name, maxDepth, curDepth)
+{
+  if (curDepth == undefined)
+    curDepth = 0;
+  if (maxDepth != undefined && curDepth > maxDepth)
+    return;
+
+  var i = 0;
+  for (prop in obj)
+  {
+    i++;
+    try {
+      if (typeof(obj[prop]) == "object")
+      {
+        if (obj[prop] && obj[prop].length != undefined)
+          ddump(name + "." + prop + "=[probably array, length "
+                + obj[prop].length + "]");
+        else
+          ddump(name + "." + prop + "=[" + typeof(obj[prop]) + "]");
+        ddumpObject(obj[prop], name + "." + prop, maxDepth, curDepth+1);
+      }
+      else if (typeof(obj[prop]) == "function")
+        ddump(name + "." + prop + "=[function]");
+      else
+        ddump(name + "." + prop + "=" + obj[prop]);
+    } catch (e) {
+      ddump(name + "." + prop + "-> Exception(" + e + ")");
+    }
+  }
+  if (!i)
+    ddump(name + " is empty");
+}
+

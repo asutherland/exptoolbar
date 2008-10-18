@@ -1,0 +1,354 @@
+<?xml version="1.0"?>
+
+<bindings id="messageBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="messagesummary">
+    <resources>
+      <stylesheet src="chrome://experimentaltoolbar/content/bindings.css"/>
+    </resources>
+    <implementation>
+      <field name="test">"messagesum"</field>
+      <property name="openInSameTab">
+        <getter>
+        <![CDATA[
+            var message = this.message;
+            tab = new messageTabOwner();
+            tab.uriToOpen = folderUri;
+            tab.hdr = this.message.folderMsg;
+            document.getElementById('tabmail').addTab(tab);
+        ]]>
+        </getter>
+      </property>
+      <property name="obj">
+        <getter>
+            <![CDATA[
+            return this.message;
+            ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+        try {
+            this.message = val;
+            var sender = document.getAnonymousElementByAttribute(this, "anonid", "sender");
+            sender.textContent = this.message.from.contact.name;
+            var date = document.getAnonymousElementByAttribute(this, "anonid", "date");
+            date.textContent = this.message.date.toLocaleString();
+        } catch (e) {
+           dumpExc(e, 'messagesummary');
+        }
+        ]]>
+        </setter>
+      </property>
+    </implementation>
+    <content>
+      <html:div class="message" flex="1">
+        <html:p>From <html:span class="sender" anonid="sender"/>, on <html:span class="date" anonid="date"/></html:p>
+        <html:p class="body" anonid="body"/>
+      </html:div>
+    </content>  
+  </binding>
+
+  <binding id="identity">
+    <implementation>
+      <property name="obj">
+        <!--The GlodaIdentity -->
+        <getter>
+            <![CDATA[
+            return this._identity;
+            ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+        try {
+            dump("assigning GlodaIdentity\n");
+            this._identity = val;
+            var name = document.getAnonymousElementByAttribute(this, "anonid", "name");
+            name.textContent = val.contact.name; // XXX first name
+        } catch (e) {
+           dumpExc(e, 'identity');
+        }
+        ]]>
+        </setter>
+      </property>
+    </implementation>
+    <content><html:div xbl:inherits="class=divclass" anonid="name"></html:div></content>
+  </binding>
+
+
+  <binding id="message">
+    <implementation>
+      <property name="obj">
+        <!--The GlodaMessage -->
+        <getter>
+            <![CDATA[
+            return this._message;
+            ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+        try {
+            dump("setting message.obj\n");
+            this._message = val;
+            var subject = document.getAnonymousElementByAttribute(this, "anonid", "subject");
+            subject.textContent = val.conversation.subject
+            var snippet = document.getAnonymousElementByAttribute(this, "anonid", "snippet");
+            // XXX this requires a heuristic, finding the first part of
+            // the message body that the author of the email wrote (as opposed
+            // to quoted text, or "In msg such-and-such so-and-so wrote...", etc.
+            snippet.textContent = "Short text snippet of the Conversation.  Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Fusce molestie, diam vel ultrices tincidunt, elit nisi luctus velit, quis lobortis."
+            var date = document.getAnonymousElementByAttribute(this, "anonid", "date");
+            // XXX format date using "N hours below" algorithm
+            date.textContent = val.date.toString();
+        } catch (e) {
+           dumpExc(e, 'message');
+        }
+        ]]>
+        </setter>
+      </property>
+    </implementation>
+    <content>
+        <html:div class="message">
+          <html:div class="subject" anonid="subject"></html:div>
+          <html:div class="snippet" anonid="snippet"></html:div>
+        </html:div>
+        <html:div class="date" anonid="date"></html:div>
+    </content>
+  </binding>  <!--message-->
+
+
+
+  <binding id="reply">
+    <implementation>
+      <property name="obj">
+        <!--The GlodaMessage -->
+        <getter>
+            <![CDATA[
+            return this._message;
+            ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+        try {
+            this._message = val;
+
+            let participantNode = document.createElement('identity');
+            let participantsNode = document.getAnonymousElementByAttribute(this, "anonid", "replyparticipants");
+            participantsNode.appendChild(participantNode);
+            participantNode.setAttribute("divclass", "participant from");
+            dump("val = " + val + '\n');
+            dump("val.from = " + val.from + '\n');
+            participantNode.obj = val.from;
+
+            var snippet = document.getAnonymousElementByAttribute(this, "anonid", "snippet");
+            // XXX this requires a heuristic, finding the first part of
+            // the message body that the author of the email wrote (as opposed
+            // to quoted text, or "In msg such-and-such so-and-so wrote...", etc.
+            snippet.textContent = "Short text snippet of the Conversation.  Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Fusce molestie, diam vel ultrices tincidunt, elit nisi luctus velit, quis lobortis."
+            var date = document.getAnonymousElementByAttribute(this, "anonid", "date");
+            // XXX format date using "N hours below" algorithm
+            date.textContent = "foo"; // val.date.toString();
+            dump('done w/ reply\n');
+        } catch (e) {
+           dumpExc(e, 'reply');
+        }
+        ]]>
+        </setter>
+      </property>
+    </implementation>
+    <content>
+      <html:div class="reply">
+        <html:div class="participants" anonid="replyparticipants"></html:div>
+        <!--<html:div class="subject" anonid="subject"></html:div>-->
+        <html:div class="message">
+          <html:div class="snippet" anonid="snippet"></html:div>
+        </html:div>
+      </html:div>
+      <html:div class="date" anonid="date"></html:div>
+    </content>
+  </binding>
+
+
+  <binding id="conversation">
+    <resources>
+      <stylesheet src="chrome://experimentaltoolbar/content/bindings.css"/>
+    </resources>
+    <implementation>
+      <property name="obj">
+        <!--This is the GlodaConversation object-->
+        <getter>
+            <![CDATA[
+            return this.conversation;
+            ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+        try {
+            this.conversation = val;
+
+            // figure out participants, and add them
+            // note: added in order of
+            //   -  sender of first message is special (conversation originator)
+            //   -  sender of subsequent messages (active speakers)
+            //   -  then recipients (targets)
+            //   -  then cc'ed (witnesses)
+            let participants = {};
+
+            let originator = this.conversation.messages[0].from;
+            participants[originator] = true;
+            this.addParticipantNode(originator, "originator")
+            for each (let message in this.conversation.messages)
+            {
+              let sender = message.from;
+              if (! (sender in participants))
+              {
+                participants[sender] = true;
+                this.addParticipantNode(sender, "speaker")
+              }
+              for each (let identity in message.to)
+              {
+                dump("   --> found a to: " + identity + '\n');
+                if (! (identity in participants))
+                {
+                  participants[identity] = true;
+                  this.addParticipantNode(identity, "recipient")
+                }
+              }
+              for each (let identity in message.cc)
+              {
+                if (! (identity in participants))
+                {
+                  participants[identity] = true;
+                  this.addParticipantNode(identity, "recipient cc")
+                }
+              }
+            }
+
+            dump("participants = " + participants + '\n');
+
+            ddumpObject(participants, "participants", 2);
+            
+            let message = document.getAnonymousElementByAttribute(this, "anonid", "message");
+            dump("message = " + this.conversation.messages[0] + '\n');
+            message.obj = this.conversation.messages[0];
+
+            // find all the replies to this message
+            dump("Messages length = " + this.conversation.messages.length + '\n')
+            let messageIter = Iterator(this.conversation.messages);
+            messageIter.next()
+            let replies = document.getAnonymousElementByAttribute(this, "anonid", "replies");
+            while (replies.firstChild)
+              replies.removeChild(replies.firstChild);
+              
+            for each (let [i,replyMsg] in messageIter) {
+              dump("Found a reply!\n")
+              let replyNode = document.createElement('reply');
+              replies.appendChild(replyNode);
+              replyNode.obj = replyMsg;
+            }
+        } catch (e) {
+           dumpExc(e, 'reply');
+        }
+        ]]>
+        </setter>
+      </property>
+
+      <method name="addParticipantNode">
+        <parameter name="participant"/>
+        <parameter name="participantType"/>
+        <body><![CDATA[
+        try {
+          dump("adding participant of type " + participantType + " with " + participant + '\n');
+            let participantNode = document.createElement('identity');
+            let participantsNode = document.getAnonymousElementByAttribute(this, "anonid", "participants");
+            participantsNode.appendChild(participantNode);
+            participantNode.setAttribute("divclass", "participant " + participantType);
+
+            participantNode.obj = participant;
+            dump("made it through\n");
+        } catch (e) {
+          dumpExc(e, "addParticipantNode");
+        }
+          ]]>
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="click" phase="capturing" button="0" preventdefault="true">
+        <![CDATA[
+        // when a conversation is selected, show the messages in the conversation view.
+        let conversationNode = document.getElementById('conversation'); // XXX make generic
+        conversationNode.obj = this.conversation;
+        diveIntoConversation(conversationNode);
+      ]]>
+      </handler>
+    </handlers>
+    
+    <content>
+      <html:div class="conversation">
+        <html:div class="conversation wrap">
+          <html:div class="participants" anonid="participants"></html:div><message anonid="message"/>
+          <html:div class="replies" anonid="replies"></html:div>
+        </html:div>
+      </html:div>
+    </content>  
+  </binding>
+
+
+
+  <binding id="conversationlist">
+    <resources>
+      <stylesheet src="chrome://experimentaltoolbar/content/bindings.css"/>
+    </resources>
+    <implementation>
+      <field name="test">"foo"</field>
+      <property name="obj">
+        <getter>
+            <![CDATA[
+            return this.conversation;
+            ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+        try {
+            dump("setting the conversation of a conversationlist\n");
+            this.conversation = val;
+            let messagelist = document.getAnonymousElementByAttribute(this, "anonid", "messagelist");
+            while (messagelist.firstChild) {
+              messagelist.removeChild(messagelist.firstChild);
+            }
+            // extract all messages
+            let messagenode;
+            for each (let message in this.conversation.messages) {
+                messagenode = document.createElement('messagesummary');
+                messagelist.appendChild(messagenode)
+                messagenode.obj = message;
+            }
+            $(messagelist).slideDown();
+        } catch (e) {
+           dump(e);
+        }
+        ]]>
+        </setter>
+      </property>
+      <handlers>
+        <handler event="click">
+        <![CDATA[
+        // when a message is selected, show it in the message preview.
+          }
+        ]]>
+        </handler>
+      </handlers>
+    </implementation>
+    <content>
+      <html:div class="messagelist" flex="1" anonid="messagelist">
+        <children/>
+        <!-- this will contain a bunch of <messagesummary> nodes -->
+      </html:div>
+    </content>  
+  </binding>
+</bindings>

@@ -1,16 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % aboutDTD SYSTEM "chrome://global/locale/about.dtd" >
+%aboutDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+%globalDTD;
+]>
 <html xmlns="http://www.w3.org/1999/xhtml"
     xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     version="-//W3C//DTD XHTML 1.1//EN" xml:lang="en">
-<head>
+  <head>
+  <link rel="stylesheet"
+      href="chrome://experimentaltoolbar/content/searchResults.css"
+      type="text/css"></link>
+  <script type="application/javascript;version=1.8"
+      src="chrome://experimentaltoolbar/content/jquery.min.js"></script>
   <script type="application/javascript;version=1.8"
       src="chrome://experimentaltoolbar/content/searchResults.js"></script>
-  <link rel="stylesheet"
-      href="chrome://experimentaltoolbar/content/searchResults.js"
-      type="text/css" />
-</head>
+  </head>
 <body>
-Hello, world!
-  <div id="results"/>
+  <div id="window">
+    <div id="navigation">
+      <span id="backButton" class="navbutton" onclick="goback()" style="opacity: 0;">Back</span>
+    </div>
+    <div class="results" id="results">
+      <div class="conversations" id="conversations"/>
+    </div>
+    <div class="rhs">
+      <div id="commandbox" class="commandbox">
+         <div class="command">Delete</div>
+         <div class="command">Move</div>
+         <div class="command">Archive</div>
+         <div class="command">Mark as Junk</div>
+      </div>
+      <!--This is where we will show the selected conversation-->
+      <conversationlist id="conversation" class="conversation"/>
+    </div>
+  </div>
 </body>
 </html>
