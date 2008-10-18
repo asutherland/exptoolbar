@@ -149,14 +149,18 @@
     <content>
       <html:div class="message wrap">
         <html:div class="message details">
-          <html:div class="msgheader">
-            <html:div class="participants" anonid="from"/>
-            <html:div class="participants" anonid="to"/>
+          <html:div class="headerblock">
+            <html:div class="msgheaders">
+              <html:div class="msgheader from"><html:div class="headerlabel">From: </html:div><html:div class="participants from" anonid="from"/></html:div>
+              <html:div class="msgheader to"><html:div class="headerlabel">To: </html:div><html:div class="participants to" anonid="to"/></html:div>
+            </html:div>
+            <html:div class="msgheaders">
+              <html:div class="msgheader subject" anonid="subject"></html:div>
+              <html:div class="msgheader date" anonid="date"></html:div>
+            </html:div>
           </html:div>
-          <html:div class="subject" anonid="subject"></html:div>
           <html:div class="body" anonid="body"></html:div>
         </html:div>
-        <html:div class="date" anonid="date"></html:div>
       </html:div>
     </content>
   </binding>

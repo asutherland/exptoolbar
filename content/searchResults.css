@@ -56,30 +56,55 @@ reply .message > .subject { display: none; }
 
 .rhs { width: 15em; position: absolute; right: 0em; top: 0em;}
  
-.details {font-size: 110%; background-color: white; border: 1px solid grey; -moz-border-radius: 5px;
-padding: 1em; margin-bottom: 1em;}
+/*All of the css that follows is bad -- daa */
 
 .details .subject {
   padding-bottom: 1em;
 }
 
-.details .subject:before { content: "Re: "; color: grey;}
-.details .from:before { content: "From: "; color: grey;}
-.details .to:before { content: "To: "; color: grey;}
+.headerlabel {color: grey; display: inline;}
 
-/*All of the css that follows is bad -- daa */
-.msgheader {
+.msgheaders {
   position: relative;
   display: block;
-  padding-bottom: 1em;
+  padding-bottom: 1.2em; /* this shouldn't be necessary but ... XXX */
 }
 
-.details .date { top: .5em; right: .5em; color: grey; font-size: 90%;}
-.msgheader .participant.from { position: absolute; display: block; padding-bottom: 1em; left: 0em; top: 0em;}
-.msgheader .participant.to { position: absolute; display: block; padding-bottom: 1em; right: 0em; top: 0em;}
+.msgheader.from { position: absolute; display: block; left: 0em; top: 0em;}
+.msgheader.to { position: absolute; display: block; right: 0em; top: 0em;}
+.msgheader.subject { position: absolute; display: block; left: 0em; top: 0em;}
+.msgheader.date { position: absolute; display: block; right: 0em; top: 0em;}
+.msgheader .participants { display: inline; padding-bottom: .5em;}
+.msgheader .participant { display: inline}
+.details .subject:before { content: "Re: "; color: grey;}
+.details .date { top: 0em; right: 0em; color: grey; font-size: 90%;}
+
+.details {margin-bottom: 1em;  padding-right: 1em;}
+
+.details .headerblock {
+border: 1px solid grey;
+font-size: 100%;
+background-color: lightgrey;
+-moz-border-radius: 5px;
+padding-left: 1em;
+padding-right: 1em;
+padding-top: 1em;
+padding-bottom: 1em;
+}
+.message .body { font-size: 95%;
+margin-left: 1em;
+margin-right: 1em;
+padding: 1em;
+border-left: 1px solid grey;
+border-right: 1px solid grey;
+border-bottom: 1px solid grey;
+background-color: white;
+-moz-border-radius-bottomleft: 5px;
+-moz-border-radius-bottomright: 5px;
+}
 
 div.command {
-  width: 80px;
+  width: 14em;
   display: block;
   min-width: 1px;
   font-size: 90%;
@@ -88,7 +113,8 @@ div.command {
   padding-left: 3px;
   padding-right: 3px;
   padding-top: 0px;
-  padding-bottom: 4px;
+  margin-top: 4px;
+  margin-bottom: 4px;
   background-color: rgb(211,215,207);
   border: 2px solid #C0C3C6;
   -moz-border-radius: 4px;

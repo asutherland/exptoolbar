@@ -111,6 +111,8 @@ function makeDateFriendly(date)
 function makeFriendlyName(name)
 {
     let firstName = name.split(' ')[0];
+    if (firstName.indexOf('@') != -1)
+        firstName = firstName.split('@')[0] + '@...';
     firstName = firstName.replace(" ", "");
     firstName = firstName.replace("'", "");
     firstName = firstName.replace('"', "");
