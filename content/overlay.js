@@ -324,7 +324,6 @@ var experimentaltoolbar = {
             node = doc.createElementNS("http://www.w3.org/1999/xhtml", "conversation");
             conversationsNode.appendChild(node);
             node.id = 'conv' + conv.id.toString()
-            dump("SETTING CONVERSATION OBJECT __ OUTSIDE\n");
             node.obj = conv;
           }
         }

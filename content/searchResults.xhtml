@@ -22,10 +22,10 @@
   </head>
 <body>
   <div id="window">
-    <div id="navigation">
-      <span id="backButton" class="navbutton" onclick="goback()" style="opacity: 0;">Back</span>
-    </div>
     <div class="results" id="results">
+      <div id="navigation">
+        <div id="backButton" class="command" onclick="goback()" style="opacity: 0;">Back</div>
+      </div>
       <div class="conversations" id="conversations"/>
     </div>
     <div class="rhs">
@@ -35,8 +35,7 @@
          <div class="command">Archive</div>
          <div class="command">Mark as Junk</div>
       </div>
-      <!--This is where we will show the selected conversation-->
-      <conversationlist id="conversation" class="conversation"/>
+      <div class="messagelist" id="messagelist"/>
     </div>
   </div>
 </body>

@@ -6,6 +6,10 @@ message {
   -moz-binding: url('chrome://experimentaltoolbar/content/bindings.xml#message');
 }
 
+fullmessage {
+  -moz-binding: url('chrome://experimentaltoolbar/content/bindings.xml#fullmessage');
+}
+
 identity {
   -moz-binding: url('chrome://experimentaltoolbar/content/bindings.xml#identity');
 }
@@ -13,19 +17,6 @@ identity {
 reply {
   -moz-binding: url('chrome://experimentaltoolbar/content/bindings.xml#reply');
 }
-
-
-
-
-/*conversationlist {*/
-/*  -moz-binding: url('chrome://experimentaltoolbar/content/bindings.xml#conversationlist');*/
-/*}*/
-/**/
-/*messagesummary {*/
-/*  -moz-binding: url('chrome://experimentaltoolbar/content/bindings.xml#messagesummary');*/
-/*}*/
-/**/
-
 
 body { margin: 0em; padding: 0em; font-family: sans-serif; font-size: 10pt; }
 #window { position: relative; }
@@ -38,36 +29,74 @@ body { margin: 0em; padding: 0em; font-family: sans-serif; font-size: 10pt; }
 .conversation.unread { background-color: #fefefe; }
 .conversation { padding: 0.2em; background-color: #e1e7f0;  position: relative; border-bottom: 1px solid #9f9f9f; cursor: pointer;}
 .conversation:first-child { border-top: 1px solid #9f9f9f; }
-.conversation:hover { background-color: yellow; }
+.conversation:hover { background-color: white; }
 .conversation.wrap { border: none; background-color: inherit; }
 
-.participants { width: 10em; position: absolute; top: 0em; left: 0em;}
-.participants .participant { display: inline; }
+conversation .participants { width: 10em; position: absolute; top: 0em; left: 0em;}
+conversation .participants .participant { display: inline; }
 identity:after { content: ", "; }
 identity:last-child:after { content: "" }
 
-.conversation .message { margin-left: 12em; }  
-.reply .message { margin-left: 11em; }  
+.message.wrap { position: relative; }
+.conversation .message { margin-left: 12em; }
+.reply .message { margin-left: 11em; min-height: 1.5em;}
 
 .subject { white-space: nowrap; overflow:hidden; }
-.date { position: absolute; right: 0em; top: 0em; text-align: right; }
+.date { position: absolute; right: 0em; top: 0em; text-align: right; font-size: smaller;}
 .snippet { color: #666; white-space: nowrap; overflow: hidden; margin-right: 7em; }
 
 .replies { margin-left: 1em; }
-.reply { position: relative; margin-top: 0.5em; }
+/*.reply { position: relative; margin-top: 0.5em; }*/
 .reply .participants { text-align: right; }
 .reply .message > .subject { display: none; }
 
-.rhs { width: 15em; position: absolute; right: 0em; top: 0em; border: 1px solid red; }
+reply { position: relative; margin-top: 0.5em; display: block;}
+reply .participants { text-align: right; }
+reply .message > .subject { display: none; }
 
+.rhs { width: 15em; position: absolute; right: 0em; top: 0em;}
+ 
+.details {font-size: 110%; background-color: white; border: 1px solid grey; -moz-border-radius: 5px;
+padding: 1em; margin-bottom: 1em;}
+
+.details .subject {
+  padding-bottom: 1em;
+}
+
+.details .subject:before { content: "Re: "; color: grey;}
+.details .from:before { content: "From: "; color: grey;}
+.details .to:before { content: "To: "; color: grey;}
+
+/*All of the css that follows is bad -- daa */
+.msgheader {
+  position: relative;
+  display: block;
+  padding-bottom: 1em;
+}
+
+.details .date { top: .5em; right: .5em; color: grey; font-size: 90%;}
+.msgheader .participant.from { position: absolute; display: block; padding-bottom: 1em; left: 0em; top: 0em;}
+.msgheader .participant.to { position: absolute; display: block; padding-bottom: 1em; right: 0em; top: 0em;}
 
 div.command {
-  background-color: lightgrey;
-  border: 1px solid black;
-  -moz-border-radius: 3px;
-  padding: 5px;
   width: 80px;
   display: block;
+  min-width: 1px;
+  font-size: 90%;
+  color: black;
+  margin-left: 0px;
+  padding-left: 3px;
+  padding-right: 3px;
+  padding-top: 0px;
+  padding-bottom: 4px;
+  background-color: rgb(211,215,207);
+  border: 2px solid #C0C3C6;
+  -moz-border-radius: 4px;
+}
+
+div.command:hover {
+  background-color: rgb(230,231,227);
+  border: 2px solid #B0B3B6;
 }
 
 .hidden {
@@ -90,6 +119,7 @@ span.navbutton {
   padding-right: .5em;
   padding-top: .2em;
   padding-bottom: .2em;
+  margin: 4px;
   font-family: sans-serif;
   font-size: small;
 }

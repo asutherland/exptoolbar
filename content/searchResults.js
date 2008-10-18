@@ -1,50 +1,121 @@
+
+let Cc = Components.classes;
+let Ci = Components.interfaces;
+
 let conversationShown = false;
 
-function addMessageWithBody(msgHdr, mimeMessage) {
-    dump("in addMessageWithBody!!" +  msgHdr + ' ' + mimeMessage + '\n')
-    //try {
-    //    dump("messagebod = " + mimeMessage.body + '\n');
-    //    $(".conversationNode").append(mimeMessage.body)
-    //} catch (e) {
-    //    dump(e);
-    //}
-}
+let gStr = {
+  yesterday: "Yesterday", // "yesterday",
+  monthDate: "#1 #2", // "monthDate",
+  yearDate: "#1 #2 #3", // "yearDate",
+};
 
 
-function diveIntoConversation(conversationNode) {
-    try {
-        dump("in diveIntoConversation " + conversationNode + '\n');
-        if (!conversationShown) {
-            conversationShown = true;
-            $(".rhs").animate({'width': "40em"})
-            $(".results").animate({'marginRight': "41em"});
-            $(".commandbox").slideUp();
-            $("#backButton").animate({'opacity': 1})
-            $(conversationNode).show();
-        }
-        let glodaconv = conversationNode.obj;
-        let message = glodaconv.messages[0];
-        parent.MsgHdrToMimeMessage(message.folderMessage,
-                            null, addMessageWithBody)
-    } catch (e) {
-        dump(e);
-    }
+function initialize()
+{
+//131     get _strBundle() {
+//132         if (!this.__strBundle) {
+//133             var bunService = Cc["@mozilla.org/intl/stringbundle;1"].
+//134                              getService(Ci.nsIStringBundleService);
+//135             this.__strBundle = bunService.createBundle(
+//136                         "chrome://passwordmgr/locale/passwordmgr.properties");
+//137             if (!this.__strBundle)
+//138                 throw "String bundle for Login Manager not present!";
+//139         }
+//140 
+//141         return this.__strBundle;
+//142     },
+  //let (sb = document.getElementById("dateStrings")) {
+  //  let getStr = function(string) sb.getString(string);
+  //  for (let [name, value] in Iterator(gStr))
+  //    gStr[name] = typeof value == "string" ? getStr(value) : value.map(getStr);
+  //}
 }
+
+function findSnippetInMimeMsg(mimeMsg) {
+  return mimeMsg.body.slice(0,100);
+}
+
 
 function goback()
 {
     try {
         $("#backButton").animate({'opacity': 0})
         $(".rhs").animate({'width': "15em"})
-        $(".results").animate({'marginRight': "16em"});
-        $(".commandbox").slideDown();
-        $(".conversation").slideUp();
+        $(".conversations").animate({'marginRight': "16em"});
+        $("#commandbox").slideDown();
+        $(".messagelist").slideUp();
         conversationShown = false;
     } catch (e) {
-        dump(e);
+        dumpExc(e);
     }
 }
 
+
+function makeDateFriendly(date)
+{
+  let dts = Cc["@mozilla.org/intl/scriptabledateformat;1"].
+            getService(Ci.nsIScriptableDateFormat);
+
+  // Figure out when today begins
+  let now = new Date();
+  let today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  // Get the end time to display
+  let end = date;
+
+  // Figure out if the end time is from today, yesterday, this week, etc.
+  let dateTime;
+  if (end >= today) {
+    // Download finished after today started, show the time
+    dateTime = dts.FormatTime("", dts.timeFormatNoSeconds,
+                              end.getHours(), end.getMinutes(), 0);
+  } else if (today - end < (24 * 60 * 60 * 1000)) {
+    // Download finished after yesterday started, show yesterday
+    dateTime = gStr.yesterday;
+  } else if (today - end < (6 * 24 * 60 * 60 * 1000)) {
+    // Download finished after last week started, show day of week
+    dateTime = end.toLocaleFormat("%A");
+  } else if (today - end < (30 * 24 * 60 * 60 * 1000)) {
+    // Download must have been from some time ago.. show month/day
+    let month = end.toLocaleFormat("%B");
+    // Remove leading 0 by converting the date string to a number
+    let date = Number(end.toLocaleFormat("%d"));
+    dateTime = replaceInsert(gStr.monthDate, 1, month);
+    dateTime = replaceInsert(dateTime, 2, date);
+  } else {
+    // Download finished after last month started, show year
+    let month = end.toLocaleFormat("%B");
+    let year = end.toLocaleFormat("%y");
+    // Remove leading 0 by converting the date string to a number
+    let date = Number(end.toLocaleFormat("%d"));
+    dateTime = replaceInsert(gStr.yearDate, 1, month);
+    dateTime = replaceInsert(dateTime, 2, date);
+    dateTime = replaceInsert(dateTime, 3, year);
+  }
+  
+  return dateTime;
+  //
+  //// Set the tooltip to be the full date and time
+  //let dateTimeTip = dts.FormatDateTime("",
+  //                                     dts.dateFormatLong,
+  //                                     dts.timeFormatNoSeconds,
+  //                                     end.getFullYear(),
+  //                                     end.getMonth() + 1,
+  //                                     end.getDate(),
+  //                                     end.getHours(),
+  //                                     end.getMinutes(),
+  //                                     0); 
+}
+
+function makeFriendlyName(name)
+{
+    let firstName = name.split(' ')[0];
+    firstName = firstName.replace(" ", "");
+    firstName = firstName.replace("'", "");
+    firstName = firstName.replace('"', "");
+    return firstName;
+}
 
 // TODO, remove after debugging
 function ddump(text)
@@ -167,3 +238,21 @@ function getObjectTree(o, recurse, compress, level)
 
     return s;
 }
+
+
+/**
+ * Helper function to replace a placeholder string with a real string
+ *
+ * @param aText
+ *        Source text containing placeholder (e.g., #1)
+ * @param aIndex
+ *        Index number of placeholder to replace
+ * @param aValue
+ *        New string to put in place of placeholder
+ * @return The string with placeholder replaced with the new string
+ */
+function replaceInsert(aText, aIndex, aValue)
+{
+  return aText.replace("#" + aIndex, aValue);
+}
+
