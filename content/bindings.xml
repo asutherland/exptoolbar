@@ -6,6 +6,53 @@
           xmlns:html="http://www.w3.org/1999/xhtml"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
+  <binding id="query">
+    <implementation>
+      <property name="obj">
+        <!--The Gloda query object-->
+        <getter>
+            <![CDATA[
+            return this.query;
+            ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+        try {
+            this.query = val;
+            let constraints = val._constraints;
+            let constraintsNode = document.getAnonymousElementByAttribute(this,
+                                                      'anonid', 'constraints');
+            while (constraintsNode.firstChild)
+              constraintsNode.removeChild(constraintsNode.firstChild);
+
+            for (let i = 0; i < constraints.length; i++) {
+              let constraint = constraints[i];
+              let constraintNode = document.createElement('div');
+              constraintNode.setAttribute('class', 'constraint');
+              constraintNode.textContent = constraint.toString();
+              constraintsNode.appendChild(constraintNode);
+            }
+            // XXX waiting until refactoring to do it right, as the
+            // constraints should be easier to explain to the user then.
+        } catch (e) {
+           dumpExc(e, 'query');
+        }
+        ]]>
+        </setter>
+      </property>
+    </implementation>
+    <content>
+      <html:div class="query">
+        Search of <html:div class="scope">All Messages</html:div>
+        <html:div class="constraints" anonid="constraints"></html:div>
+        <!--<html:div class="involves" anonid="involves"></html:div>-->
+        <!--<html:div class="involves" anonid="involves"></html:div>-->
+        <!--<html:div class="mentioning" anonid="mentioning"></html:div>-->
+        <html:div xbl:inherits="class=divclass" anonid="name"></html:div>
+      </html:div>
+    </content>
+  </binding>
+
   <binding id="identity">
     <implementation>
       <property name="obj">
@@ -132,8 +179,13 @@
         <body><![CDATA[
         try {
             body = this.mimeMsg.body;
+            let bodyHTML = makeHTML(body)
+            let bodyDOM = stringToDOM(bodyHTML);
             var bodyNode= document.getAnonymousElementByAttribute(this, "anonid", "body");
-            bodyNode.textContent = body;
+            bodyNode.appendChild(bodyDOM);
+            //dump("bodyHTML" + bodyHTML + '\n');
+            // XXX crashes -- talk to bz about it.
+            //bodyNode.innerHTML = "<html:p>foo<html:b>bar</html:b></html:p>";
             this.addParticipantNode('from', this._message.from, 'from');
             let tos = Iterator(this._message.to);
             for (let [indx,to] in tos) {

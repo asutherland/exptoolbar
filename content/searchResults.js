@@ -7,8 +7,94 @@ let conversationShown = false;
 let gStr = {
   yesterday: "Yesterday", // "yesterday",
   monthDate: "#1 #2", // "monthDate",
-  yearDate: "#1 #2 #3", // "yearDate",
+  yearDate: "#1 #2 #3" // "yearDate",
 };
+
+var tl;
+var gEventSource;
+
+function OnLoad() {
+  try {
+    dump("onload\n");
+    $(window).bind("resize", onResize);
+    gEventSource = new Timeline.DefaultEventSource();
+    var bandInfos = [
+      Timeline.createBandInfo({
+          eventSource: gEventSource,
+          showEventText: false,
+          width:          "70%", 
+          intervalUnit:   Timeline.DateTime.MONTH, 
+          intervalPixels: 100
+      }),
+      Timeline.createBandInfo({
+          eventSource: gEventSource,
+          width:          "30%",
+          showEventText: false,
+          trackHeight:    0.5,
+          trackGap:       0.2,
+          intervalUnit:   Timeline.DateTime.YEAR, 
+          intervalPixels: 200,
+          overview:       true
+      })
+    ];
+    bandInfos[1].syncWith = 0;
+    bandInfos[1].highlight = true;
+    tl = Timeline.create(document.getElementById("my-timeline"), bandInfos);
+    var theme = Timeline.ClassicTheme.create();
+    Timeline.ThemeName = 'dark-theme'
+  } catch (e) {
+    dumpExc(e);
+  }
+}
+
+var resizeTimerID = null;
+function onResize() {
+    if (resizeTimerID == null) {
+        resizeTimerID = window.setTimeout(function() {
+            resizeTimerID = null;
+            tl.layout(); // timeline stuff
+
+            var newWindowHeight = $(window).height();
+            var navbarHeight = $("#navigation").height();
+            dump("newWindowHeight = " + newWindowHeight + '\n');
+            dump("navbarHeight = " + navbarHeight + '\n');
+            $("#conversations").css("height", newWindowHeight - navbarHeight - 3); // XXX
+            $("#messagelist").css("height", newWindowHeight);
+        }, 500);
+    }
+}
+
+function gTimeline_addConversations(conversations) {
+  try {
+    let events = []
+    for (let i = 0; i < conversations.length ; i++) {
+      let conversation = conversations[i];
+      let messagesIter = Iterator(conversation.messages);
+      let oldest = conversation.messages[0].date;
+      let newest = conversation.messages[0].date;
+      for each ([idx, message] in messagesIter)
+      {
+        oldest = message.date < oldest ? message.date : oldest;
+        newest = message.date > newest ? message.date : newest;
+      }
+      let escapedSubject = conversation.subject.replace('&', '&amp;');
+      let escapedShortSubject = conversation.subject.slice(0,25).replace('&', '&amp;')+'...';
+      var evt = new Timeline.DefaultEventSource.Event({
+                    id: conversation.id.toString(),
+                    start: oldest,
+                    end: newest,
+                    instant: true,
+                    text: escapedShortSubject,
+                    description: escapedShortSubject,
+                    caption: escapedShortSubject
+      });
+      events.push(evt);
+    };
+    gEventSource.addMany(events);
+  } catch (e) {
+    dumpExc(e);
+  }
+}
 
 
 function initialize()
@@ -258,3 +344,7 @@ function replaceInsert(aText, aIndex, aValue)
   return aText.replace("#" + aIndex, aValue);
 }
 
+var converter = new Showdown.converter();
+function makeHTML(text) {
+    return converter.makeHtml(text);
+}

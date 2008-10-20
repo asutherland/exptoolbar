@@ -1,3 +1,7 @@
+query {
+  -moz-binding: url('chrome://experimentaltoolbar/content/bindings.xml#query');
+}
+
 conversation {
   -moz-binding: url('chrome://experimentaltoolbar/content/bindings.xml#conversation');
 }
@@ -21,10 +25,26 @@ reply {
 body { margin: 0em; padding: 0em; font-family: sans-serif; font-size: 10pt; }
 #window { position: relative; }
 
+query {position: relative; display: block; padding: 1em;}
+.scope {display: inline;}
+.constraints {display: inline;}
+.constraint {display: inline;}
+
 .match { font-weight: bold; }
 
-.conversations { border-right: 1px solid #9f9f9f; border-left: 1px solid #9f9f9f; }
-.conversations { margin-right: 16em; } /* rhs.width + 1em pad */
+.conversations {
+  border-right: 1px solid #9f9f9f;
+  border-left: 1px solid #9f9f9f;
+  margin-right: 16em; /* rhs.width + 1em pad */
+  height: 400px;
+  overflow: auto;
+}
+
+.messagelist {
+  height: 400px;
+  overflow: auto;
+}
+
 
 .conversation.unread { background-color: #fefefe; }
 .conversation { padding: 0.2em; background-color: #e1e7f0;  position: relative; border-bottom: 1px solid #9f9f9f; cursor: pointer;}
@@ -150,3 +170,47 @@ span.navbutton {
   font-size: small;
 }
 
+.t-highlight1{background-color:#ccf;}
+.p-highlight1{background-color:#fcc;}
+
+#my-timeline {
+    font-family: Trebuchet MS, Helvetica, Arial, sans serif;
+    font-size: 8pt;
+    border: 1px solid #aaa;
+}
+.timeline-highlight-label-start .label_t-highlight1{color:#f00;}
+.timeline-highlight-label-end .label_t-highlight1{color:#aaf;}
+
+.timeline-band-events .important{color:#f00;}		
+.timeline-band-events .small-important{background:#c00;}
+
+.timeline-default {
+    font-family: Trebuchet MS, Helvetica, Arial, sans serif;
+    font-size: 8pt;
+    border: 1px solid #aaa;
+}
+/*---------------------------------*/
+
+.dark-theme {color:#eee;}
+.dark-theme .timeline-band-0 .timeline-ether-bg{background-color:#333}
+.dark-theme .timeline-band-1 .timeline-ether-bg{background-color:#111}
+.dark-theme .timeline-band-2 .timeline-ether-bg{background-color:#222}
+.dark-theme .timeline-band-3 .timeline-ether-bg{background-color:#444}
+
+
+.dark-theme .t-highlight1{background-color:#003;}
+.dark-theme .p-highlight1{background-color:#300;}
+
+.dark-theme .timeline-highlight-label-start .label_t-highlight1{color:#f00;}
+.dark-theme .timeline-highlight-label-end .label_t-highlight1{color:#115;}
+
+.dark-theme .timeline-band-events .important{color:#c00;}
+.dark-theme .timeline-band-events .small-important{background:#c00;}
+
+.dark-theme .timeline-date-label-em{color:#fff;}
+.dark-theme .timeline-ether-lines{border-color:#555; border-style:solid;}
+.dark-theme .timeline-ether-highlight{background:#555;}
+
+.dark-theme .timeline-event-tape {background: lightyellow; opacity: .8 !important}
+.dark-theme .timeline-small-event-tape{background:#f60;}
+.dark-theme .timeline-ether-weekends{background:#111;}

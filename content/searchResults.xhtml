@@ -18,12 +18,31 @@
   <script type="application/javascript;version=1.8"
       src="chrome://experimentaltoolbar/content/jquery.min.js"></script>
   <script type="application/javascript;version=1.8"
+      src="chrome://experimentaltoolbar/content/showdown.js"></script>
+  <script type="application/javascript;version=1.8"
+      src="chrome://experimentaltoolbar/content/innerDOM.js"></script>
+  <script>
+    Timeline_ajax_url="chrome://experimentaltoolbar/content/timeline/src/ajax/api/simile-ajax-api.js?bundle=false";
+    Timeline_urlPrefix='chrome://experimentaltoolbar/content/timeline/src/webapp/api/';
+    Timeline_parameters='bundle=false';
+
+    //Timeline_ajax_url="chrome://experimentaltoolbar/content/timeline_packed/timeline_ajax/simile-ajax-api.js";
+    //Timeline_urlPrefix='chrome://experimentaltoolbar/content/timeline_packed/timeline_js/';
+    //Timeline_parameters='bundle=true';
+  </script>
+  <script type="text/javascript"
+      src="chrome://experimentaltoolbar/content/timeline/src/webapp/api/timeline-api.js"></script>
+  <!--<script type="text/javascript"-->
+  <!--    src="chrome://experimentaltoolbar/content/timeline_packed/timeline_js/timeline-api.js"></script>-->
+  <script type="application/javascript;version=1.8"
       src="chrome://experimentaltoolbar/content/searchResults.js"></script>
   </head>
-<body>
+<body onload="OnLoad()">
+  <div id="my-timeline" style="height: 150px; border: 1px solid #aaa" class="dark-theme"></div>
   <div id="window">
     <div class="results" id="results">
       <div id="navigation">
+        <query id="query"/>
         <div id="backButton" class="command" onclick="goback()" style="opacity: 0;">Back</div>
       </div>
       <div class="conversations" id="conversations"/>

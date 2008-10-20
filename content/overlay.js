@@ -299,25 +299,34 @@ var experimentaltoolbar = {
   },
   applyQueryToDocument: function applyQueryToDocument (aQuery) {
     let doc = this.tabmail.currentTabInfo.panel.contentDocument;
+    let win = this.tabmail.currentTabInfo.panel.contentWindow;
     let conversationsNode = doc.getElementById("conversations");
     while (conversationsNode.firstChild) {
       conversationsNode.removeChild(conversationsNode.firstChild);
     }
+    let queryNode = doc.getElementById("query");
+    queryNode.obj = aQuery;
     
     // do not allow us to issue an empty query, or we will explode!
     if (!aQuery.constraintCount)
       return;
   
-    let conversations = [];
+    let conversationMap = {};
 
     let collection = aQuery.getCollection({
+      onQueryCompleted: function() {
+          // send the conversations to the timeline
+          let convs = [];
+          let id;
+          win.gTimeline_addConversations([conversationMap[id] for (id in conversationMap)]);
+      },
       onItemsAdded: function (aItems) {
-        
         // extract conversations
-        
         for each (let message in aItems) {
           let conv = message.conversation;
-          conversations.push(conv)
+          if (!(conv.id in conversationMap)) {
+            conversationMap[conv.id] = conv;
+          }
           let convid = 'conv'+conv.id.toString();
           let node = doc.getElementById(convid);
           if (node == undefined) {
