@@ -112,6 +112,10 @@ var experimentaltoolbar = {
     if (this.tabmail.currentTabInfo) {
       searchTabMonitor.onTabTitleChanged(this.tabmail.currentTabInfo);
     }
+    
+    // XXX remove the quick search keyboard shortcut
+    var qsk = document.getElementById("key_quickSearchFocus");
+    qsk.parentNode.removeChild(qsk);
   },
   focusSearchInput : function(event) {
     this.searchInput.select();

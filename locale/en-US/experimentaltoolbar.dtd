@@ -1,2 +1,3 @@
-<!-- XXX I really wanted the "k" key, but it wasn't working for some reason -->
-<!ENTITY experimentaltoolbar.key "j">
+<!-- XXX we're now overriding the quick search entry and giving it the 'j' -->
+<!ENTITY experimentaltoolbar.key "k">
+<!ENTITY experimentaltoolbarOverride.key "j">
