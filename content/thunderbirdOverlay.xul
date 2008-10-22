@@ -50,6 +50,7 @@
   </commandset>
   
   <keyset>
+    <key id="key_quickSearchFocus2" key="&experimentaltoolbarOverride.key;"  oncommand="QuickSearchFocus()" modifiers="accel"/>
     <key id="key_thundersearch" key="&experimentaltoolbar.key;"
          command="Toolbar:FocusSearch" modifiers="accel"/>
   </keyset>
@@ -81,7 +82,7 @@
 
       <toolbaritem id="search-container2" title="Thunder-Search" class="" flex="1">
         <textbox id="searchInput2" timeout="200" flex="1"
-                 emptytext="Search messages, events, people... (ctrl-j)"
+                 emptytext="Search messages, events, people... (ctrl-k)"
                  chromedir="ltr"
                  searchCriteria="true"
                  type="glodacomplete"
