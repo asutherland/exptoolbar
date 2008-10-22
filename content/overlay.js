@@ -372,6 +372,9 @@ dump("APPLY CONSTRAINTS\n");
         query.involves.apply(query, bubble.constraint.identities);
       else if (bubble.constraint.NOUN_ID == Gloda.NOUN_FOLDER) {
         // don't do anything with this for now...
+      } else if (bubble.constraint.NOUN_ID == Gloda.NOUN_CONVERSATION) {
+        // we want to show all messages in this conversation
+        query.conversation.apply(query, bubble.constraint); // XXX works?
       }
       else { // it must be a contact collection
         let identities = [];
@@ -395,9 +398,12 @@ dump("APPLY CONSTRAINTS\n");
     this._activeSearchText = this.searchInput.value;
     this._constraintsChanged = false;   
   },
-  makeSearchTab: function makeSearchTab() {
+
+  makeSearchTab: function makeSearchTab(constraints) {
     this._suppress = true;
-    let constraints = this.serializeConstraints();
+    if (! constraints) {
+      constraints = this.serializeConstraints();
+    }
     this.clearConstraints();
     this.tabmail.openTab("searchAll", constraints);
     this._suppress = false;
