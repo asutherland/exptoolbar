@@ -182,7 +182,12 @@
             let bodyHTML = makeHTML(body)
             let bodyDOM = stringToDOM(bodyHTML);
             var bodyNode= document.getAnonymousElementByAttribute(this, "anonid", "body");
-            bodyNode.appendChild(bodyDOM);
+            try {
+              bodyNode.appendChild(bodyDOM);
+            } catch (e) {
+              dump("body = " + body + '\n\n');
+              dumpExc(e);
+            }
             //dump("bodyHTML" + bodyHTML + '\n');
             // XXX crashes -- talk to bz about it.
             //bodyNode.innerHTML = "<html:p>foo<html:b>bar</html:b></html:p>";

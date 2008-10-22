@@ -38,21 +38,25 @@
       src="chrome://experimentaltoolbar/content/searchResults.js"></script>
   </head>
 <body onload="OnLoad()">
-  <div id="my-timeline" style="height: 150px; border: 1px solid #aaa" class="dark-theme"></div>
+  <div id="timeline-wrap">
+    <div id="close-timeline-button"/>
+    <div id="my-timeline" style="height: 150px;"></div>
+  </div>
   <div id="window">
     <div class="results" id="results">
       <div id="navigation">
-        <query id="query"/>
         <div id="backButton" class="command" onclick="goback()" style="opacity: 0;">Back</div>
       </div>
       <div class="conversations" id="conversations"/>
     </div>
     <div class="rhs">
       <div id="commandbox" class="commandbox">
-         <div class="command">Delete</div>
-         <div class="command">Move</div>
-         <div class="command">Archive</div>
-         <div class="command">Mark as Junk</div>
+          <div id="timeline-toggle-button" class="command">Show timeline</div>
+          <div class="command">Delete</div>
+          <div class="command">Move</div>
+          <div class="command">Archive</div>
+          <div class="command">Mark as Junk</div>
+          <query id="query"/>
       </div>
       <div class="messagelist" id="messagelist"/>
     </div>

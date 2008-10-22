@@ -15,7 +15,6 @@ var gEventSource;
 
 function OnLoad() {
   try {
-    dump("onload\n");
     $(window).bind("resize", onResize);
     gEventSource = new Timeline.DefaultEventSource();
     var bandInfos = [
@@ -41,10 +40,25 @@ function OnLoad() {
     bandInfos[1].highlight = true;
     tl = Timeline.create(document.getElementById("my-timeline"), bandInfos);
     var theme = Timeline.ClassicTheme.create();
-    Timeline.ThemeName = 'dark-theme'
+    //Timeline.ThemeName = 'dark-theme'
+    $("#timeline-wrap").hide();
+    $('#timeline-toggle-button').bind("click", ShowTimeline);
+    $('#close-timeline-button').bind("click", HideTimeline);
+    adjustSizes();
   } catch (e) {
     dumpExc(e);
   }
+}
+
+function adjustSizes()
+{
+
+  var newWindowHeight = $(window).height();
+  //var navbarHeight = $("#navigation").height();
+  dump("newWindowHeight = " + newWindowHeight + '\n');
+  //dump("navbarHeight = " + navbarHeight + '\n');
+  $("#conversations").css("height", newWindowHeight); // XXX
+  $("#messagelist").css("height", newWindowHeight);
 }
 
 var resizeTimerID = null;
@@ -52,23 +66,27 @@ function onResize() {
     if (resizeTimerID == null) {
         resizeTimerID = window.setTimeout(function() {
             resizeTimerID = null;
-            tl.layout(); // timeline stuff
-
-            var newWindowHeight = $(window).height();
-            var navbarHeight = $("#navigation").height();
-            dump("newWindowHeight = " + newWindowHeight + '\n');
-            dump("navbarHeight = " + navbarHeight + '\n');
-            $("#conversations").css("height", newWindowHeight - navbarHeight - 3); // XXX
-            $("#messagelist").css("height", newWindowHeight);
-        }, 500);
+            adjustSizes();
+            tl.layout(); }, 500);
     }
 }
 
+let gEvents = [];
+let gConversations = [];
+let gTimelineShown = false;
+
 function gTimeline_addConversations(conversations) {
-  try {
-    let events = []
-    for (let i = 0; i < conversations.length ; i++) {
-      let conversation = conversations[i];
+  gConversations = conversations;
+  if (gTimelineShown) {
+    UpdateTimeline();
+  }
+}
+
+function UpdateTimeline()
+{
+    gEvents = []
+    for (let i = 0; i < gConversations.length ; i++) {
+      let conversation = gConversations[i];
       let messagesIter = Iterator(conversation.messages);
       let oldest = conversation.messages[0].date;
       let newest = conversation.messages[0].date;
@@ -78,7 +96,12 @@ function gTimeline_addConversations(conversations) {
         newest = message.date > newest ? message.date : newest;
       }
       let escapedSubject = conversation.subject.replace('&', '&amp;');
-      let escapedShortSubject = conversation.subject.slice(0,25).replace('&', '&amp;')+'...';
+      let escapedShortSubject;
+      if (conversation.subject.length > 20) {
+        escapedShortSubject = conversation.subject.slice(0,25).replace('&', '&amp;')+'...';
+      } else {
+        escapedShortSubject = conversation.subject;
+      }
       var evt = new Timeline.DefaultEventSource.Event({
                     id: conversation.id.toString(),
                     start: oldest,
@@ -88,14 +111,37 @@ function gTimeline_addConversations(conversations) {
                     description: escapedShortSubject,
                     caption: escapedShortSubject
       });
-      events.push(evt);
+      gEvents.push(evt);
     };
-    gEventSource.addMany(events);
+    gEventSource.clear();
+    gEventSource.addMany(gEvents);
+}
+
+function ShowTimeline()
+{
+  try {
+    UpdateTimeline();
+    $('#timeline-wrap').slideDown();
+    $('#timeline-wrap').show();
+    $('#my-timeline').show();
+    $('#timeline-toggle-button').text("Hide timeline");
+    $('#timeline-toggle-button').unbind("click", ShowTimeline);
+    $('#timeline-toggle-button').bind("click", HideTimeline);
+    gTimelineShown = true;
   } catch (e) {
+    dump(e);
     dumpExc(e);
   }
 }
 
+function HideTimeline()
+{
+  $("#timeline-wrap").slideUp();
+  $('#timeline-toggle-button').text("Show timeline");
+  $('#timeline-toggle-button').unbind("click", HideTimeline);
+  $('#timeline-toggle-button').bind("click", ShowTimeline);
+  gTimelineShown = false;
+}
 
 function initialize()
 {
@@ -347,4 +393,17 @@ function replaceInsert(aText, aIndex, aValue)
 var converter = new Showdown.converter();
 function makeHTML(text) {
     return converter.makeHtml(text);
+}
+
+
+escapeXMLchars = function(s) {
+    return s.replace(/[<>&]/g, function(s) {
+        switch (s) {
+            case "<": return "&lt;";
+            case ">": return "&gt;";
+            case "&": return "&amp;";
+            default: throw Error("Unexpected match");
+            }
+        }
+    );    
 }

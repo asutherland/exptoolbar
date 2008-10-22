@@ -114,9 +114,10 @@ var experimentaltoolbar = {
     }
   },
   focusSearchInput : function(event) {
-    this.searchInput.select();
     this.searchInput.focus();
+    this.searchInput.selectAll();
   },
+
   onBlurSearchInput : function(event) {
     var searchInput = document.getElementById("searchInput2");
     if (searchInput.value == "") {
@@ -301,9 +302,11 @@ var experimentaltoolbar = {
     let doc = this.tabmail.currentTabInfo.panel.contentDocument;
     let win = this.tabmail.currentTabInfo.panel.contentWindow;
     let conversationsNode = doc.getElementById("conversations");
+    dump("applyQueryToDocument !\n");
     while (conversationsNode.firstChild) {
       conversationsNode.removeChild(conversationsNode.firstChild);
     }
+    dump("cleaned up mess!\n");
     let queryNode = doc.getElementById("query");
     queryNode.obj = aQuery;
     
@@ -318,10 +321,12 @@ var experimentaltoolbar = {
           // send the conversations to the timeline
           let convs = [];
           let id;
+          dump("ON QUERY COMPLETED!\n");
           win.gTimeline_addConversations([conversationMap[id] for (id in conversationMap)]);
       },
       onItemsAdded: function (aItems) {
         // extract conversations
+        //dump("onItemsAdded!\n");
         for each (let message in aItems) {
           let conv = message.conversation;
           if (!(conv.id in conversationMap)) {
@@ -371,10 +376,10 @@ dump("APPLY CONSTRAINTS\n");
       if (bubble.constraint.NOUN_ID == Gloda.NOUN_CONTACT)
         query.involves.apply(query, bubble.constraint.identities);
       else if (bubble.constraint.NOUN_ID == Gloda.NOUN_FOLDER) {
-        // don't do anything with this for now...
+        query.folderURI(bubble.constraint.uri)
       } else if (bubble.constraint.NOUN_ID == Gloda.NOUN_CONVERSATION) {
         // we want to show all messages in this conversation
-        query.conversation.apply(query, bubble.constraint); // XXX works?
+        query.conversation(bubble.constraint);
       }
       else { // it must be a contact collection
         let identities = [];
@@ -433,6 +438,7 @@ dump("APPLY CONSTRAINTS\n");
     aTextSpacer.prevTextSpacer = prevTextSpacer.prevTextSpacer;
     if (aTextSpacer.prevTextSpacer)
       aTextSpacer.prevTextSpacer.nextTextSpacer = aTextSpacer;
+    this._constraintsChanged = true;
   },
   
   destroySpacerAndNextBubble: function destroySpacerAndNextBubble(aTextSpacer) {
@@ -443,7 +449,7 @@ dump("APPLY CONSTRAINTS\n");
 
     aTextSpacer.nextTextSpacer.prevBubble = aTextSpacer.prevBubble;
     aTextSpacer.nextTextSpacer.prevTextSpacer = aTextSpacer.prevTextSpacer;
-    
+    this._constraintsChanged = true;
     if (aTextSpacer.prevTextSpacer)
       aTextSpacer.prevTextSpacer.nextTextSpacer = aTextSpacer.nextTextSpacer;
   },

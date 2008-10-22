@@ -61,8 +61,9 @@
 
   <toolbox id="mail-toolbox">
     <toolbar id="mail-bar2" collapsed="true"/>
+  <!--<toolbarpalette id="MailToolbarPalette">-->
     
-      <toolbar id="mail-search-bar" class="toolbar-nuevo" toolbarname="Mail Toolbar" accesskey="o" fullscreentoolbar="true" mode="full" customizable="true" context="toolbar-context-menu" 
+      <toolbar id="mail-search-bar" class="toolbar-primary" toolbarname="Mail Toolbar" accesskey="o" fullscreentoolbar="true" mode="full" customizable="true" context="toolbar-context-menu" 
     defaultset="button-getmsg2,button-newmsg2,search-container2" collapsed="false">
 
       <toolbarbutton id="button-getmsg2" type="menu-button" class="" tooltiptext="Get new messages" oncommand="MsgGetMessagesForAccount(event.target._folder)" observes="button_getNewMessages">
@@ -95,6 +96,6 @@
       </toolbaritem>
 
     </toolbar>
-
+  <!--</toolbarpalette>-->
   </toolbox>
 </overlay>
