@@ -54,9 +54,6 @@ function adjustSizes()
 {
 
   var newWindowHeight = $(window).height();
-  //var navbarHeight = $("#navigation").height();
-  dump("newWindowHeight = " + newWindowHeight + '\n');
-  //dump("navbarHeight = " + navbarHeight + '\n');
   $("#conversations").css("height", newWindowHeight); // XXX
   $("#messagelist").css("height", newWindowHeight);
 }
@@ -115,18 +112,19 @@ function UpdateTimeline()
     };
     gEventSource.clear();
     gEventSource.addMany(gEvents);
+    tl.layout();
 }
 
 function ShowTimeline()
 {
   try {
-    UpdateTimeline();
     $('#timeline-wrap').slideDown();
     $('#timeline-wrap').show();
     $('#my-timeline').show();
     $('#timeline-toggle-button').text("Hide timeline");
     $('#timeline-toggle-button').unbind("click", ShowTimeline);
     $('#timeline-toggle-button').bind("click", HideTimeline);
+    UpdateTimeline();
     gTimelineShown = true;
   } catch (e) {
     dump(e);
