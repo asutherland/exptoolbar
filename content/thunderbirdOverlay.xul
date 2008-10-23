@@ -99,4 +99,8 @@
     </toolbar>
   <!--</toolbarpalette>-->
   </toolbox>
+  
+  <box id="tabmail-buttons">
+    <toolbarbutton insertbefore="calendar-tab-button" id="button-ab" label="Address Book" oncommand="experimentaltoolbar.makeAddressBookTab()"/>
+  </box>
 </overlay>

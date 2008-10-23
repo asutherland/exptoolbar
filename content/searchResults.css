@@ -49,10 +49,10 @@ query {position: relative; display: block; padding: 1em;}
 .conversation.unread { background-color: #fefefe; }
 .conversation { padding: 0.2em; background-color: #e1e7f0;  position: relative; border-bottom: 1px solid #9f9f9f; cursor: pointer;}
 .conversation:first-child { border-top: 1px solid #9f9f9f; }
-.conversation:hover { background-color: white; }
+.conversation:hover { background-color: #edeef0; }
 .conversation.wrap { border: none; background-color: inherit; }
 
-conversation .participants { width: 10em; position: absolute; top: 0em; left: 0em;}
+conversation .participants { width: 10em; position: absolute; top: 0em; left: 0em; }
 conversation .participants .participant { display: inline; }
 identity:after { content: ", "; }
 identity:last-child:after { content: "" }
@@ -94,7 +94,7 @@ reply .message > .subject { display: none; }
 .msgheader.to { position: absolute; display: block; right: 0em; top: 0em;}
 .msgheader.subject { position: absolute; display: block; left: 0em; top: 0em;}
 .msgheader.date { position: absolute; display: block; right: 0em; top: 0em;}
-.msgheader .participants { display: inline; padding-bottom: .5em;}
+.msgheader .participants { display: inline; padding-bottom: .5em; }
 .msgheader .participant { display: inline}
 .details .subject:before { content: "Re: "; color: grey;}
 .details .date { top: 0em; right: 0em; color: grey; font-size: 90%;}

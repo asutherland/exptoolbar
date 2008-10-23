@@ -1,0 +1,224 @@
+<?xml version="1.0"?>
+
+<bindings id="addressBookBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="query">
+    <implementation>
+      <property name="obj">
+        <!--The Gloda query object-->
+        <getter>
+            <![CDATA[
+            return this.query;
+            ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+        try {
+            this.query = val;
+
+        } catch (e) {
+
+        }
+        ]]>
+        </setter>
+      </property>
+    </implementation>
+    <content>
+      <html:div class="query">
+        Search of <html:div class="scope">All Messages</html:div>
+        <html:div class="constraints" anonid="constraints"></html:div>
+        <!--<html:div class="involves" anonid="involves"></html:div>-->
+        <!--<html:div class="involves" anonid="involves"></html:div>-->
+        <!--<html:div class="mentioning" anonid="mentioning"></html:div>-->
+        <html:div xbl:inherits="class=divclass" anonid="name"></html:div>
+      </html:div>
+    </content>
+  </binding>
+
+  <binding id="contact">
+
+    <resources>
+      <stylesheet src="chrome://experimentaltoolbar/content/addressbook.css"/>
+    </resources>
+
+    <implementation>
+
+      <constructor>
+        <![CDATA[
+          this._name = document.getAnonymousElementByAttribute(this,
+                                                'anonid', 'name');
+          this._description = document.getAnonymousElementByAttribute(this,
+                                                'anonid', 'description');
+          this._photo = document.getAnonymousElementByAttribute(this,
+                                                'anonid', 'photo');
+          this._identities = document.getAnonymousElementByAttribute(this,
+                                                'anonid', 'identities');
+        ]]>
+      </constructor>
+
+      <destructor>
+        <![CDATA[
+
+        ]]>
+      </destructor>
+      
+      <property name="obj">
+        <!--This is the GlodaContact object-->
+        <getter>
+          <![CDATA[
+            return this._contact;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            try {
+                this._contact = val;
+
+                this._name.textContent = this._contact.name;                               
+                this._description.textContent = this._contact.contactUUID || "description";
+
+                let photoURL = null;
+                
+                for each (let identity in this._contact.identities)
+                {
+                  let identityNode = document.createElement('identity');
+                  this._identities.appendChild(identityNode);
+                  identityNode.obj = identity;
+                  if ( ! photoURL ) {
+                    photoURL = identity.pictureURL;
+                  }
+                }
+
+                this._photo.photoURL = photoURL;
+                
+            } catch (e) {
+              dump(e);
+            }
+          ]]>
+        </setter>
+      </property>
+    </implementation>
+
+    <content>
+      <html:div class="contact">
+        <html:div class="summary">
+          <photo anonid="photo"/>
+          <html:div class="information">
+            <html:div class="name" anonid="name"></html:div>
+            <html:div class="description" anonid="description"></html:div>
+          </html:div>
+        </html:div>
+        <html:div class="identities" anonid="identities">
+        </html:div>
+      </html:div>
+    </content>  
+    
+  </binding>
+  
+  <binding id="photo">
+
+    <implementation>
+      <constructor>
+        <![CDATA[
+
+        ]]>
+      </constructor>
+      <destructor>
+        <![CDATA[
+
+        ]]>
+      </destructor>
+
+      <property name="photoURL">
+        <!--This is the GlodaContact object-->
+        <getter>
+          <![CDATA[
+            return this._photoURL;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            try {
+                this._photoURL = val;
+                let photoURL = document.getAnonymousElementByAttribute(this,
+                                                      'anonid', 'photoURL');
+                // XXX need to fix
+                photoURL.setAttribute("image", this._photoURL );
+            } catch (e) {
+              dumpExc(e, 'photo');
+            }
+          ]]>
+        </setter>
+      </property>
+    </implementation>
+
+    <content>
+      <html:div class="photo"><xul:image xbl:inherits="src=image" anonid="photoURL"/></html:div>
+    </content>  
+    
+  </binding>
+  
+  <binding id="identity">
+
+    <implementation>
+
+      <constructor>
+        <![CDATA[
+
+        ]]>
+      </constructor>
+
+      <destructor>
+        <![CDATA[
+
+        ]]>
+      </destructor>
+      
+      <property name="obj">
+        <!--This is the GlodaIdentity object-->
+        <getter>
+          <![CDATA[
+            return this._identity;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            try {
+                this._identity = val;
+                var type = document.getAnonymousElementByAttribute(this,
+                                                      'anonid', 'type');
+                type.textContent = this._identity.kind;
+                               
+                var value = document.getAnonymousElementByAttribute(this,
+                                                      'anonid', 'value');
+                value.textContent = this._identity.value;
+
+                /** XXX removing this for now since it's always empty
+                var desc = document.getAnonymousElementByAttribute(this,
+                                                      'anonid', 'desc');
+                desc.textContent = this._identity.description;
+                */
+
+            } catch (e) {
+              dumpExc(e, 'identity');
+            }
+          ]]>
+        </setter>
+      </property>
+    </implementation>
+
+    <content>
+      <html:div class="identity">
+        <html:div class="type" anonid="type"></html:div>
+        <html:div class="value" anonid="value"></html:div>
+<!--        <html:div class="value" anonid="desc"></html:div> -->
+      </html:div>
+    </content>  
+    
+  </binding>
+
+</bindings>

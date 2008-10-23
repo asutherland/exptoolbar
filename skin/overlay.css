@@ -7,13 +7,17 @@
   font-family: sans-serif;
   font-weight: bold;
   /*-moz-appearance: button;*/
+  /* XXX may need this?
+  -moz-appearance: none;
+  background-color: -moz-dialog;
+  */
   -moz-border-image: url("chrome://experimentaltoolbar/skin/thinbutton.png")  2 2 2 2 stretch stretch;
   font-size: 110%;
   padding: 0em .5em;
   margin-top: 4px;
   margin-bottom: 4px;
   padding-right: 5px;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
 }
 
 #button-write:hover
@@ -87,7 +91,7 @@ input.bubble-spacer {
   padding-top: 5px;
   padding-left: 10px;
   padding-right: 0px;
-  list-style-image: url(chrome://messenger/skin/downloadIcon.png);
+  list-style-image: url("chrome://experimentaltoolbar/skin/downloadIcon.png");
   line-height: 0px;
   height: 16px;
 }
@@ -109,4 +113,11 @@ input.bubble-spacer {
 
 #searchInput2[empty=true] {
   color: #aaaaaa;
+}
+
+#button-ab {
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/addrbook.png");
+}
+#button-ab > .toolbarbutton-text {
+  display: none;
 }
