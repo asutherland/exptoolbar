@@ -34,8 +34,8 @@ img { margin: 0em; padding: 0em; border: none; }
 .summary > .information > .name { color: #222; font-weight: bold; font-size: 120%; overflow: hidden; white-space: nowrap; }
 .summary > .information > .description { color: #999; margin-top: 0.5em; }
 
-.contact > .identities { margin-top: 0.5em; }
-.identities > identity > .identity { position: relative; }
+.contact > .identities { margin-top: 1em; border-top: 1px solid #ddd; padding-top: 0.5em; }
+.identities > identity > .identity { position: relative; margin-bottom: 0.2em; }
 .identity > .type, .identity > .value { white-space: nowrap; overflow: hidden; }
 .identity > .type { position: absolute; color: #999; width: 48px; text-align: right;}
 .identity > .value { margin-left: 50px; padding-left: 1em; }
