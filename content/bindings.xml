@@ -272,8 +272,29 @@
         </getter>
         <setter>
         <![CDATA[
-        try {
             this.conversation = val;
+            
+            this.messagesCollection =
+              this.conversation.getMessagesCollection(this);
+        ]]>
+        </setter>
+      </property>
+      <method name="onItemsAdded">
+        <body/>
+      </method>
+      <method name="onItemsModified">
+        <body/>
+      </method>
+      <method name="onItemsRemoved">
+        <body/>
+      </method>
+      <method name="onQueryCompleted">
+        <body><![CDATA[
+          try {
+            this.messages = this.messagesCollection.items;
+            
+            gTimeline_addConversations([this.conversation,
+                                        this.messagesCollection]); 
 
             // figure out participants, and add them
             // note: added in order of
@@ -283,10 +304,10 @@
             //   -  then cc'ed (witnesses)
             let participants = {};
 
-            let originator = this.conversation.messages[0].from;
+            let originator = this.messages[0].from;
             participants[originator] = true;
             this.addParticipantNode('participants', originator, "originator")
-            for each (let message in this.conversation.messages)
+            for each (let message in this.messages)
             {
               let sender = message.from;
               if (! (sender in participants))
@@ -313,10 +334,10 @@
             }
 
             let message = document.getAnonymousElementByAttribute(this, "anonid", "message");
-            message.obj = this.conversation.messages[0];
+            message.obj = this.messages[0];
 
             // find all the replies to this message
-            let messageIter = Iterator(this.conversation.messages);
+            let messageIter = Iterator(this.messages);
             messageIter.next()
             let replies = document.getAnonymousElementByAttribute(this, "anonid", "replies");
             while (replies.firstChild)
@@ -330,9 +351,8 @@
         } catch (e) {
            dumpExc(e, 'reply');
         }
-        ]]>
-        </setter>
-      </property>
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>
@@ -343,7 +363,7 @@
         let conversationNode = document.getElementById('messagelist'); // XXX make generic
         while (conversationNode.firstChild)
           conversationNode.removeChild(conversationNode.firstChild);
-        let messages = Iterator(this.conversation.messages);
+        let messages = Iterator(this.messages);
         let indx, msg, msgNode;
         for each ([indx, msg] in messages) {
           msgNode = document.createElement('fullmessage');

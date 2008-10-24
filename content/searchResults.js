@@ -72,21 +72,37 @@ let gEvents = [];
 let gConversations = [];
 let gTimelineShown = false;
 
-function gTimeline_addConversations(conversations) {
+function gTimeline_setConversations(conversations) {
   gConversations = conversations;
   if (gTimelineShown) {
-    UpdateTimeline();
+    ScheduleTimelineUpdate();
   }
+}
+
+function gTimeline_addConversations(conversation) {
+  gConversations.push(conversation);
+  if (gTimelineShown) {
+    ScheduleTimelineUpdate();
+  }
+}
+
+// we don't cancel right now, but we could
+let gTimelineUpdateTimer = null;
+function ScheduleTimelineUpdate() {
+  if (!gTimelineUpdateTimer)
+    gTimelineUpdaterTimer = window.setTimeout(UpdateTimeline, 250);
 }
 
 function UpdateTimeline()
 {
+    gTimelineUpdateTimer = null;
+    
     gEvents = []
     for (let i = 0; i < gConversations.length ; i++) {
-      let conversation = gConversations[i];
-      let messagesIter = Iterator(conversation.messages);
-      let oldest = conversation.messages[0].date;
-      let newest = conversation.messages[0].date;
+      let [conversation, messagesCollection] = gConversations[i];
+      let messagesIter = Iterator(messagesCollection.items);
+      let oldest = messagesCollection.items[0].date;
+      let newest = messagesCollection.items[0].date;
       for each ([idx, message] in messagesIter)
       {
         oldest = message.date < oldest ? message.date : oldest;

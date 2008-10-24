@@ -187,7 +187,7 @@ var experimentaltoolbar = {
       
       let item;
       if (row.multi) {
-        row.collection.explanation = row.nounMeta.name + "s " + 
+        row.collection.explanation = row.nounDef.name + "s " + 
           row.criteriaType + "ged " + row.criteria;
         item = row.collection;
       }
@@ -228,15 +228,24 @@ var experimentaltoolbar = {
     let bubble = document.createElementNS(
       "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
       "label");
-    bubble.setAttribute("value", aItem.explanation || aItem.toString());
+    let label;
+    if (aItem.explanation)
+      label = aItem.explanation;
+    else if (aItem.NOUN_ID == Gloda.NOUN_FOLDER)
+      label = aItem.name;
+    else if (aItem.NOUN_ID == Gloda.NOUN_CONTACT)
+      label = aItem.name;
+    else
+      label = aItem.toString();
+    bubble.setAttribute("value", label);
     bubble.setAttribute("class", "bubble");
     // the following is a little hacky and uses private knowledge because we
     //  are assuming this framework will have justifiable private usage...
     let typeName;
     if (aItem.NOUN_ID)
-      typeName = Gloda._nounIDToMeta[aItem.NOUN_ID].name;
+      typeName = Gloda._nounIDToDef[aItem.NOUN_ID].name;
     else
-      typeName = aItem._nounMeta.name + "-collection";
+      typeName = aItem._nounDef.name + "-collection";
     bubble.setAttribute("type", typeName);
     this.searchInput.inputField.parentNode.insertBefore(bubble,
       this.searchInput.inputField);
@@ -375,10 +384,12 @@ var experimentaltoolbar = {
     let collection = aQuery.getCollection({
       onQueryCompleted: function() {
           // send the conversations to the timeline
-          let convs = [];
           let id;
           dump("ON QUERY COMPLETED!\n");
-          win.gTimeline_addConversations([conversationMap[id] for (id in conversationMap)]);
+          // clear the set of conversations; they will add themselves as their
+          //  messages collections load. XXX Update-every-time is not a great
+          //  thing, and should be replaced by a timer thing.
+          win.gTimeline_setConversations([]);
       },
       onItemsAdded: function (aItems) {
         // extract conversations
@@ -432,7 +443,7 @@ dump("APPLY CONSTRAINTS\n");
       if (bubble.constraint.NOUN_ID == Gloda.NOUN_CONTACT)
         query.involves.apply(query, bubble.constraint.identities);
       else if (bubble.constraint.NOUN_ID == Gloda.NOUN_FOLDER) {
-        query.folderURI(bubble.constraint.uri)
+        query.folder(bubble.constraint)
       } else if (bubble.constraint.NOUN_ID == Gloda.NOUN_CONVERSATION) {
         // we want to show all messages in this conversation
         query.conversation(bubble.constraint);
