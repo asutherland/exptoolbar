@@ -178,7 +178,7 @@
       <method name="_updateMsgBody">
         <body><![CDATA[
         try {
-            body = this.mimeMsg.body;
+            body = this.mimeMsg.bodyPlain;
             let bodyHTML = makeHTML(body)
             let bodyDOM = stringToDOM(bodyHTML);
             var bodyNode= document.getAnonymousElementByAttribute(this, "anonid", "body");

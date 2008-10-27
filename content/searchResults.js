@@ -179,7 +179,7 @@ function initialize()
 }
 
 function findSnippetInMimeMsg(mimeMsg) {
-  return mimeMsg.body.slice(0,100);
+  return mimeMsg.bodyPlain.slice(0,100);
 }
 
 
