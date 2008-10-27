@@ -194,23 +194,21 @@ var experimentaltoolbar = {
       this.log.debug("retrieved row of type: " + row.nounDef.name + " multi: " +
           row.multi + ": " + row);
       
-      let item;
+      let item = row.item, nounDef = row.nounDef;
       if (row.multi) {
         row.collection.explanation = row.nounDef.name + "s " + 
           row.criteriaType + "ged " + row.criteria;
         item = row.collection;
       }
       else {
-        let obj = row.item;
-        if (row.nounID == Gloda.NOUN_CONTACT)
-          item = obj;
-        else if (row.nounID == Gloda.NOUN_IDENTITY)
-          item = obj.contact;
-        else if (row.nounID == Gloda.NOUN_TAG)
-          item = obj;
+        // promote from the identity to the contact
+        if (row.nounID == Gloda.NOUN_IDENTITY) {
+          item = item.contact;
+          nounDef = item.NOUN_DEF;
+        }
       }
       
-      this.addBubble(item, row.nounDef, row.multi);
+      this.addBubble(item, nounDef, row.multi);
       this.applyConstraints();
     }
   },
