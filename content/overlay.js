@@ -34,6 +34,8 @@
  * 
  * ***** END LICENSE BLOCK ***** */
 
+Components.utils.import("resource://gloda/modules/log4moz.js");
+
 Components.utils.import("resource://gloda/modules/gloda.js")
 Components.utils.import("resource://gloda/modules/mimemsg.js")
 
@@ -66,7 +68,8 @@ var searchTabType = {
 var searchTabMonitor = {
   onTabTitleChanged: function(aTab) {
     if (aTab.mode.name == "folder") {
-      aTab.constraints = [Gloda.getFolderForFolder(gMsgFolderSelected)];
+      aTab.constraints = [[Gloda.getFolderForFolder(gMsgFolderSelected),
+                           Gloda.lookupNounDef("folder"), false]];
       experimentaltoolbar.clearConstraints();
       experimentaltoolbar.deserializeConstraints(aTab.constraints);
     }
@@ -108,6 +111,8 @@ var addressbookTabType = {
 };
 
 var experimentaltoolbar = {
+  log: Log4Moz.Service.getLogger("exptoolbar.overlay"),
+    
   SEARCH_INPUT_HELPER_TEXT : "Search messages, events, people...",
   
   onLoad: function() {
@@ -181,9 +186,13 @@ var experimentaltoolbar = {
         this.searchInput.popup.selectedIndex);
       
       if (row == null) {
+        this.log.debug("no row retrieved, performing fulltext");
         this.applyConstraints();
         return;
       }
+
+      this.log.debug("retrieved row of type: " + row.nounDef.name + " multi: " +
+          row.multi + ": " + row);
       
       let item;
       if (row.multi) {
@@ -193,18 +202,20 @@ var experimentaltoolbar = {
       }
       else {
         let obj = row.item;
-        if (obj.NOUN_ID == Gloda.NOUN_CONTACT)
+        if (row.nounID == Gloda.NOUN_CONTACT)
           item = obj;
-        else if (obj.NOUN_ID == Gloda.NOUN_IDENTITY)
+        else if (row.nounID == Gloda.NOUN_IDENTITY)
           item = obj.contact;
+        else if (row.nounID == Gloda.NOUN_TAG)
+          item = obj;
       }
       
-      this.addBubble(item);
+      this.addBubble(item, row.nounDef, row.multi);
       this.applyConstraints();
     }
   },
   
-  addBubble: function (aItem) {
+  addBubble: function (aItem, aNounDef, aMulti) {
     // always create a magic text spacer...
     let textSpacer = null;
     
@@ -229,7 +240,9 @@ var experimentaltoolbar = {
       "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
       "label");
     let label;
-    if (aItem.explanation)
+    if (aNounDef.id == Gloda.NOUN_TAG)
+      label = aItem.tag;
+    else if (aMulti)
       label = aItem.explanation;
     else if (aItem.NOUN_ID == Gloda.NOUN_FOLDER)
       label = aItem.name;
@@ -242,16 +255,18 @@ var experimentaltoolbar = {
     // the following is a little hacky and uses private knowledge because we
     //  are assuming this framework will have justifiable private usage...
     let typeName;
-    if (aItem.NOUN_ID)
-      typeName = Gloda._nounIDToDef[aItem.NOUN_ID].name;
+    if (!aMulti)
+      typeName = aNounDef.name;
     else
-      typeName = aItem._nounDef.name + "-collection";
+      typeName = aNounDef.name + "-collection";
     bubble.setAttribute("type", typeName);
     this.searchInput.inputField.parentNode.insertBefore(bubble,
       this.searchInput.inputField);
     this.searchInput.value = "";
     
     bubble.constraint = aItem;
+    bubble.nounDef = aNounDef;
+    bubble.multi = aMulti;
     
     textSpacer.nextBubble = bubble;
     
@@ -313,10 +328,12 @@ var experimentaltoolbar = {
   serializeConstraints: function () {
     let constraintObjects = [];
     
+    this.log.debug("serializing...");
+    
     let textSpacer = this.searchInput;
     while (textSpacer && textSpacer.prevBubble) {
       let bubble = textSpacer.prevBubble;
-      constraintObjects.push(bubble.constraint);
+      constraintObjects.push([bubble.constraint, bubble.nounDef, bubble.multi]);
       textSpacer = textSpacer.prevTextSpacer;
     }
     
@@ -329,11 +346,12 @@ var experimentaltoolbar = {
     return constraintObjects;
   },
   deserializeConstraints: function (aConstraints) {
-    for each (let item in aConstraints) {
+    this.log.debug("deserializing...");
+    for each (let [,item] in Iterator(aConstraints)) {
       if (typeof(item) == "string")
         this.searchInput.value = item;
       else
-        this.addBubble(item);
+        this.addBubble.apply(this, item);
     }
   },
   applyQueryToView: function (aQuery) {
@@ -440,20 +458,24 @@ dump("APPLY CONSTRAINTS\n");
       let bubble = textSpacer.prevBubble;
       
       // XXX this should all be generalized, of course...
-      if (bubble.constraint.NOUN_ID == Gloda.NOUN_CONTACT)
-        query.involves.apply(query, bubble.constraint.identities);
-      else if (bubble.constraint.NOUN_ID == Gloda.NOUN_FOLDER) {
-        query.folder(bubble.constraint)
-      } else if (bubble.constraint.NOUN_ID == Gloda.NOUN_CONVERSATION) {
-        // we want to show all messages in this conversation
-        query.conversation(bubble.constraint);
-      }
-      else { // it must be a contact collection
+      if (bubble.multi) {
+        // it must be a contact collection
         let identities = [];
         for each (let contact in bubble.constraint.items) {
           identities.push.apply(identities, contact.identities);
         }
         query.involves.apply(query, identities);
+      }
+      else if (bubble.nounDef.id == Gloda.NOUN_TAG)
+        query.tags(bubble.constraint)
+      else if (bubble.nounDef.id == Gloda.NOUN_CONTACT)
+        query.involves.apply(query, bubble.constraint.identities);
+      else if (bubble.nounDef.id == Gloda.NOUN_FOLDER) {
+        query.folder(bubble.constraint)
+      }
+      else if (bubble.nounDef.id == Gloda.NOUN_CONVERSATION) {
+        // we want to show all messages in this conversation
+        query.conversation(bubble.constraint);
       }
     
       textSpacer = textSpacer.prevTextSpacer;

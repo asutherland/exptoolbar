@@ -55,6 +55,11 @@
   border: 1px solid #5FFD33;
 }
 
+#mail-search-bar .bubble[type="tag"] {
+  background-color: #eeeeff;
+  border: 1px solid #8888cc;
+}
+
 input.bubble-spacer {
   margin: 0px;
   border: 1px solid orange;
