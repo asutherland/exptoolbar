@@ -155,8 +155,16 @@
         <body><![CDATA[
         try {
             var snippetNode = document.getAnonymousElementByAttribute(this, "anonid", "snippet");
-            snippet = findSnippetInMimeMsg(this.mimeMsg);
+            let content = parent.Gloda.getMessageContent(this._message, this.mimeMsg);
+            let snippet;
+            if (content && content.hasContent())
+              snippet = content.getContentSnippet(100);
+            else
+              snippet = findSnippetInMimeMsg(this.mimeMsg);
+            if (!snippet)
+              snippet = "(blank)";
             snippetNode.textContent = snippet;
+            this._message.domContribute(snippetNode);
         } catch (e) {
           dumpExc(e);
         }
@@ -178,7 +186,12 @@
       <method name="_updateMsgBody">
         <body><![CDATA[
         try {
-            body = this.mimeMsg.bodyPlain;
+            let body;
+            let content = parent.Gloda.getMessageContent(this._message, this.mimeMsg);
+            if (content && content.hasContent())
+              body = content.getContentString();
+            else
+              body = this.mimeMsg.bodyPlain;
             let bodyHTML = makeHTML(body)
             let bodyDOM = stringToDOM(bodyHTML);
             var bodyNode= document.getAnonymousElementByAttribute(this, "anonid", "body");

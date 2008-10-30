@@ -90,6 +90,11 @@ reply .message > .subject { display: none; }
   padding-bottom: 1.2em; /* this shouldn't be necessary but ... XXX */
 }
 
+.snippet[bug-attachment] {background-color: lightblue;}
+.snippet[bug-request-action="1"] {color: yellow;}
+.snippet[bug-request-action="2"] {color: green;}
+.snippet[bug-request-action="3"] {color: red;}
+
 .msgheader.from { position: absolute; display: block; left: 0em; top: 0em;}
 .msgheader.to { position: absolute; display: block; right: 0em; top: 0em;}
 .msgheader.subject { position: absolute; display: block; left: 0em; top: 0em;}
