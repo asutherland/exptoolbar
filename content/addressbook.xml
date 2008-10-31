@@ -88,8 +88,8 @@
                   let identityNode = document.createElement('identity');
                   this._identities.appendChild(identityNode);
                   identityNode.obj = identity;
-                  if ( ! photoURL ) {
-                    photoURL = identity.pictureURL;
+                  if ( ! photoURL ) { /* Not the best method of choosing */
+                    photoURL = identity.pictureURL(48);
                   }
                 }
 
@@ -144,10 +144,9 @@
           <![CDATA[
             try {
                 this._photoURL = val;
-                let photoURL = document.getAnonymousElementByAttribute(this,
+                let photoURLNode = document.getAnonymousElementByAttribute(this,
                                                       'anonid', 'photoURL');
-                // XXX need to fix
-                photoURL.setAttribute("image", this._photoURL );
+                photoURLNode.setAttribute("src", this._photoURL );
             } catch (e) {
               dumpExc(e, 'photo');
             }
@@ -156,9 +155,7 @@
       </property>
     </implementation>
 
-    <content>
-      <html:div class="photo"><xul:image xbl:inherits="src=image" anonid="photoURL"/></html:div>
-    </content>  
+    <content><html:div class="photo"><xul:image anonid="photoURL"/></html:div></content>  
     
   </binding>
   

@@ -7,10 +7,7 @@
   font-family: sans-serif;
   font-weight: bold;
   /*-moz-appearance: button;*/
-  /* XXX may need this?
   -moz-appearance: none;
-  background-color: -moz-dialog;
-  */
   -moz-border-image: url("chrome://experimentaltoolbar/skin/thinbutton.png")  2 2 2 2 stretch stretch;
   font-size: 110%;
   padding: 0em .5em;
@@ -51,8 +48,8 @@
 }
 
 #mail-search-bar .bubble[type="folder"] {
-  background-color: #A4FF8C;
-  border: 1px solid #5FFD33;
+  background-color: #faf0b8;
+  border: 1px solid #b19065;
 }
 
 #mail-search-bar .bubble[type="tag"] {
