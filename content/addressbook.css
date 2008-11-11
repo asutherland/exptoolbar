@@ -27,15 +27,15 @@ img { margin: 0em; padding: 0em; border: none; }
 
 
 .contact {  }
-.contact > .summary { position: relative; min-height: 48px; }
-.summary > photo { min-width: 48px; min-height: 48px; position: absolute; border: 1px solid #aaa; }
-.summary > photo > .photo > image { margin: 0em; padding: 0em; border: none; width: 48px; height: 48px; }
-.summary > .information { margin-left: 50px; padding-left: 1em; }
+.contact > .summary { position: relative; min-height: 52px; }
+.summary > photo { width: 52px; height: 52px; position: absolute; border: 1px solid #aaa; }
+.summary > photo > .photo > image { margin: 0em; padding: 0em; border: 2px solid #eee; width: 48px; height: 48px; }
+.summary > .information { margin-left: 54px; padding-left: 1em; }
 .summary > .information > .name { color: #222; font-weight: bold; font-size: 120%; overflow: hidden; white-space: nowrap; }
 .summary > .information > .description { color: #999; margin-top: 0.5em; }
 
 .contact > .identities { margin-top: 1em; border-top: 1px solid #ddd; padding-top: 0.5em; }
 .identities > identity > .identity { position: relative; margin-bottom: 0.2em; }
 .identity > .type, .identity > .value { white-space: nowrap; overflow: hidden; }
-.identity > .type { position: absolute; color: #999; width: 48px; text-align: right;}
-.identity > .value { margin-left: 50px; padding-left: 1em; }
+.identity > .type { position: absolute; color: #999; width: 52px; text-align: right;}
+.identity > .value { margin-left: 54px; padding-left: 1em; }
