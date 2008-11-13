@@ -103,4 +103,9 @@
   <box id="tabmail-buttons">
     <toolbarbutton insertbefore="calendar-tab-button" id="button-ab" label="Address Book" oncommand="experimentaltoolbar.makeAddressBookTab()"/>
   </box>
+
+  <popup id="emailAddressPopup">
+    <menuitem id="gloda-involves-filter-menuitem" oncommand="experimentaltoolbar.constrainFromEmailPopup(document.popupNode.parentNode);" label="Search By Contact"/>
+  </popup>
+
 </overlay>

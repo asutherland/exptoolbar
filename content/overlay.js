@@ -5,7 +5,7 @@
  * 1.1 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  * http://www.mozilla.org/MPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
  * for the specific language governing rights and limitations under the
@@ -31,7 +31,7 @@
  * and other provisions required by the GPL or the LGPL. If you do not delete
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
- * 
+ *
  * ***** END LICENSE BLOCK ***** */
 
 Components.utils.import("resource://gloda/modules/log4moz.js");
@@ -45,7 +45,7 @@ var searchTabType = {
   modes: {
     searchAll: {
       type: "search",
-      
+
     },
   },
   openTab: function (aTab, aConstraints) {
@@ -89,7 +89,7 @@ var addressbookTabType = {
   modes: {
     abAll: {
       type: "addressbook",
-      
+
     },
   },
   openTab: function (aTab, aConstraints) {
@@ -112,14 +112,15 @@ var addressbookTabType = {
 
 var experimentaltoolbar = {
   log: Log4Moz.Service.getLogger("exptoolbar.overlay"),
-    
+
   SEARCH_INPUT_HELPER_TEXT : "Search messages, events, people...",
-  
+
   onLoad: function() {
     // initialization code
+    this._callbackHandle.init();
     this.initialized = true;
     this.strings = document.getElementById("experimentaltoolbar-strings");
-    
+
     var mailToolbar = experimentaltoolbar.getMailBar();
 
     // ====== hacky bubble logic, destined for being hidden ugliness in XBL.
@@ -145,7 +146,7 @@ var experimentaltoolbar = {
     if (this.tabmail.currentTabInfo) {
       searchTabMonitor.onTabTitleChanged(this.tabmail.currentTabInfo);
     }
-    
+
     // XXX remove the quick search keyboard shortcut
     var qsk = document.getElementById("key_quickSearchFocus");
     qsk.parentNode.removeChild(qsk);
@@ -171,12 +172,137 @@ var experimentaltoolbar = {
     return document.getElementById("mail-bar2") ||
            document.getElementById("msgToolbar");
   },
-  
-  
+
+  /** this needs to be refactored into a reusable construct.  beware */
+  _callbackHandle: {
+    wrappedCallback: function() {
+      experimentaltoolbar._callbackHandle.callback();
+    },
+
+    _data: undefined,
+    callback: function() {
+      if (arguments.length)
+        this._data = arguments;
+
+      try {
+        dump("about to enter while: " + this.activeStack.length + "\n");
+        while (this.activeStack.length) {
+          dump("callback driving!\n");
+          switch (this.activeIterator.send(this._data)) {
+            case Gloda.kWorkSync:
+              this._data = undefined;
+              break;
+            case Gloda.kWorkAsync:
+              this._data = undefined;
+              return;
+            case Gloda.kWorkDone:
+              this.pop();
+              this._data = undefined;
+              dump("done, popped to lenght of: " + this.activeStack.length + "\n");
+              break;
+            case Gloda.kWorkDoneWithResult:
+              this._data = this.popWithResult();
+              dump("done-w-r, popped to lenght of: " + this.activeStack.length + "\n");
+              continue;
+          }
+        }
+        dump("out of the while loop!\n");
+      }
+      catch (ex) {
+        dump("Cleaning up due to failure :( :( :( :( :( : " + ex + "\n");
+        // clear out our current generators and our related data
+        this.cleanup();
+        this._data = undefined;
+        throw ex;
+      }
+    },
+
+    init: function gloda_index_callbackhandle_init() {
+      this.callbackThis = this;
+    },
+
+    activeStack: [],
+    activeIterator: null,
+    push: function gloda_index_callbackhandle_push(aIterator) {
+      this.activeStack.push(aIterator);
+      this.activeIterator = aIterator;
+    },
+    pushAndGo: function gloda_index_callbackhandle_pushAndGo(aIterator) {
+      this.push(aIterator);
+      return this.activeIterator.next();
+    },
+    pop: function gloda_index_callbackhandle_pop() {
+      this.activeIterator.close();
+      this.activeStack.pop();
+      if (this.activeStack.length)
+        this.activeIterator = this.activeStack[this.activeStack.length - 1];
+      else
+        this.activeIterator = null;
+      dump("popped to length: " + this.activeStack.length + "\n");
+    },
+    /**
+     * Someone propagated an exception and we need to clean-up all the active
+     *  logic as best we can.  Which is not really all that well.
+     */
+    cleanup: function gloda_index_callbackhandle_cleanup() {
+      while (this.activeIterator !== null) {
+        this.pop();
+      }
+    },
+    popWithResult: function gloda_index_callbackhandle_popWithResult() {
+      this.pop();
+      let result = this._result;
+      this._result = null;
+      return result;
+    },
+    _result: null,
+    doneWithResult: function gloda_index_callbackhandle_doneWithResult(aResult){
+      this._result = aResult;
+      return Gloda.kWorkDoneWithResult;
+    },
+
+    /* be able to serve as a collection listener, resuming the active iterator's
+       last yield kWorkAsync */
+    onItemsAdded: function() {},
+    onItemsModified: function() {},
+    onItemsRemoved: function() {},
+    onQueryCompleted: function(aCollection) {
+      dump("query completed notification, calling callback\n");
+      this.callback();
+    }
+  },
+
+
+  constrainFromEmailPopup: function(aEmailAddressNode) {
+    let fullAddress = aEmailAddressNode.getAttribute("fullAddress");
+
+    this._callbackHandle.push(this._constrainEmailWorker(fullAddress));
+    // kick off the callback driver...
+    this._callbackHandle.callback();
+  },
+
+  _constrainEmailWorker: function(aFullMailName) {
+    dump("in _constrainEmailWorker: " + aFullMailName + "\n");
+    let [identities] = yield this._callbackHandle.pushAndGo(
+      Gloda.getOrCreateMailIdentities(this._callbackHandle, aFullMailName));
+    dump("got identities: " + identities + "\n");
+
+    let tabmail = document.getElementById("tabmail");
+
+    dump("opening tab\n");
+    if (identities.length)
+      tabmail.openTab("searchAll", [[identities[0].contact,
+                                     Gloda.lookupNounDef("contact"),
+                                     false]]);
+    dump("opened tab\n");
+    yield Gloda.kWorkDone;
+  },
+
+
   // ======= the stuff below here should all end up in XBL bindings, likely.
   _activeSearchText: '',
   _constraintsChanged: false,
-  
+
   // (bubble logic)
   observe: function(aSubject, aTopic, aData) {
     if (aTopic == "autocomplete-will-enter-text") {
@@ -184,7 +310,7 @@ var experimentaltoolbar = {
     else if (aTopic == "autocomplete-did-enter-text") {
       let row = this.glodaCompleter.curResult.getObjectAt(
         this.searchInput.popup.selectedIndex);
-      
+
       if (row == null) {
         this.log.debug("no row retrieved, performing fulltext");
         this.applyConstraints();
@@ -193,10 +319,10 @@ var experimentaltoolbar = {
 
       this.log.debug("retrieved row of type: " + row.nounDef.name + " multi: " +
           row.multi + ": " + row);
-      
+
       let item = row.item, nounDef = row.nounDef;
       if (row.multi) {
-        row.collection.explanation = row.nounDef.name + "s " + 
+        row.collection.explanation = row.nounDef.name + "s " +
           row.criteriaType + "ged " + row.criteria;
         item = row.collection;
       }
@@ -207,32 +333,32 @@ var experimentaltoolbar = {
           nounDef = item.NOUN_DEF;
         }
       }
-      
+
       this.addBubble(item, nounDef, row.multi);
       this.applyConstraints();
     }
   },
-  
+
   addBubble: function (aItem, aNounDef, aMulti) {
     // always create a magic text spacer...
     let textSpacer = null;
-    
+
     textSpacer = document.createElementNS(
       "http://www.w3.org/1999/xhtml", "html:input");
     textSpacer.setAttribute("value", "");
     textSpacer.setAttribute("class", "bubble-spacer");
     textSpacer.onkeypress = this.spacerOnKeyPress;
-    
+
     // (prevBubble may be null)
     textSpacer.prevBubble = this.searchInput.prevBubble;
     textSpacer.prevTextSpacer = this.searchInput.prevTextSpacer;
     if (textSpacer.prevTextSpacer)
       textSpacer.prevTextSpacer.nextTextSpacer = textSpacer;
     textSpacer.nextTextSpacer = this.searchInput;
-    
+
     this.searchInput.inputField.parentNode.insertBefore(textSpacer,
       this.searchInput.inputField);
-    
+
     // create the bubble
     let bubble = document.createElementNS(
       "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
@@ -261,34 +387,34 @@ var experimentaltoolbar = {
     this.searchInput.inputField.parentNode.insertBefore(bubble,
       this.searchInput.inputField);
     this.searchInput.value = "";
-    
+
     bubble.constraint = aItem;
     bubble.nounDef = aNounDef;
     bubble.multi = aMulti;
-    
+
     textSpacer.nextBubble = bubble;
-    
+
     this.searchInput.prevTextSpacer = textSpacer;
     this.searchInput.prevBubble = bubble;
-    
+
     this._constraintsChanged = true;
   },
   showAddressBookContacts: function() {
     this.createSearchView();
-    
+
     let doc = this.tabmail.currentTabInfo.panel.contentDocument;
     let win = this.tabmail.currentTabInfo.panel.contentWindow;
 
     let query = Gloda.newQuery(Gloda.NOUN_CONTACT);
 
     let results = doc.getElementById("results");
-        
+
     let collection = query.getCollection({
       onItemsAdded: function (aItems) {
         for each (let contact in aItems) {
           let node = doc.createElementNS("http://www.w3.org/1999/xhtml", "contact");
           results.appendChild(node);
-          node.obj = contact;   
+          node.obj = contact;
           node.id = 'contact_' + contact.id.toString();
         }
       },
@@ -302,8 +428,8 @@ var experimentaltoolbar = {
   createSearchView: function()
   {
     let viewType = gDBView.viewType;
-    //if not already in quick search view 
-    if (viewType != nsMsgViewType.eShowSearch)  
+    //if not already in quick search view
+    if (viewType != nsMsgViewType.eShowSearch)
     {
       var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);  //clear selection
       if (treeView && treeView.selection)
@@ -325,18 +451,18 @@ var experimentaltoolbar = {
   },
   serializeConstraints: function () {
     let constraintObjects = [];
-    
+
     this.log.debug("serializing...");
-    
+
     let textSpacer = this.searchInput;
     while (textSpacer && textSpacer.prevBubble) {
       let bubble = textSpacer.prevBubble;
       constraintObjects.push([bubble.constraint, bubble.nounDef, bubble.multi]);
       textSpacer = textSpacer.prevTextSpacer;
     }
-    
+
     constraintObjects.reverse();
-    
+
     let trimmedValue = this.searchInput.value.trim();
     if (trimmedValue)
       constraintObjects.push(trimmedValue);
@@ -376,7 +502,7 @@ var experimentaltoolbar = {
       onItemsRemoved: function () {
       }
     });
-   
+
     RerootThreadPane();
   },
   applyQueryToDocument: function applyQueryToDocument (aQuery) {
@@ -390,11 +516,11 @@ var experimentaltoolbar = {
     dump("cleaned up mess!\n");
     let queryNode = doc.getElementById("query");
     queryNode.obj = aQuery;
-    
+
     // do not allow us to issue an empty query, or we will explode!
     if (!aQuery.constraintCount)
       return;
-  
+
     let conversationMap = {};
 
     let collection = aQuery.getCollection({
@@ -440,21 +566,21 @@ var experimentaltoolbar = {
       return;
     if (this._suppress)
       return;
-  
+
 dump("APPLY CONSTRAINTS\n");
     let query = Gloda.newQuery(Gloda.NOUN_MESSAGE);
-    
+
     let textSpacer = this.searchInput;
-    
+
     if ((textSpacer.prevBubble === null) && !this.searchInput.value.length) {
       this.clearViewQuery();
       dump("restoring previous search\n");
       return;
     }
-    
+
     while (textSpacer.prevBubble) {
       let bubble = textSpacer.prevBubble;
-      
+
       // XXX this should all be generalized, of course...
       if (bubble.multi) {
         // it must be a contact collection
@@ -475,10 +601,10 @@ dump("APPLY CONSTRAINTS\n");
         // we want to show all messages in this conversation
         query.conversation(bubble.constraint);
       }
-    
+
       textSpacer = textSpacer.prevTextSpacer;
     }
-   
+
     if (this.searchInput.value) {
       dump("adding fulltext search on: " + this.searchInput.value + "\n");
       query.bodyMatches(this.searchInput.value);
@@ -486,9 +612,9 @@ dump("APPLY CONSTRAINTS\n");
 
     if (this.tabmail.currentTabInfo.mode.tabType.name == "search")
       this.applyQueryToDocument(query);
-    
+
     this._activeSearchText = this.searchInput.value;
-    this._constraintsChanged = false;   
+    this._constraintsChanged = false;
   },
 
   makeSearchTab: function makeSearchTab(constraints) {
@@ -510,7 +636,7 @@ dump("APPLY CONSTRAINTS\n");
     this.tabmail.openTab("abAll", constraints);
     this._suppress = false;
   },
-  
+
   clearConstraints: function clearConstraints() {
     while (this.searchInput.prevBubble) {
       this.destroyPreviousBubble(this.searchInput);
@@ -518,14 +644,14 @@ dump("APPLY CONSTRAINTS\n");
     this.searchInput.value = '';
     this._constraintsChanged = true;
   },
-  
+
   destroyPreviousBubble: function destroyPreviousBubble(aTextSpacer) {
     let prevBubble = aTextSpacer.prevBubble;
     let prevTextSpacer = aTextSpacer.prevTextSpacer;
-    
+
     if (!prevBubble)
       return;
-    
+
     // remove the previous bubble
     prevBubble.parentNode.removeChild(prevBubble);
 
@@ -537,7 +663,7 @@ dump("APPLY CONSTRAINTS\n");
       aTextSpacer.prevTextSpacer.nextTextSpacer = aTextSpacer;
     this._constraintsChanged = true;
   },
-  
+
   destroySpacerAndNextBubble: function destroySpacerAndNextBubble(aTextSpacer) {
     // kill the (next) bubble
     aTextSpacer.nextBubble.parentNode.removeChild(aTextSpacer.nextBubble);
@@ -550,7 +676,7 @@ dump("APPLY CONSTRAINTS\n");
     if (aTextSpacer.prevTextSpacer)
       aTextSpacer.prevTextSpacer.nextTextSpacer = aTextSpacer.nextTextSpacer;
   },
-  
+
   spacerOnKeyPress: function spaceOnKeyPress(aEvent) {
     let target = aEvent.target;
     if (aEvent.keyCode == aEvent.DOM_VK_LEFT) {
@@ -576,7 +702,7 @@ dump("APPLY CONSTRAINTS\n");
       experimentaltoolbar.destroySpacerAndNextBubble(target);
       // we do need to re-focus to the right
       target.nextTextSpacer.focus();
-      
+
       experimentaltoolbar.applyConstraints();
       aEvent.stopPropagation();
     }
@@ -627,7 +753,7 @@ dump("APPLY CONSTRAINTS\n");
     else {
       this.applyConstraints();
     }
-    
+
     dump("Text value: " + this.searchInput.textValue + "\n");
   },
   onTextReverted: function() {
