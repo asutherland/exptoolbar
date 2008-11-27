@@ -8,7 +8,8 @@
 
   <binding id="query">
     <implementation>
-      <property name="obj">
+      <field name="hitMessageMap">{}</field>
+      <property name="glodaQuery">
         <!--The Gloda query object-->
         <getter>
             <![CDATA[
@@ -40,6 +41,72 @@
         ]]>
         </setter>
       </property>
+      <method name="addItems">
+        <parameter name="items"/>
+        <body>
+        <![CDATA[
+        try {
+          //dump("in query.addItems\n");
+          // We want to keep track of which messages were found in the query
+          // and of the conversations that they belong to.  The former
+          // will be displayed in the latter with special styling, etc.
+          let conversationMap = {};
+          let conversationsNode = document.getElementById("conversations");
+          this.hitMessageMap = {};
+          let conversations = [];
+
+          dump("identifying conversations from messages\n")
+          for each (let message in items) {
+            //dump("message.id = " + message.id + '\n');
+            this.hitMessageMap[message.id] = true;
+            let conv = message.conversation;
+            if (!(conv.id in conversationMap)) {
+              conversationMap[conv.id] = conv;
+              conversations.push(conv);
+            }
+          }
+          //dump("conversations = " + conversations + "\n");
+          //ddumpObject(conversations[0], "conversations[0]", 1);
+
+          conversationsNode.setAttribute("hidden", "true");
+          let convcount = 0;
+          for (let i in conversations.slice(0, 20))
+          {
+            let conv = conversations[i];
+            dump("conv = " + conv + '\n')
+            //let conv = conversations[i]; 
+            let convid = 'conv'+conv.id.toString();
+            let node = document.getElementById(convid);
+            if (!node) {
+              node = document.createElementNS("http://www.w3.org/1999/xhtml", "conversation");
+              conversationsNode.appendChild(node);
+              node.id = 'conv' + conv.id.toString()
+              node.glodaConversation = conv; // XXX this is _slow_
+            }
+          }
+          dump("done creating conversation nodes\n");
+          conversationsNode.removeAttribute("hidden"); // XXX the consequences of this are _slow_
+          dump("conversations shown\n");
+        } catch (e) {
+          dumpExc(e);
+        }
+        ]]>
+        </body>
+      </method>
+      <method name="modifyItems">
+        <parameter name="items"/>
+        <body>
+          <![CDATA[
+          ]]>
+        </body>
+      </method>
+      <method name="removeItems">
+        <parameter name="items"/>
+        <body>
+          <![CDATA[
+          ]]>
+        </body>
+      </method>
     </implementation>
     <content>
       <html:div class="query">
@@ -55,7 +122,7 @@
 
   <binding id="identity">
     <implementation>
-      <property name="obj">
+      <property name="glodaIdentity">
         <!--The GlodaIdentity -->
         <getter>
             <![CDATA[
@@ -66,6 +133,10 @@
         <![CDATA[
         try {
             this._identity = val;
+            if (!val) {
+              dump("ERROR: Setting something false to identity");
+              throw("Bad identity");
+            }
             var name = document.getAnonymousElementByAttribute(this, "anonid", "name");
             if (val.contact == parent.Gloda.myContact) {
               name.textContent = "You"; // localize XXX
@@ -79,7 +150,7 @@
         </setter>
       </property>
     </implementation>
-    <content><html:div xbl:inherits="class=divclass" anonid="name"></html:div></content>
+    <content><html:span xbl:inherits="class=divclass" anonid="name"></html:span></content>
   </binding>
 
 
@@ -91,12 +162,16 @@
         <parameter name="participantType"/>
         <body><![CDATA[
         try {
+          //dump("adding participantnode, participant = "+ participant + " and participantType = " + participantType + "\n");
+          if (!participant) {
+            throw("BAD PARTICIPANT");
+          }
             let participantNode = document.createElement('identity');
             let participantsNode = document.getAnonymousElementByAttribute(this, "anonid", participantsNodeId);
             participantsNode.appendChild(participantNode);
-            participantNode.setAttribute("divclass", "participant " + participantType);
+            participantNode.setAttribute("divclass", participantType);
 
-            participantNode.obj = participant;
+            participantNode.glodaIdentity = participant;
         } catch (e) {
           dumpExc(e, "addParticipantNode");
         }
@@ -108,7 +183,7 @@
 
   <binding id="message" extends="chrome://experimentaltoolbar/content/bindings.xml#participation">
     <implementation>
-      <property name="obj">
+      <property name="glodaMessage">
         <!--The GlodaMessage -->
         <getter>
             <![CDATA[
@@ -126,11 +201,7 @@
         <body>
         <![CDATA[
         try {
-            var subject = document.getAnonymousElementByAttribute(this, "anonid", "subject");
-            subject.textContent = this._message.conversation.subject
             parent.MsgHdrToMimeMessage(this._message.folderMessage, this, this.addMessageBody)
-            var date = document.getAnonymousElementByAttribute(this, "anonid", "date");
-            date.textContent = makeDateFriendly(this._message.date);
         } catch (e) {
            dumpExc(e, 'message');
         }
@@ -173,11 +244,7 @@
       </method>
     </implementation>
     <content>
-        <html:div class="message">
-          <html:div class="subject" anonid="subject"></html:div>
-          <html:div class="snippet" anonid="snippet"></html:div>
-        </html:div>
-        <html:div class="date" anonid="date"></html:div>
+        <html:div class="snippet" anonid="snippet"></html:div>
     </content>
   </binding>  <!--message-->
 
@@ -198,7 +265,7 @@
             try {
               bodyNode.appendChild(bodyDOM);
             } catch (e) {
-              dump("body = " + body + '\n\n');
+              //dump("body = " + body + '\n\n');
               dumpExc(e);
             }
             //dump("bodyHTML" + bodyHTML + '\n');
@@ -235,22 +302,43 @@
     </content>
   </binding>
 
+  <!--Replies are follow-on messages in a conversation. -->
+
   <binding id="reply" extends="chrome://experimentaltoolbar/content/bindings.xml#message">
     <implementation>
       <method name="_update">
         <body>
         <![CDATA[
         try {
+            this.addParticipantNode("from", this._message.from, "recipient");
 
-            let participantNode = document.createElement('identity');
-            let participantsNode = document.getAnonymousElementByAttribute(this, "anonid", "replyparticipants");
-            participantsNode.appendChild(participantNode);
-            participantNode.setAttribute("divclass", "participant from");
-            participantNode.obj = this._message.from;
-
+            //let participantNode = document.createElement('identity');
+            //let fromNode = document.getAnonymousElementByAttribute(this, "anonid", "from");
+            //participantNode.setAttribute("divclass", "reply from");
+            //participantNode.glodaIdentity = this._message.from;
+            //parent.MsgHdrToMimeMessage(this._message.folderMessage, this, this.addMessageBody)
+            if (this._message.date)
+            {
+              var date = document.getAnonymousElementByAttribute(this, "anonid", "date");
+              date.textContent = makeDateFriendly(this._message.date);
+            } else {
+              dump("ERROR: No date on this message?\n");
+            }
+            
             parent.MsgHdrToMimeMessage(this._message.folderMessage, this, this.addMessageBody)
-            var date = document.getAnonymousElementByAttribute(this, "anonid", "date");
-            date.textContent = makeDateFriendly(this._message.date);
+        } catch (e) {
+           dumpExc(e, 'reply');
+        }
+        ]]>
+        </body>
+      </method>
+      <method name="openMessageInTab">
+        <body>
+        <![CDATA[
+        try {
+          dump("in binding, openMessageInTab\n");
+          let tabmail = parent.document.getElementById("tabmail");
+          tabmail.openTab("message", this._message.folderURI, this._message.folderMessage)
         } catch (e) {
            dumpExc(e, 'reply');
         }
@@ -260,23 +348,22 @@
     </implementation>
     <content>
       <html:div class="reply">
-        <html:div class="participants" anonid="replyparticipants"></html:div>
-        <!--<html:div class="subject" anonid="subject"></html:div>-->
-        <html:div class="message">
-          <html:div class="snippet" anonid="snippet"></html:div>
+        <html:div class="author" onclick="document.getBindingParent(this).openMessageInTab()">
+          <html:span anonid="from" class="name"></html:span>
+          <html:span anonid="date" class="date"></html:span>
         </html:div>
+        <html:div anonid="snippet" class="body"></html:div>
       </html:div>
-      <html:div class="date" anonid="date"></html:div>
     </content>
   </binding>
 
 
-  <binding id="conversation" extends="chrome://experimentaltoolbar/content/bindings.xml#participation">
+  <binding id="conversation" extends="chrome://experimentaltoolbar/content/bindings.xml#message">
     <resources>
       <stylesheet src="chrome://experimentaltoolbar/content/bindings.css"/>
     </resources>
     <implementation>
-      <property name="obj">
+      <property name="glodaConversation">
         <!--This is the GlodaConversation object-->
         <getter>
             <![CDATA[
@@ -286,14 +373,175 @@
         <setter>
         <![CDATA[
             this.conversation = val;
-            
             this.messagesCollection =
               this.conversation.getMessagesCollection(this);
         ]]>
         </setter>
       </property>
+      <method name="openMessageInTab">
+        <body>
+        <![CDATA[
+        try {
+           dump("in conversation binding, openMessageInTab\n");
+         let tabmail = parent.document.getElementById("tabmail");
+          let firstmessage;
+          for each (let message in this.messages)
+          {
+            firstmessage = message;
+            break;
+          }
+          tabmail.openTab("message", firstmessage.folderURI, firstmessage.folderMessage)
+        } catch (e) {
+           dumpExc(e, 'conversation');
+        }
+        ]]>
+        </body>
+      </method>
       <method name="onItemsAdded">
-        <body/>
+        <body><![CDATA[
+          try {
+            this.messages = this.messagesCollection.items;
+            
+            let participants = {};
+            let firstmessage;
+
+            for each (let message in this.messages)
+            {
+              firstmessage = message;
+              break;
+            }
+            if (! (firstmessage)) 
+            {
+              dump("ERROR: no message 0\n")
+              return;
+            }
+            //parent.ddumpObject(firstmessage, "message 0", 1);
+            let originator = firstmessage.from;
+            if (!originator) {
+              dump("ERROR: from of first message is false\n");
+              //ddumpObject(firstmessage, "ProblemMessage", 1);
+              return;
+            }
+            //dump("Originator = " + originator + "\n");
+            // figure out participants, and add them
+            // note: added in order of
+            //   -  sender of first message is special (conversation originator)
+            //   -  sender of subsequent messages (active speakers)
+            //   -  then recipients (targets)
+            //   -  then cc'ed (witnesses)
+            participants[originator] = true;
+            let authorNode = document.getAnonymousElementByAttribute(this, "anonid", "author");
+            authorNode.glodaIdentity = originator;
+            this.addParticipantNode('author', firstmessage.from, 'author');
+
+            let dateNode = document.getAnonymousElementByAttribute(this, "anonid", "date");
+            dateNode.textContent = makeDateFriendly(firstmessage.date);
+
+            let subjectNode = document.getAnonymousElementByAttribute(this, "anonid", "subject");
+            subjectNode.textContent = this.conversation.subject;
+            
+            if (firstmessage.folderMessage) {
+              this._message = firstmessage;
+              parent.MsgHdrToMimeMessage(firstmessage.folderMessage, this, this.addMessageBody)
+            } else {
+              dump("ERROR: Message from " + originator + " has no folderMessage\n");
+            }
+
+            for each (let message in this.messages)
+            {
+              let sender = message.from;
+              if (! (sender in participants))
+              {
+                participants[sender] = true;
+                this.addParticipantNode('recipients', sender, "recipient speaker")
+              }
+              for each (let identity in message.to)
+              {
+                if (! (identity in participants))
+                {
+                  participants[identity] = true;
+                  this.addParticipantNode('recipients', identity, "recipient")
+                }
+              }
+              for each (let identity in message.cc)
+              {
+                if (! (identity in participants))
+                {
+                  participants[identity] = true;
+                  this.addParticipantNode('recipients', identity, "recipient cc")
+                }
+              }
+            }
+
+
+            // find all the replies to this message, insert the ones that were
+            // actually hit in the query itself.
+            let hitMessageMap = document.getElementById('query').hitMessageMap;
+
+            let messageIter = Iterator(this.messages);
+            messageIter.next()
+            let replies = document.getAnonymousElementByAttribute(this, "anonid", "replies");
+            let replyInsertionNode = document.getAnonymousElementByAttribute(this, "anonid", "reply_other");
+            //while (replies.firstChild && ! replies.firstChild.getAttribute("keep"))
+            //  replies.removeChild(replies.firstChild);
+            let nOthers = 0;
+            let nUnread = 0;
+
+            //dump("replyInsertionNode = " + replyInsertionNode + '\n');
+            for each (let [i,replyMsg] in messageIter) {
+              //dump("looking at message "+  i + '\n');
+              if (replyMsg.id in hitMessageMap)
+              {
+                let replyNode = document.createElement('reply');
+                replies.insertBefore(replyNode, replyInsertionNode);
+                replyNode.glodaMessage = replyMsg;
+                //dump("hit\n");
+              }
+              else
+              {
+                //dump("other, ");
+                nOthers++;
+                //dump("replyMsg.read = "+ replyMsg.read + '\n');
+                if (! replyMsg.read)
+                {
+                  //dump("unread\n")
+                  nUnread++;
+                }
+                else
+                {
+                  //dump("read\n")
+                }
+              }
+            }
+            //dump("nOthers = " + nOthers + ", nUnread = " + nUnread + '\n');
+            if (nOthers)
+            {
+              let allReplyCount = document.getAnonymousElementByAttribute(this, "anonid", "other_reply_count")
+              allReplyCount.textContent =  nOthers.toString() + " other replies"; // XXX l10n
+              if (nUnread)
+              {
+                let unreadReplyCount = document.getAnonymousElementByAttribute(this, "anonid", "unread_reply_count")
+                unreadReplyCount.textContent =  nUnread.toString() + " unread"; // XXX l10n
+                //dump("unreadReplyCount = " + unreadReplyCount + '\n')
+                //dump("unreadReplyCount.textContent = " + unreadReplyCount.textContent + '\n')
+              }
+              else
+              {
+                let unreadReplyCount = document.getAnonymousElementByAttribute(this, "anonid", "unread_reply_count")
+                unreadReplyCount.parentNode.removeChild(unreadReplyCount);
+              }
+              replyInsertionNode.none = false;
+            }
+            else
+            {
+              replyInsertionNode.none = true;
+              let allReplies = document.getAnonymousElementByAttribute(this, "anonid", "reply_other")
+              allReplies.parentNode.removeChild(allReplies);
+            }
+        } catch (e) {
+           dumpExc(e, 'reply');
+        }
+        ]]></body>
       </method>
       <method name="onItemsModified">
         <body/>
@@ -302,106 +550,90 @@
         <body/>
       </method>
       <method name="onQueryCompleted">
-        <body><![CDATA[
-          try {
-            this.messages = this.messagesCollection.items;
-            
-            gTimeline_addConversations([this.conversation,
-                                        this.messagesCollection]); 
-
-            // figure out participants, and add them
-            // note: added in order of
-            //   -  sender of first message is special (conversation originator)
-            //   -  sender of subsequent messages (active speakers)
-            //   -  then recipients (targets)
-            //   -  then cc'ed (witnesses)
-            let participants = {};
-
-            let originator = this.messages[0].from;
-            participants[originator] = true;
-            this.addParticipantNode('participants', originator, "originator")
-            for each (let message in this.messages)
-            {
-              let sender = message.from;
-              if (! (sender in participants))
-              {
-                participants[sender] = true;
-                this.addParticipantNode('participants', sender, "speaker")
-              }
-              for each (let identity in message.to)
-              {
-                if (! (identity in participants))
-                {
-                  participants[identity] = true;
-                  this.addParticipantNode('participants', identity, "recipient")
-                }
-              }
-              for each (let identity in message.cc)
-              {
-                if (! (identity in participants))
-                {
-                  participants[identity] = true;
-                  this.addParticipantNode('participants', identity, "recipient cc")
-                }
-              }
-            }
-
-            let message = document.getAnonymousElementByAttribute(this, "anonid", "message");
-            message.obj = this.messages[0];
-
-            // find all the replies to this message
-            let messageIter = Iterator(this.messages);
-            messageIter.next()
-            let replies = document.getAnonymousElementByAttribute(this, "anonid", "replies");
-            while (replies.firstChild)
-              replies.removeChild(replies.firstChild);
-              
-            for each (let [i,replyMsg] in messageIter) {
-              let replyNode = document.createElement('reply');
-              replies.appendChild(replyNode);
-              replyNode.obj = replyMsg;
-            }
-        } catch (e) {
-           dumpExc(e, 'reply');
-        }
-        ]]></body>
+        <body/>
       </method>
     </implementation>
 
     <handlers>
-      <handler event="click" phase="capturing" button="0" preventdefault="true">
+      <handler event="focus" phase="capturing" preventdefault="true">
         <![CDATA[
-        // when a conversation is selected, show the messages in the conversation view.
-      try {
-        let conversationNode = document.getElementById('messagelist'); // XXX make generic
-        while (conversationNode.firstChild)
-          conversationNode.removeChild(conversationNode.firstChild);
-        let messages = Iterator(this.messages);
-        let indx, msg, msgNode;
-        for each ([indx, msg] in messages) {
-          msgNode = document.createElement('fullmessage');
-          conversationNode.appendChild(msgNode);
-          msgNode.obj = msg;
-        }
-        $("#backButton").animate({'opacity': 1})
-        $(".rhs").animate({'width': "40em"})
-        $(".conversations").animate({'marginRight': "41em"});
-        $("#commandbox").slideUp();
-        $(conversationNode).slideDown();
-      } catch (e) {
-        dumpExc(e);
-      }
-      ]]>
+          $("#toolbox").css("top", $(this).offset().top);
+          selectedConversation = $(this);
+        ]]>
+      </handler>
+      <handler event="mouseover">
+        <![CDATA[
+            $("#toolbox").css("top", $(this).offset().top);
+            selectedConversation = $(this);
+        ]]>
       </handler>
     </handlers>
-    
+      try {
+    <!---->
+    <!--<handlers>-->
+    <!--  <handler event="click" phase="capturing" button="0" preventdefault="true">-->
+    <!--    <![CDATA[-->
+    <!--    // when a conversation is selected, show the messages in the conversation view.-->
+    <!--  try {-->
+    <!--    let conversationNode = document.getElementById('messagelist'); // XXX make generic-->
+    <!--    while (conversationNode.firstChild)-->
+    <!--      conversationNode.removeChild(conversationNode.firstChild);-->
+    <!--    let messages = Iterator(this.messages);-->
+    <!--    let indx, msg, msgNode;-->
+    <!--    for each ([indx, msg] in messages) {-->
+    <!--      msgNode = document.createElement('fullmessage');-->
+    <!--      conversationNode.appendChild(msgNode);-->
+    <!--      msgNode.glodaMessage = msg;-->
+    <!--    }-->
+    <!--    $("#backButton").animate({'opacity': 1})-->
+    <!--    $(".rhs").animate({'width': "40em"})-->
+    <!--    $(".conversations").animate({'marginRight': "41em"});-->
+    <!--    $("#commandbox").slideUp();-->
+    <!--    $(conversationNode).slideDown();-->
+    <!--  } catch (e) {-->
+    <!--    dumpExc(e);-->
+    <!--  }-->
+    <!--  ]]>-->
+    <!--  </handler>-->
+    <!--</handlers>-->
+    <!---->
     <content>
-      <html:div class="conversation">
-        <html:div class="conversation wrap">
-          <html:div class="participants" anonid="participants"></html:div><message anonid="message"/>
-          <html:div class="replies" anonid="replies"></html:div>
+      <html:a class="conversation">
+        <html:div class="toolbox">
+          <html:div class="toolbar">
+            <html:button class="archive">Archive</html:button>
+            <html:button class="delete">Delete</html:button>
+            <html:button class="junk">Junk</html:button>
+          </html:div>
+          <html:div>
+            <html:button>Reply</html:button>
+            <html:button>Forward</html:button>
+            <html:button>&#8744;</html:button>
+          </html:div>
         </html:div>
-      </html:div>
+
+        <html:div class="image"><html:img src="bryan" /></html:div>
+        <html:div class="message">
+          <html:div class="header">
+              <html:div class="addressing" onclick="document.getBindingParent(this).openMessageInTab()">
+                <html:span anonid="author" class="author"></html:span> writes 
+                  <html:div anonid="recipients" class="recipients"/> 
+                  <html:span anonid="date" class="date"></html:span>
+              </html:div>
+              <html:div anonid="subject" class="subject"></html:div>
+              <html:div anonid="tags" class="tags"></html:div>
+          </html:div>
+          <html:blockquote anonid="snippet" class="body">
+          </html:blockquote>
+        </html:div>
+        <html:div class="replies" anonid="replies">
+          <html:div class="reply other" anonid="reply_other">
+            <html:div class="see-all">
+              <html:span anonid="other_reply_count"></html:span><html:span anonid="unread_reply_count" class="unread"></html:span>
+            </html:div>
+          </html:div>
+        </html:div>
+      </html:a>
     </content>  
   </binding>
 

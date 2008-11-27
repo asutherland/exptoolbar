@@ -414,7 +414,7 @@ var experimentaltoolbar = {
         for each (let contact in aItems) {
           let node = doc.createElementNS("http://www.w3.org/1999/xhtml", "contact");
           results.appendChild(node);
-          node.obj = contact;
+          node.glodaIdentity = contact;
           node.id = 'contact_' + contact.id.toString();
         }
       },
@@ -427,6 +427,7 @@ var experimentaltoolbar = {
   /* stolen from searchBar.js, changing to use search view from quicksearch */
   createSearchView: function()
   {
+    //dump("in createSearchView\n")
     let viewType = gDBView.viewType;
     //if not already in quick search view
     if (viewType != nsMsgViewType.eShowSearch)
@@ -505,50 +506,46 @@ var experimentaltoolbar = {
 
     RerootThreadPane();
   },
-  applyQueryToDocument: function applyQueryToDocument (aQuery) {
-    let doc = this.tabmail.currentTabInfo.panel.contentDocument;
-    let win = this.tabmail.currentTabInfo.panel.contentWindow;
-    let conversationsNode = doc.getElementById("conversations");
-    dump("applyQueryToDocument !\n");
-    while (conversationsNode.firstChild) {
-      conversationsNode.removeChild(conversationsNode.firstChild);
+  
+  clearSearchResults: function () {
+    try {
+      // XXX this fails sometimes, why?
+      let doc = this.tabmail.currentTabInfo.panel.contentDocument;
+      let conversationsNode = doc.getElementById("conversations");
+      while (conversationsNode.firstChild) {
+        conversationsNode.removeChild(conversationsNode.firstChild);
+      }
+    } catch (e) {
+      dumpExc(e);
     }
-    dump("cleaned up mess!\n");
+    // XXX TBD: clear toolbox
+    // XXX TBD: move to binding
+  },
+  
+  applyQueryToDocument: function applyQueryToDocument (aQuery) {
+  try {
+    dump("applyQueryToDocument !\n");
+
+    this.clearSearchResults();
+
+    let doc = this.tabmail.currentTabInfo.panel.contentDocument;
     let queryNode = doc.getElementById("query");
-    queryNode.obj = aQuery;
+    queryNode.glodaQuery = aQuery;
 
     // do not allow us to issue an empty query, or we will explode!
     if (!aQuery.constraintCount)
       return;
 
-    let conversationMap = {};
-
+    //ddumpObject(queryNode, "queryNode", 1);
+    
     let collection = aQuery.getCollection({
       onQueryCompleted: function() {
-          // send the conversations to the timeline
-          let id;
-          dump("ON QUERY COMPLETED!\n");
-          // clear the set of conversations; they will add themselves as their
-          //  messages collections load. XXX Update-every-time is not a great
-          //  thing, and should be replaced by a timer thing.
-          win.gTimeline_setConversations([]);
       },
       onItemsAdded: function (aItems) {
-        // extract conversations
-        //dump("onItemsAdded!\n");
-        for each (let message in aItems) {
-          let conv = message.conversation;
-          if (!(conv.id in conversationMap)) {
-            conversationMap[conv.id] = conv;
-          }
-          let convid = 'conv'+conv.id.toString();
-          let node = doc.getElementById(convid);
-          if (node == undefined) {
-            node = doc.createElementNS("http://www.w3.org/1999/xhtml", "conversation");
-            conversationsNode.appendChild(node);
-            node.id = 'conv' + conv.id.toString()
-            node.obj = conv;
-          }
+        try {
+          queryNode.addItems(aItems);
+        } catch (e) {
+          dumpExc(e);
         }
       },
       onItemsModified: function () {
@@ -556,25 +553,31 @@ var experimentaltoolbar = {
       onItemsRemoved: function () {
       }
     });
+  } catch (e) {
+    dumpExc(e);
+  }
   },
   clearViewQuery: function () {
-    restorePreSearchView();
+    // clear results pane.
+    this.clearSearchResults();
+    // ??? why do this?
+    //restorePreSearchView(); 
   },
   applyConstraints: function applyConstraints() {
+  try {
     if (!this._constraintsChanged &&
         this.searchInput.value == this._activeSearchText)
       return;
     if (this._suppress)
       return;
 
-dump("APPLY CONSTRAINTS\n");
     let query = Gloda.newQuery(Gloda.NOUN_MESSAGE);
 
     let textSpacer = this.searchInput;
 
     if ((textSpacer.prevBubble === null) && !this.searchInput.value.length) {
-      this.clearViewQuery();
       dump("restoring previous search\n");
+      this.clearViewQuery();
       return;
     }
 
@@ -615,6 +618,9 @@ dump("APPLY CONSTRAINTS\n");
 
     this._activeSearchText = this.searchInput.value;
     this._constraintsChanged = false;
+  } catch (e) {
+    dumpExc(e);
+  }
   },
 
   makeSearchTab: function makeSearchTab(constraints) {

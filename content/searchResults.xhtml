@@ -16,50 +16,36 @@
       href="chrome://experimentaltoolbar/content/searchResults.css"
       type="text/css"></link>
   <script type="application/javascript;version=1.8"
-      src="chrome://experimentaltoolbar/content/jquery.min.js"></script>
+      src="chrome://experimentaltoolbar/content/ddump.js"></script>
   <script type="application/javascript;version=1.8"
       src="chrome://experimentaltoolbar/content/showdown.js"></script>
   <script type="application/javascript;version=1.8"
+      src="chrome://experimentaltoolbar/content/jquery.min.js"></script>
+  <script type="application/javascript;version=1.8"
       src="chrome://experimentaltoolbar/content/innerDOM.js"></script>
-  <script>
-    Timeline_ajax_url="chrome://experimentaltoolbar/content/timeline/src/ajax/api/simile-ajax-api.js?bundle=false";
-    Timeline_urlPrefix='chrome://experimentaltoolbar/content/timeline/src/webapp/api/';
-    Timeline_parameters='bundle=false';
-
-    //Timeline_ajax_url="chrome://experimentaltoolbar/content/timeline_packed/timeline_ajax/simile-ajax-api.js";
-    //Timeline_urlPrefix='chrome://experimentaltoolbar/content/timeline_packed/timeline_js/';
-    //Timeline_parameters='bundle=true';
-  </script>
-  <script type="text/javascript"
-      src="chrome://experimentaltoolbar/content/timeline/src/webapp/api/timeline-api.js"></script>
-  <!--<script type="text/javascript"-->
-  <!--    src="chrome://experimentaltoolbar/content/timeline_packed/timeline_js/timeline-api.js"></script>-->
   <script type="application/javascript;version=1.8"
       src="chrome://experimentaltoolbar/content/searchResults.js"></script>
   </head>
 <body onload="OnLoad()">
-  <div id="timeline-wrap">
-    <div id="close-timeline-button"/>
-    <div id="my-timeline" style="height: 150px;"></div>
-  </div>
   <div id="window">
     <div class="results" id="results">
-      <div id="navigation">
-        <div id="backButton" class="command" onclick="goback()" style="opacity: 0;">Back</div>
-      </div>
       <div class="conversations" id="conversations"/>
     </div>
-    <div class="rhs">
-      <div id="commandbox" class="commandbox">
-          <div id="timeline-toggle-button" class="command">Show timeline</div>
-          <div class="command">Delete</div>
-          <div class="command">Move</div>
-          <div class="command">Archive</div>
-          <div class="command">Mark as Junk</div>
-          <query id="query"/>
-      </div>
-      <div class="messagelist" id="messagelist"/>
+  </div>
+  <div class="messagelist" id="messagelist"/>
+
+  <div id="toolbox" class="toolbox">
+    <div class="toolbar">
+      <button class="archive"><u>A</u>rchive</button>
+      <button class="delete"><u>D</u>elete</button>
+      <button class="junk"><u>J</u>unk</button>
+    </div>
+    <div>
+      <button class="reply"><u>R</u>eply</button>
+      <button class="forward"><u>F</u>orward</button>
+      <button type="menu">&#8744;</button>
     </div>
   </div>
+  <query id="query"/>
 </body>
 </html>

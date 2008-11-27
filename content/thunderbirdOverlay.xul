@@ -41,6 +41,7 @@
 <overlay id="experimentaltoolbar-overlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="overlay.js" type="application/javascript;version=1.8"/>
+  <script src="chrome://experimentaltoolbar/content/ddump.js" type="application/javascript;version=1.8"/>
   <stringbundleset id="stringbundleset">
     <stringbundle id="experimentaltoolbar-strings" src="chrome://experimentaltoolbar/locale/experimentaltoolbar.properties"/>
   </stringbundleset>
@@ -105,7 +106,7 @@
   </box>
 
   <popup id="emailAddressPopup">
-    <menuitem id="gloda-involves-filter-menuitem" oncommand="experimentaltoolbar.constrainFromEmailPopup(document.popupNode.parentNode);" label="Search By Contact"/>
+    <menuitem id="gloda-involves-filter-menuitem" oncommand="experimentaltoolbar.constrainFromEmailPopup(findEmailNodeFromPopupNode(document.popupNode, 'emailAddressPopup'));" label="Search By Contact"/>
   </popup>
 
 </overlay>

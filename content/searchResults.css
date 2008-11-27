@@ -22,223 +22,108 @@ reply {
   -moz-binding: url('chrome://experimentaltoolbar/content/bindings.xml#reply');
 }
 
-body { margin: 0em; padding: 0em; font-family: sans-serif; font-size: 10pt; }
-#window { position: relative; }
-
-query {position: relative; display: block; padding: 1em;}
-.scope {display: inline;}
-.constraints {display: inline;}
-.constraint {display: inline;}
-
-.match { font-weight: bold; }
-
-.conversations {
-  border-right: 1px solid #9f9f9f;
-  border-left: 1px solid #9f9f9f;
-  margin-right: 16em; /* rhs.width + 1em pad */
-  height: 400px;
-  overflow: auto;
-}
-
-.messagelist {
-  height: 400px;
-  overflow: auto;
-}
+/*body { margin: 0em; padding: 0em; font-family: sans-serif; font-size: 10pt; }*/
+/*#window { position: relative; }*/
 
 
-.conversation.unread { background-color: #fefefe; }
-.conversation { padding: 0.2em; background-color: #e1e7f0;  position: relative; border-bottom: 1px solid #9f9f9f; cursor: pointer;}
-.conversation:first-child { border-top: 1px solid #9f9f9f; }
-.conversation:hover { background-color: #edeef0; }
-.conversation.wrap { border: none; background-color: inherit; }
 
-conversation .participants { width: 10em; position: absolute; top: 0em; left: 0em; }
-conversation .participants .participant { display: inline; }
-identity:after { content: ", "; }
-identity:last-child:after { content: "" }
+/* BASICS */
+body { font-family: sans-serif; font-size: 10pt; margin: 0px; padding: 0px; }
+img { margin: 0em; padding: 0em; border: none; }
+img[src=""] { visibility: hidden; }
 
-.message.wrap { position: relative; }
-.conversation .message { margin-left: 12em; }
-.reply .message { margin-left: 11em; min-height: 1.5em;}
+/* CONVERSATION CONTAINER */    
+/************** 
+  CONVERSATION
+    IMAGE
+    MESSAGE
+      HEADER
+        RECIPIENTS
+          RECIPIENT
+          (+DATE)
+        SUBJECT
+        TAGS
+          TAG              
+      BODY
+    REPLIES
+      REPLY
+***************/
 
-.subject { white-space: nowrap; overflow:hidden; }
-.date { position: absolute; right: 0em; top: 0em; text-align: right; font-size: smaller;}
-.snippet { color: #666; white-space: nowrap; overflow: hidden; margin-right: 7em; }
+a.conversation { text-decoration: none; display: block; }
+a.conversation:visited { color: #14628a; }
+.conversation { background-color: #fff; min-height: 5em; }
+.conversation { position: relative; min-width: 600px; max-width: 1024px; }
+.conversation { padding: 0em; margin: 0px; padding-bottom: 1em; border-bottom: 1px solid #ddd;}
+.conversation:last-child { margin-bottom: 0em; }
+.conversation:first-child { margin-top: 0em; border-top: 1px solid #ddd; }
 
-.replies { margin-left: 1em; }
-/*.reply { position: relative; margin-top: 0.5em; }*/
-.reply .participants { text-align: right; }
-.reply .message > .subject { display: none; }
+.conversation > .image { position: absolute; left: 0.2em; }
+.conversation > .image > img { width: 48px; height: 48px; }
 
-reply { position: relative; margin-top: 0.5em; display: block;}
-reply .participants { text-align: right; }
-reply .message > .subject { display: none; }
+/* MESSAGE */
+/*.message, .replies { position: relative; margin-left: 48px; padding-left: 1em;  }*/
+.message, .replies { position: relative; margin-left: 0px; padding-left: 0em;  }
 
-.rhs { width: 15em; position: absolute; right: 0em; top: 0em;}
- 
-/*All of the css that follows is bad -- daa */
+.message .addressing { font-size: x-small; color: #666; }
+.message .addressing:hover { text-decoration: underline; }
+.message .addressing .author { font-size: medium; color: #222; }    
 
-.details .subject {
-  padding-bottom: 1em;
-}
+.message .addressing .date { text-decoration: none; color: #666; font-weight: normal;  }
+.message .addressing .date:before { content: "at "; }
 
-.headerlabel {color: grey; display: inline;}
+.header .recipients { display: inline; font-size: medium; color: #222; }
+.header .recipient:first-child:before { content: ""; }
+.header .recipient:after { content: ", "; }
+.header .recipient:last-child:after { content: ""; }
+.you { text-transform: lowercase; }
 
-.msgheaders {
-  position: relative;
-  display: block;
-  padding-bottom: 1.2em; /* this shouldn't be necessary but ... XXX */
-}
+.message .subject { text-decoration: underline; font-weight: bold; white-space: nowrap; overflow: hidden; margin-bottom: 0.3em; color: #14628a; }
 
-.snippet[bug-attachment] {background-color: lightblue;}
-.snippet[bug-request-action="1"] {color: yellow;}
-.snippet[bug-request-action="2"] {color: green;}
-.snippet[bug-request-action="3"] {color: red;}
+.message .body { color: #666; margin: 0.3em 0em; padding: 0em 1em; }
 
-.msgheader.from { position: absolute; display: block; left: 0em; top: 0em;}
-.msgheader.to { position: absolute; display: block; right: 0em; top: 0em;}
-.msgheader.subject { position: absolute; display: block; left: 0em; top: 0em;}
-.msgheader.date { position: absolute; display: block; right: 0em; top: 0em;}
-.msgheader .participants { display: inline; padding-bottom: .5em; }
-.msgheader .participant { display: inline}
-.details .subject:before { content: "Re: "; color: grey;}
-.details .date { top: 0em; right: 0em; color: grey; font-size: 90%;}
+.message .tags span { -moz-border-radius: 0.3em; padding: 0em 0.4em; }
+.message .folder { background-color: #faf0b8; border: 1px solid #ede4af; }
+.message .tag[type="moz"] { background-color: #669999; border: 1px solid #5e8c8c; color: #fff; }
+.message .tag[type="advert"] { background-color: #990033; border: 1px solid #8c002f; color: #fff; }
 
-.details {margin-bottom: 1em;  padding-right: 1em;}
+/* REPLIES */
+.replies { padding: 0em 2em; font-size: small; }
 
-.details .headerblock {
-border: 1px solid grey;
-font-size: 100%;
-background-color: lightgrey;
--moz-border-radius: 5px;
-padding-left: 1em;
-padding-right: 1em;
-padding-top: 1em;
-padding-bottom: 1em;
-}
-.message .body { font-size: 95%;
-margin-left: 1em;
-margin-right: 1em;
-padding: 1em;
-border-left: 1px solid grey;
-border-right: 1px solid grey;
-border-bottom: 1px solid grey;
-background-color: white;
--moz-border-radius-bottomleft: 5px;
--moz-border-radius-bottomright: 5px;
-}
+/* REPLY */
+.replies .reply { border-bottom: 1px solid #dde1eb; margin: 0em; padding: 0em; }
+.replies .reply { background-color: #fff; margin-right: 10em; }
+.replies .reply:only-of-type { border-bottom: none; }
 
-div.command {
-  width: 14em;
-  cursor: pointer;
-  display: block;
-  min-width: 1px;
-  font-size: 90%;
-  color: black;
-  margin-left: 0px;
-  padding-left: 3px;
-  padding-right: 3px;
-  padding-top: 0px;
-  margin-top: 4px;
-  margin-bottom: 4px;
-  background-color: rgb(211,215,207);
-  border: 2px solid #C0C3C6;
-  -moz-border-radius: 4px;
-}
+.replies .reply.other { background-color: inherit; border: none; margin: 0em; padding: 0em; }
+.replies .reply.other[none='true'] { display:none; }
+.replies .reply > .author { }
+.replies .reply > .author:hover { text-decoration: underline; }
+.replies .reply > .author > img { width: 24px; height: 24px; vertical-align: middle;}
+.replies .reply > .author > .date { color: #adb0a9; }
+.replies .reply > .author > .date:before { content: "at "; }
+.replies .reply > .body { margin-left: 24px; padding-left: 1em; color: #555753;  }
+.replies .reply > .see-all { text-align: center; }
+.replies .reply > .see-all > .unread { font-weight: bold; }
+.replies .reply > .see-all > .unread:before { content: ", "; }
 
-div.command:hover {
-  background-color: rgb(230,231,227);
-  border: 2px solid #B0B3B6;
-}
+/* UNKNOWN SENDERS */
+.conversation.unknown { }
+.conversation.unknown .message .body { display: none; }   
 
-.hidden {
-  visibility: hidden;
-}
+/* READ CONVERSATIONS */
+a.conversation.read:visited { color: #666; }
+.conversation.read { background-color: #f3f3f3; }
+.conversation.read .subject { color: #333; text-decoration: none; font-weight: normal; }
 
-conversationsummary {
-  display: block;
-  padding-left: 1em;
-  padding-right: 1em;
-  border-bottom: 1px solid grey;
-}
 
-span.navbutton {
-  display: inline-block;
-  background-color: lightblue;
-  -moz-border-radius: 3px;
-  color: black;
-  padding-left: .5em;
-  padding-right: .5em;
-  padding-top: .2em;
-  padding-bottom: .2em;
-  margin: 4px;
-  font-family: sans-serif;
-  font-size: small;
-}
+.conversations[hidden="true"] { display: none; }
 
-.t-highlight1{background-color:#ccf;}
-.p-highlight1{background-color:#fcc;}
+/* BUTTON TOOLBOX */
+.toolbox { visibility: hidden; float: right; text-align: right; margin: 0em;  padding: 0em 0.2em; background-color: #efefef; -moz-border-radius-bottomleft: 1em; border-left: 1px solid #ccc; border-bottom: 1px solid #ccc;  border-right: 1px solid #ccc;  }
+.toolbox button { font-size: x-small; margin: 0.3em 0em; -moz-user-focus: ignore; }
+button.archive { font-weight: bold; }
+button[type="menu"] { border: none; background-color: #ddd; -moz-border-radius: 0.5em; }
 
-#timeline-wrap {
-  position: relative;
-  background-color: white;
-  font-family: Trebuchet MS, Helvetica, Arial, sans serif;
-  font-size: 8pt;
-  border-bottom: 1px solid #aaa;
-}
+/* FLOATING BUTTON TOOLBOX */
+#toolbox { position: absolute; top: 0px; right: 0px; visibility: visible; float: none; }
 
-#close-timeline-button {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  z-index: 100;
-  background-image: url("chrome://global/skin/icons/closetab.png");
-  width: 16px;
-  height: 16px;
-}
-
-#close-timeline-button:hover {
-  background-image: url("chrome://global/skin/icons/closetab-active.png");
-}
-
-#my-timeline {
-}
-
-.timeline-highlight-label-start .label_t-highlight1{color:#f00;}
-.timeline-highlight-label-end .label_t-highlight1{color:#aaf;}
-
-.timeline-band-events .important{color:#f00;}		
-.timeline-band-events .small-important{background:#c00;}
-
-.timeline-default {
-    font-family: Trebuchet MS, Helvetica, Arial, sans serif;
-    font-size: 8pt;
-    border: 1px solid #aaa;
-}
-/*---------------------------------*/
-
-.timeline-event-tape {background: orange; opacity: .8 !important}
-
-/*.dark-theme {color:#eee;}*/
-/*.dark-theme .timeline-band-0 .timeline-ether-bg{background-color:#333}*/
-/*.dark-theme .timeline-band-1 .timeline-ether-bg{background-color:#111}*/
-/*.dark-theme .timeline-band-2 .timeline-ether-bg{background-color:#222}*/
-/*.dark-theme .timeline-band-3 .timeline-ether-bg{background-color:#444}*/
-/**/
-/**/
-/*.dark-theme .t-highlight1{background-color:#003;}*/
-/*.dark-theme .p-highlight1{background-color:#300;}*/
-/**/
-/*.dark-theme .timeline-highlight-label-start .label_t-highlight1{color:#f00;}*/
-/*.dark-theme .timeline-highlight-label-end .label_t-highlight1{color:#115;}*/
-/**/
-/*.dark-theme .timeline-band-events .important{color:#c00;}*/
-/*.dark-theme .timeline-band-events .small-important{background:#c00;}*/
-/**/
-/*.dark-theme .timeline-date-label-em{color:#fff;}*/
-/*.dark-theme .timeline-ether-lines{border-color:#555; border-style:solid;}*/
-/*.dark-theme .timeline-ether-highlight{background:#555;}*/
-/**/
-/*.dark-theme .timeline-event-tape {background: lightyellow; opacity: .8 !important}*/
-/*.dark-theme .timeline-small-event-tape{background:#f60;}*/
-/*.dark-theme .timeline-ether-weekends{background:#111;}*/
