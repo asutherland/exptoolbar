@@ -56,6 +56,11 @@
           let conversations = [];
 
           dump("identifying conversations from messages\n")
+          // XXX TBD: we should have the messages sorted w/ most recent first,
+          // that way we'll have 'free' sorting of the conversations.
+          // In general, we probably want something smarter to figure out
+          // most relevant conversations first, but recency is a good first cut.
+          
           for each (let message in items) {
             //dump("message.id = " + message.id + '\n');
             this.hitMessageMap[message.id] = true;

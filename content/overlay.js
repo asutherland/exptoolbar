@@ -405,7 +405,7 @@ var experimentaltoolbar = {
     let doc = this.tabmail.currentTabInfo.panel.contentDocument;
     let win = this.tabmail.currentTabInfo.panel.contentWindow;
 
-    let query = Gloda.newQuery(Gloda.NOUN_CONTACT);
+    let query = Gloda.newQuery(Gloda.NOUN_CONTACT).limit(100);
 
     let results = doc.getElementById("results");
 
@@ -612,6 +612,8 @@ var experimentaltoolbar = {
       dump("adding fulltext search on: " + this.searchInput.value + "\n");
       query.bodyMatches(this.searchInput.value);
     }
+
+    query.orderBy('-date'); // most recent messages first
 
     if (this.tabmail.currentTabInfo.mode.tabType.name == "search")
       this.applyQueryToDocument(query);

@@ -1,11 +1,5 @@
-* broke folder-specific searches.  
-
 * the unread/other stuff makes everything much slower.  figure out how to make the initial message return 
   be sorted, use that to figure out the most recent 20 conversations; use the 20 conversations to do the query of
   other messages in the conversations we're going to show, w/o having to look up all messages in all conversations
- 
-* restoring context on mail tab fails sometimes
-  * do search that finds something
-  * edit the search bar to contain nothing
-  * cmd-w -> the mail tab isn't restored
-  
+* get resizing to work (esp. placement of toolbox)
+* get toolbox buttons to work

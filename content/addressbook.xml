@@ -66,7 +66,7 @@
         ]]>
       </destructor>
       
-      <property name="obj">
+      <property name="glodaIdentity">
         <!--This is the GlodaContact object-->
         <getter>
           <![CDATA[
@@ -78,7 +78,7 @@
             try {
                 this._contact = val;
 
-                this._name.textContent = this._contact.name;                               
+                this._name.textContent = this._contact.name;
                 this._description.textContent = this._contact.contactUUID || "description";
 
                 let photoURL = null;
