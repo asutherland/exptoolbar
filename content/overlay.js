@@ -610,7 +610,7 @@ var experimentaltoolbar = {
 
     if (this.searchInput.value) {
       dump("adding fulltext search on: " + this.searchInput.value + "\n");
-      query.bodyMatches(this.searchInput.value);
+      query.fulltextMatches(this.searchInput.value);
     }
 
     if (this.tabmail.currentTabInfo.mode.tabType.name == "search")

@@ -550,7 +550,35 @@
         <body/>
       </method>
       <method name="onQueryCompleted">
-        <body/>
+        <body><![CDATA[
+          let canvas = document.getAnonymousElementByAttribute(this, "anonid", "canvis");
+          let ctx = canvas.getContext("2d");
+          
+          dump("beginning vis process thinger.\n");
+          
+          let vMessage = new Vis();
+          vMessage.add(new Circle("fromFill", "fromStroke", "fromStrokeWidth",
+                                  "radius"));
+        
+          let vThread = new Vis();
+          vThread.add(new DistinctColor("from", "fromFill", 0.2, 0.9));
+          vThread.add(new DistinctColor("from", "fromStroke"));
+          vThread.add(new GlodaThreader("parent"));
+          vThread.add(new ArcEdges("parent", "x", "y",
+                                   "arcStroke", "arcStrokeWidth"));
+          vThread.add(new LinearLayout(vMessage,
+                                       {radius: 5, y: 0, fromStrokeWidth:1 },
+                                       "x", "y", "radius", "spacing"));
+          
+          vcThread = vThread.makeContext(this.messages, {
+              spacing: 2,
+              arcStroke: new Color(64, 64, 192, 0.2),
+              arcStrokeWidth: 3
+            });
+          dump("about to kick vis.\n");
+          kickIt(vcThread, canvas, ctx, 0, 70);
+          dump("vis kicked.\n");
+        ]]></body>
       </method>
     </implementation>
 
@@ -610,6 +638,9 @@
             <html:button>Forward</html:button>
             <html:button>&#8744;</html:button>
           </html:div>
+        </html:div>
+        <html:div class="vis" anonid="visbox">
+          <html:canvas anonid="canvis" width="160" height="80"></html:canvas>
         </html:div>
 
         <html:div class="image"><html:img src="bryan" /></html:div>
