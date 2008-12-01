@@ -60,7 +60,7 @@ a.conversation:visited { color: #14628a; }
 .conversation > .image { position: absolute; left: 0.2em; }
 .conversation > .image > img { width: 48px; height: 48px; }
 
-.conversation > .vis { position: absolute; left: 880px;
+.conversation > .vis { position: absolute; left: 1024px;
   width: 160px; height: 80px;}
 
 /* MESSAGE */
@@ -96,6 +96,8 @@ a.conversation:visited { color: #14628a; }
 .replies .reply { border-bottom: 1px solid #dde1eb; margin: 0em; padding: 0em; }
 .replies .reply { background-color: #fff; margin-right: 10em; }
 .replies .reply:only-of-type { border-bottom: none; }
+
+.replies reply[vishover] .reply { background-color: #ddf; }
 
 .replies .reply.other { background-color: inherit; border: none; margin: 0em; padding: 0em; }
 .replies .reply.other[none='true'] { display:none; }

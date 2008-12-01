@@ -346,6 +346,24 @@
         </body>
       </method>
     </implementation>
+    <handlers>
+      <handler event="mouseover">
+        <![CDATA[
+          if (selectedConversation) {
+            selectedConversation.get(0).visContext.react("select", null, false,
+              this.glodaMessage.id);
+          }
+        ]]>
+      </handler>
+      <handler event="mouseout">
+        <![CDATA[
+          if (selectedConversation) {
+            selectedConversation.get(0).visContext.react("unselect", null, false,
+              this.glodaMessage.id);
+          }
+        ]]>
+      </handler>
+    </handlers>
     <content>
       <html:div class="reply">
         <html:div class="author" onclick="document.getBindingParent(this).openMessageInTab()">
@@ -551,11 +569,6 @@
       </method>
       <method name="onQueryCompleted">
         <body><![CDATA[
-          let canvas = document.getAnonymousElementByAttribute(this, "anonid", "canvis");
-          let ctx = canvas.getContext("2d");
-          
-          dump("beginning vis process thinger.\n");
-          
           let vMessage = new Vis();
           vMessage.add(new Circle("fromFill", "fromStroke", "fromStrokeWidth",
                                   "radius"));
@@ -563,9 +576,18 @@
           let vThread = new Vis();
           vThread.add(new DistinctColor("from", "fromFill", 0.2, 0.9));
           vThread.add(new DistinctColor("from", "fromStroke"));
-          vThread.add(new GlodaThreader("parent"));
+          vThread.add(new GlodaThreader("parent", "children"));
           vThread.add(new ArcEdges("parent", "x", "y",
                                    "arcStroke", "arcStrokeWidth"));
+          vThread.add(new TriggerTween("click", "children",
+                                       "radius", 10, 5, 1000, "clickStateC"));
+          vThread.add(new TriggerTween("click", "parent",
+                                       "radius", 15, 5, 1000, "clickStateP"));
+          vThread.add(new HoverCallback(this, this.onVisMessageHover));
+          vThread.add(new ExternalToggler("select", "unselect", "id", "toggled",
+                                          {throb: true, fromFill: "white"}));
+          vThread.add(new ConditionalThrobber("throb", "throbState",
+                                              "radius", 5, 10, 900));
           vThread.add(new LinearLayout(vMessage,
                                        {radius: 5, y: 0, fromStrokeWidth:1 },
                                        "x", "y", "radius", "spacing"));
@@ -575,9 +597,36 @@
               arcStroke: new Color(64, 64, 192, 0.2),
               arcStrokeWidth: 3
             });
-          dump("about to kick vis.\n");
-          kickIt(vcThread, canvas, ctx, 0, 70);
-          dump("vis kicked.\n");
+          let canvas = document.getAnonymousElementByAttribute(this, "anonid", "canvis");
+          vcThread.bindToCanvasNode(canvas, 0, 70);
+          
+          this.visContext = vcThread;
+        ]]></body>
+      </method>
+      <method name="onVisMessageHover">
+        <parameter name="aMessage"/>
+        <parameter name="aIsHoverEnter"/>
+        <body><![CDATA[
+          if (this._curHovered) {
+            this._curHovered.removeAttribute("vishover");
+            this._curHovered = null;
+          }
+          if (!aIsHoverEnter)
+            return;
+
+          dump("hovering over: " + aMessage + "\n");
+          let messageId = aMessage.id;
+          let replies = document.getAnonymousElementByAttribute(this, "anonid", "replies");
+          let curReply = replies.firstChild;
+          while (curReply) {
+            if (curReply.glodaMessage && (curReply.glodaMessage.id == messageId)) {
+              dump("!!! setting vishover on " + curReply.tagName + ": " + curReply + "\n");
+              curReply.setAttribute("vishover", "true");
+              this._curHovered = curReply;
+              break;
+            }
+            curReply = curReply.nextSibling;
+          }
         ]]></body>
       </method>
     </implementation>
