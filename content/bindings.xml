@@ -803,6 +803,13 @@
             dump("node.from = " + node.from.contact.name + '\n')
             liNode.appendChild(nameNode);
             parent.appendChild(liNode);
+
+            let messagesNode = document.getAnonymousElementByAttribute(this, "anonid", "messages");
+            let messageNode = document.createElement("message-in-conversation");
+            messagesNode.appendChild(messageNode);
+            messageNode.glodaMessage = node;
+            liNode.messageNode = messageNode;
+            
             if (node['children']) {
               dump("has children: " + node['children'].length + "\n");
               let ulNode = document.createElement('ul');
@@ -836,13 +843,7 @@
               this.addThreadNode(topnode, document.getAnonymousElementByAttribute(this, "anonid", "threadroot"));
             }
 
-            
-            let firstmessage;
-            for each (let message in this.messages)
-            {
-              firstmessage = message;
-              break;
-            }
+            let firstmessage = topnodes[0];
             let participants = {};
             this.addParticipantNode('participants', firstmessage.from, "recipient from")
             participants[firstmessage.from] = true;
@@ -875,13 +876,6 @@
               }
             }
 
-            let messagesNode = document.getAnonymousElementByAttribute(this, "anonid", "messages");
-            for each (let message in this.messages)
-            {
-              let messageNode = document.createElement("message-in-conversation");
-              messagesNode.appendChild(messageNode);
-              messageNode.glodaMessage = message;
-            }
         } catch (e) {
            dumpExc(e, 'reply');
         }
