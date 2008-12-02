@@ -83,32 +83,6 @@ var searchTabMonitor = {
   },
 };
 
-var addressbookTabType = {
-  name: "addressbook",
-  perTabPanel: "iframe",
-  modes: {
-    abAll: {
-      type: "addressbook",
-
-    },
-  },
-  openTab: function (aTab, aConstraints) {
-    aTab.panel.contentWindow.addEventListener("load",
-      function(e) { experimentaltoolbar.showAddressBookContacts(); }, false);
-    aTab.constraints = "";
-    aTab.panel.setAttribute("src",
-      "chrome://experimentaltoolbar/content/addressbook.xhtml");
-    aTab.title = "Address Book v2";
-  },
-  closeTab: function (aTab) {
-  },
-  saveTabState: function (aTab) {
-    aTab.constraints = experimentaltoolbar.serializeConstraints();
-  },
-  showTab: function (aTab) {
-    aTab.constraints = "";
-  }
-};
 
 var experimentaltoolbar = {
   log: Log4Moz.Service.getLogger("exptoolbar.overlay"),
@@ -141,7 +115,6 @@ var experimentaltoolbar = {
 
     this.tabmail = document.getElementById("tabmail");
     this.tabmail.registerTabType(searchTabType);
-    this.tabmail.registerTabType(addressbookTabType);
     this.tabmail.tabMonitors.push(searchTabMonitor);
     if (this.tabmail.currentTabInfo) {
       searchTabMonitor.onTabTitleChanged(this.tabmail.currentTabInfo);
@@ -399,31 +372,6 @@ var experimentaltoolbar = {
 
     this._constraintsChanged = true;
   },
-  showAddressBookContacts: function() {
-    this.createSearchView();
-
-    let doc = this.tabmail.currentTabInfo.panel.contentDocument;
-    let win = this.tabmail.currentTabInfo.panel.contentWindow;
-
-    let query = Gloda.newQuery(Gloda.NOUN_CONTACT).limit(100);
-
-    let results = doc.getElementById("results");
-
-    let collection = query.getCollection({
-      onItemsAdded: function (aItems) {
-        for each (let contact in aItems) {
-          let node = doc.createElementNS("http://www.w3.org/1999/xhtml", "contact");
-          results.appendChild(node);
-          node.glodaIdentity = contact;
-          node.id = 'contact_' + contact.id.toString();
-        }
-      },
-      onItemsModified: function () {
-      },
-      onItemsRemoved: function () {
-      }
-    });
-  },
   /* stolen from searchBar.js, changing to use search view from quicksearch */
   createSearchView: function()
   {
@@ -632,16 +580,6 @@ var experimentaltoolbar = {
     }
     this.clearConstraints();
     this.tabmail.openTab("searchAll", constraints);
-    this._suppress = false;
-  },
-
-  makeAddressBookTab: function makeAddressBookTab(constraints) {
-    this._suppress = true;
-    if (! constraints) {
-      constraints = this.serializeConstraints();
-    }
-    this.clearConstraints();
-    this.tabmail.openTab("abAll", constraints);
     this._suppress = false;
   },
 
