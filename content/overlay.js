@@ -39,6 +39,33 @@ Components.utils.import("resource://app/modules/gloda/log4moz.js");
 Components.utils.import("resource://app/modules/gloda/public.js");
 Components.utils.import("resource://app/modules/gloda/mimemsg.js");
 
+var conversationTabType = {
+  name: "conversation",
+  perTabPanel: "iframe",
+  modes: {
+    conversation: {
+      type: "conversation"
+    }
+  },
+  openTab: function (aTab, aConstraints) {
+    aTab.panel.contentWindow.addEventListener("load",
+      function(e) { experimentaltoolbar.showConversation(aConstraints); }, false);
+    aTab.constraints = aConstraints;
+    dump("subject = " + aConstraints[0].subject + '\n');
+    aTab.panel.setAttribute("src",
+      "chrome://experimentaltoolbar/content/conversation.xhtml");
+    aTab.title = aConstraints[0].subject;
+  },
+  closeTab: function (aTab) {
+  },
+  saveTabState: function (aTab) {
+    aTab.constraints = experimentaltoolbar.serializeConstraints();
+  },
+  showTab: function (aTab) {
+    aTab.constraints = "";
+  }
+};
+
 var searchTabType = {
   name: "search",
   perTabPanel: "iframe",
@@ -116,6 +143,7 @@ var experimentaltoolbar = {
     this.tabmail = document.getElementById("tabmail");
     this.tabmail.registerTabType(searchTabType);
     this.tabmail.tabMonitors.push(searchTabMonitor);
+    this.tabmail.registerTabType(conversationTabType);
     if (this.tabmail.currentTabInfo) {
       searchTabMonitor.onTabTitleChanged(this.tabmail.currentTabInfo);
     }
@@ -372,6 +400,23 @@ var experimentaltoolbar = {
 
     this._constraintsChanged = true;
   },
+  
+  showConversation: function(aConstraints) {
+    try {
+      dump("in showConversation!\n");
+      let conversation = aConstraints[0];
+      //ddumpObject(conversation, "conversation", 1);
+      
+      let doc = this.tabmail.currentTabInfo.panel.contentDocument;
+      let win = this.tabmail.currentTabInfo.panel.contentWindow;
+  
+      let conversationNode = doc.getElementById("conversation-contents");
+      conversationNode.glodaConversation = conversation;
+      dump("set the glodaconv object\n");
+    } catch (e) {
+      dumpExc(e);
+    }
+  },
   /* stolen from searchBar.js, changing to use search view from quicksearch */
   createSearchView: function()
   {
@@ -424,7 +469,11 @@ var experimentaltoolbar = {
       if (typeof(item) == "string")
         this.searchInput.value = item;
       else
-        this.addBubble.apply(this, item);
+      try {
+        this.addBubble.apply(this, item); // this raises an exception sometime
+      } catch (e) {
+        dumpExc(e);
+      }
     }
   },
   applyQueryToView: function (aQuery) {
@@ -580,6 +629,16 @@ var experimentaltoolbar = {
     }
     this.clearConstraints();
     this.tabmail.openTab("searchAll", constraints);
+    this._suppress = false;
+  },
+
+  makeConversationTab: function makeConversationTab(constraints) {
+    this._suppress = true;
+    if (! constraints) {
+      constraints = this.serializeConstraints();
+    }
+    this.clearConstraints();
+    this.tabmail.openTab("conversation", constraints);
     this._suppress = false;
   },
 

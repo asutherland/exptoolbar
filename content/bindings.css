@@ -1,3 +1,36 @@
+query {
+  -moz-binding: url('chrome://experimentaltoolbar/content/bindings.xml#query');
+}
+
+conversation {
+  -moz-binding: url('chrome://experimentaltoolbar/content/bindings.xml#conversation');
+}
+
+message {
+  -moz-binding: url('chrome://experimentaltoolbar/content/bindings.xml#message');
+}
+
+fullmessage {
+  -moz-binding: url('chrome://experimentaltoolbar/content/bindings.xml#fullmessage');
+}
+
+identity {
+  -moz-binding: url('chrome://experimentaltoolbar/content/bindings.xml#identity');
+}
+
+reply {
+  -moz-binding: url('chrome://experimentaltoolbar/content/bindings.xml#reply');
+}
+
+conversation-reader {
+  -moz-binding: url('chrome://experimentaltoolbar/content/bindings.xml#conversation-reader');
+}
+
+message-in-conversation {
+  -moz-binding: url('chrome://experimentaltoolbar/content/bindings.xml#message-in-conversation');
+}
+
+
 body#main {
     background-color: white !important;
     padding: 2em !important;

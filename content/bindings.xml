@@ -248,8 +248,7 @@
         </body>
       </method>
     </implementation>
-    <content>
-        <html:div class="snippet" anonid="snippet"></html:div>
+    <content><html:div class="snippet" anonid="snippet"></html:div>
     </content>
   </binding>  <!--message-->
 
@@ -266,7 +265,7 @@
               body = this.mimeMsg.bodyPlain;
             let bodyHTML = makeHTML(body)
             let bodyDOM = stringToDOM(bodyHTML);
-            var bodyNode= document.getAnonymousElementByAttribute(this, "anonid", "body");
+            let bodyNode= document.getAnonymousElementByAttribute(this, "anonid", "body");
             try {
               bodyNode.appendChild(bodyDOM);
             } catch (e) {
@@ -362,10 +361,8 @@
     </content>
   </binding>
 
-
   <binding id="conversation" extends="chrome://experimentaltoolbar/content/bindings.xml#message">
     <resources>
-      <stylesheet src="chrome://experimentaltoolbar/content/bindings.css"/>
     </resources>
     <implementation>
       <property name="glodaConversation">
@@ -383,12 +380,25 @@
         ]]>
         </setter>
       </property>
+      <method name="openConversationInTab">
+        <body>
+        <![CDATA[
+        try {
+          //dump("in conversation binding, openConversationInTab\n");
+          let tabmail = parent.document.getElementById("tabmail");
+          tabmail.openTab("conversation", [this.conversation])
+        } catch (e) {
+           dumpExc(e, 'conversation');
+        }
+        ]]>
+        </body>
+      </method>
       <method name="openMessageInTab">
         <body>
         <![CDATA[
         try {
-           dump("in conversation binding, openMessageInTab\n");
-         let tabmail = parent.document.getElementById("tabmail");
+          //dump("in conversation binding, openMessageInTab\n");
+          let tabmail = parent.document.getElementById("tabmail");
           let firstmessage;
           for each (let message in this.messages)
           {
@@ -573,35 +583,6 @@
         ]]>
       </handler>
     </handlers>
-      try {
-    <!---->
-    <!--<handlers>-->
-    <!--  <handler event="click" phase="capturing" button="0" preventdefault="true">-->
-    <!--    <![CDATA[-->
-    <!--    // when a conversation is selected, show the messages in the conversation view.-->
-    <!--  try {-->
-    <!--    let conversationNode = document.getElementById('messagelist'); // XXX make generic-->
-    <!--    while (conversationNode.firstChild)-->
-    <!--      conversationNode.removeChild(conversationNode.firstChild);-->
-    <!--    let messages = Iterator(this.messages);-->
-    <!--    let indx, msg, msgNode;-->
-    <!--    for each ([indx, msg] in messages) {-->
-    <!--      msgNode = document.createElement('fullmessage');-->
-    <!--      conversationNode.appendChild(msgNode);-->
-    <!--      msgNode.glodaMessage = msg;-->
-    <!--    }-->
-    <!--    $("#backButton").animate({'opacity': 1})-->
-    <!--    $(".rhs").animate({'width': "40em"})-->
-    <!--    $(".conversations").animate({'marginRight': "41em"});-->
-    <!--    $("#commandbox").slideUp();-->
-    <!--    $(conversationNode).slideDown();-->
-    <!--  } catch (e) {-->
-    <!--    dumpExc(e);-->
-    <!--  }-->
-    <!--  ]]>-->
-    <!--  </handler>-->
-    <!--</handlers>-->
-    <!---->
     <content>
       <html:a class="conversation">
         <html:div class="toolbox">
@@ -625,7 +606,7 @@
                   <html:div anonid="recipients" class="recipients"/> 
                   <html:span anonid="date" class="date"></html:span>
               </html:div>
-              <html:div anonid="subject" class="subject"></html:div>
+              <html:div anonid="subject" class="subject" onclick="document.getBindingParent(this).openConversationInTab()"></html:div>
               <html:div anonid="tags" class="tags"></html:div>
           </html:div>
           <html:blockquote anonid="snippet" class="body">
@@ -641,5 +622,300 @@
       </html:a>
     </content>  
   </binding>
+  
+  <binding id="message-in-conversation" extends="chrome://experimentaltoolbar/content/bindings.xml#message">
+    <implementation>
+      <method name="_update">
+        <body>
+        <![CDATA[
+        try {
+            parent.MsgHdrToMimeMessage(this._message.folderMessage, this, this.addMessageBody)
+            this.addParticipantNode('sender', this._message.from, 'sender');
 
+            var dateNode = document.getAnonymousElementByAttribute(this, "anonid", "date");
+            dateNode.textContent = makeDateFriendly(this._message.date);
+            
+            //dump("attachmentNames = " + this._message.attachmentNames + '\n');
+            let attachmentCountNode = document.getAnonymousElementByAttribute(this, "anonid", "attachmentcount");
+            let attachmentsList = document.getAnonymousElementByAttribute(this, "anonid", "attachments-list");
+            let attachmentsNode = document.getAnonymousElementByAttribute(this, "anonid", "attachments");
+            let attachmentsUL = document.getAnonymousElementByAttribute(this, "anonid", "attachment_ul");
+            if (this._message.attachmentNames)
+            {
+              attachmentCountNode.textContent = '(' + this._message.attachmentNames.length.toString() + ')';
+              for each (let attachmentName in this._message.attachmentNames)
+              {
+                let attachmentNode = document.createElement('li');
+                let aref = document.createElement('a');
+                aref.textContent = attachmentName;
+                aref.setAttribute('href', attachmentName); // XXX
+                attachmentNode.appendChild(aref);
+                attachmentsUL.appendChild(attachmentNode);
+              }
+              $(attachmentsNode).show();
+              $(attachmentsList).show();
+            }
+            else
+            {
+              $(attachmentsNode).hide();
+              $(attachmentsList).hide();
+            }
+        } catch (e) {
+           dumpExc(e, 'message');
+        }
+        ]]>
+        </body>
+      </method>
+      <method name="_updateMsgBody">
+        <body><![CDATA[
+        try {
+            var snippetNode = document.getAnonymousElementByAttribute(this, "anonid", "snippet");
+            let content = parent.Gloda.getMessageContent(this._message, this.mimeMsg);
+            let snippet;
+            if (content && content.hasContent())
+              snippet = content.getContentSnippet(100);
+            else
+              snippet = findSnippetInMimeMsg(this.mimeMsg);
+            if (!snippet)
+              snippet = "(blank)";
+            snippetNode.textContent = snippet;
+
+            // the following should be replaced by a real mozilla text-to-html
+            // converter XXX
+            body = content.getContentString();
+            let bodyHTML = makeHTML(body);
+            
+            //dump("bodyHTML = " + bodyHTML + '\n');
+            let bodyDOM = stringToDOM(bodyHTML);
+            let iframe = document.getAnonymousElementByAttribute(this, "anonid", "iframe");
+            let bodyNode= iframe.contentDocument.body;
+            try {
+              bodyNode.appendChild(bodyDOM);
+            } catch (e) {
+              //dump("body = " + body + '\n\n');
+              dumpExc(e);
+            }
+            this._message.domContribute(snippetNode);
+        } catch (e) {
+          dumpExc(e);
+        }
+        ]]>
+        </body>
+      </method>
+    </implementation>
+    <handlers>
+      <handler event="click">
+        <![CDATA[
+          $(this).addClass("expanded");
+          let iframe = document.getAnonymousElementByAttribute(this, "anonid", "iframe");
+          let bodyNode= iframe.contentDocument.body;
+          iframe.height = bodyNode.scrollHeight + 40; // WHY NEEDED?
+        ]]>
+      </handler>
+    </handlers>
+    <content><html:div class="header">
+          <html:div class="headers">
+            <html:div class="meta">
+              <html:div>
+                <html:span anonid="attachments" class="attachments">
+                  <html:span anonid="attachmentcount" class="count"></html:span>
+                  <html:img src="file:///usr/share/icons/gnome/16x16/status/stock_attach.png" />
+                </html:span>
+                <html:span anonid="date" class="time"></html:span>
+              </html:div>
+              <html:div class="actions">
+                <html:button>reply all | v</html:button>
+              </html:div>
+            </html:div>
+            <html:div class="details">
+              <html:div class="participants"><html:span
+                    anonid="sender" class="sender"></html:span></html:div
+                ><html:div anonid="snippet" class="snippet"></html:div>
+            </html:div>
+          </html:div>
+        </html:div>
+        <html:div class="body">
+          <html:div anonid="attachments-list" class="attachments-list">
+            <html:div>attachments</html:div>
+            <html:ul anonid="attachment_ul"></html:ul>
+          </html:div>
+          <html:iframe anonid="iframe" class="content" src="chrome://experimentaltoolbar/content/message.html"></html:iframe>
+          <html:div class="attachments-area"></html:div>
+          <html:div class="actions">
+            <html:button>reply all | v</html:button>
+            <html:button>forward</html:button>
+            <html:button>other actions | v</html:button>
+          </html:div>
+        </html:div></content>
+  </binding>
+
+  <binding id="conversation-reader" extends="chrome://experimentaltoolbar/content/bindings.xml#message">
+    <resources>
+      <stylesheet src="chrome://experimentaltoolbar/content/conversationBindings.css"/>
+    </resources>
+    <implementation>
+      <property name="glodaConversation">
+        <!--This is the GlodaConversation object-->
+        <getter>
+            <![CDATA[
+            return this.conversation;
+            ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+        try {
+            this.conversation = val;
+            this.messagesCollection =
+              this.conversation.getMessagesCollection(this);
+        } catch (e) {
+          dumpExc(e);
+        }
+        ]]>
+        </setter>
+      </property>
+      <method name="openMessageInTab">
+        <body>
+        <![CDATA[
+        try {
+          let tabmail = parent.document.getElementById("tabmail");
+          let firstmessage;
+          for each (let message in this.messages)
+          {
+            firstmessage = message;
+            break;
+          }
+          tabmail.openTab("message", firstmessage.folderURI, firstmessage.folderMessage)
+        } catch (e) {
+           dumpExc(e, 'conversation');
+        }
+        ]]>
+        </body>
+      </method>
+      <method name="addThreadNode">
+        <parameter name="node"/>
+        <parameter name="parent"/>
+        <body><![CDATA[
+          try {
+            let liNode = document.createElement('li');
+            let nameNode = document.createElement('span');
+            nameNode.setAttribute('class', 'name');
+            nameNode.textContent = node.from.contact.name;
+            dump("node.from = " + node.from.contact.name + '\n')
+            liNode.appendChild(nameNode);
+            parent.appendChild(liNode);
+            if (node['children']) {
+              dump("has children: " + node['children'].length + "\n");
+              let ulNode = document.createElement('ul');
+              ulNode.setAttribute('class', 'thread');
+              for each (let child in node['children'])
+              {
+                this.addThreadNode(child, ulNode);
+              }
+              parent.appendChild(ulNode);
+            }
+          } catch (e) {
+            dumpExc(e);
+          }
+          ]]>
+        </body>
+      </method>
+      <method name="onItemsAdded">
+        <body><![CDATA[
+          try {
+            this.messages = this.messagesCollection.items;
+            
+            let subjectNode = document.getAnonymousElementByAttribute(this, "anonid", "subject");
+            subjectNode.textContent = this.conversation.subject;
+            
+            // thread the messages
+            let threadmap = new GlodaThreader('edge', 'children');
+            let topnodes = threadmap.map(this.messages);
+            for each (let [,topnode] in Iterator(topnodes))
+            {
+              dump("adding a top node " + topnode + "\n")
+              this.addThreadNode(topnode, document.getAnonymousElementByAttribute(this, "anonid", "threadroot"));
+            }
+
+            
+            let firstmessage;
+            for each (let message in this.messages)
+            {
+              firstmessage = message;
+              break;
+            }
+            let participants = {};
+            this.addParticipantNode('participants', firstmessage.from, "recipient from")
+            participants[firstmessage.from] = true;
+            for each (let message in this.messages)
+            {
+              //ddumpObject(message, "message", 0);
+              //ddumpObject(message['edge'], "message['edge']", 0);
+              //ddumpObject(message['children'], "message['children']", 0);
+              let sender = message.from;
+              if (! (sender in participants))
+              {
+                participants[sender] = true;
+                this.addParticipantNode('participants', sender, "recipient from")
+              }
+              for each (let identity in message.to)
+              {
+                if (! (identity in participants))
+                {
+                  participants[identity] = true;
+                  this.addParticipantNode('participants', identity, "recipient to")
+                }
+              }
+              for each (let identity in message.cc)
+              {
+                if (! (identity in participants))
+                {
+                  participants[identity] = true;
+                  this.addParticipantNode('participants', identity, "recipient cc")
+                }
+              }
+            }
+
+            let messagesNode = document.getAnonymousElementByAttribute(this, "anonid", "messages");
+            for each (let message in this.messages)
+            {
+              let messageNode = document.createElement("message-in-conversation");
+              messagesNode.appendChild(messageNode);
+              messageNode.glodaMessage = message;
+            }
+        } catch (e) {
+           dumpExc(e, 'reply');
+        }
+        ]]></body>
+      </method>
+      <method name="onItemsModified">
+        <body/>
+      </method>
+      <method name="onItemsRemoved">
+        <body/>
+      </method>
+      <method name="onQueryCompleted">
+        <body/>
+      </method>
+    </implementation>
+
+    <handlers>
+    </handlers>
+    <content>
+      <html:div anonid="threader" class="threader">
+        <html:ul anonid="threadroot" class="thread top"></html:ul>
+        <html:div style="font-size:x-small;margin-top:2em;">
+          <html:div><html:a id="expandAll" href="javascript:void(0);">Expand All</html:a></html:div>
+          <html:div><html:a id="collapseAll" href="javascript:void(0);">Collapse All</html:a></html:div>
+        </html:div>
+      </html:div>
+      <html:div anonid="conversation" class="main">
+        <html:div class="toolbar">
+          <html:button style="font-weight:bold;">Archive</html:button>
+          <html:button>Junk</html:button>
+          <html:button>Delete</html:button>
+        </html:div>
+        <html:div anonid="subject" class="subject"></html:div>
+        <html:div class="between">Between <html:span anonid="participants" class="recipients"></html:span></html:div><html:div anonid="messages" class="messages"/></html:div>
+    </content>
+  </binding>
 </bindings>

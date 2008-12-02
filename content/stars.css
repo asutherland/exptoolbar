@@ -1,0 +1,6 @@
+
+.star { position: absolute; }
+.star.unstarred { clip:rect(0px 16px 16px 0px); }
+.star.starred { clip:rect(0px 48px 16px 32px); }
+
+a.back { font-size: small; border: 1px solid #999; color: #999; padding: 0.1em 0.3em; -moz-border-radius: 0.2em; text-decoration: none;  }

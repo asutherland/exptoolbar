@@ -18,41 +18,32 @@
       type="text/css"></link>
   <!--Themes-->
   <link rel="stylesheet"
-      href="chrome://experimentaltoolbar/content/searchResults.css"
+      href="chrome://experimentaltoolbar/content/stars.css"
+      type="text/css"></link>
+  <link rel="stylesheet"
+      href="chrome://experimentaltoolbar/content/index.css"
+      type="text/css"></link>
+  <link rel="stylesheet"
+      href="chrome://experimentaltoolbar/content/conversation.css"
       type="text/css"></link>
   <script type="application/javascript;version=1.8"
       src="chrome://experimentaltoolbar/content/ddump.js"></script>
   <script type="application/javascript;version=1.8"
-      src="chrome://experimentaltoolbar/content/showdown.js"></script>
-  <script type="application/javascript;version=1.8"
       src="chrome://experimentaltoolbar/content/jquery.min.js"></script>
+  <script type="application/javascript;version=1.8"
+      src="chrome://experimentaltoolbar/content/showdown.js"></script>
   <script type="application/javascript;version=1.8"
       src="chrome://experimentaltoolbar/content/innerDOM.js"></script>
   <script type="application/javascript;version=1.8"
       src="chrome://experimentaltoolbar/content/utils.js"></script>
   <script type="application/javascript;version=1.8"
-      src="chrome://experimentaltoolbar/content/searchResults.js"></script>
+      src="chrome://experimentaltoolbar/content/threader.js"></script>
+  <script type="application/javascript;version=1.8"
+      src="chrome://experimentaltoolbar/content/conversation.js"></script>
   </head>
-<body onload="OnLoad()">
-  <div id="window">
-    <div class="results" id="results">
-      <div class="conversations" id="conversations"/>
-    </div>
-  </div>
-  <div class="messagelist" id="messagelist"/>
 
-  <div id="toolbox" class="toolbox">
-    <div class="toolbar">
-      <button class="archive"><u>A</u>rchive</button>
-      <button class="delete"><u>D</u>elete</button>
-      <button class="junk"><u>J</u>unk</button>
-    </div>
-    <div>
-      <button class="reply"><u>R</u>eply</button>
-      <button class="forward"><u>F</u>orward</button>
-      <button type="menu">&#8744;</button>
-    </div>
-  </div>
-  <query id="query"/>
+<body id="body">
+
+<conversation-reader id="conversation-contents"/>
 </body>
 </html>
