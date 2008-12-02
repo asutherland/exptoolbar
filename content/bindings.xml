@@ -55,7 +55,6 @@
           this.hitMessageMap = {};
           let conversations = [];
 
-          dump("identifying conversations from messages\n")
           // XXX TBD: we should have the messages sorted w/ most recent first,
           // that way we'll have 'free' sorting of the conversations.
           // In general, we probably want something smarter to figure out
@@ -79,7 +78,6 @@
           {
             convcount++;
             let conv = conversations[i];
-            dump("conv = " + conv + '\n')
             let convid = 'conv'+conv.id.toString();
             let node = document.getElementById(convid);
             if (!node) {
@@ -90,7 +88,6 @@
               node.glodaConversation = conv; // XXX this is _slow_
             }
           }
-          dump("done creating conversation nodes\n");
           conversationsNode.removeAttribute("hidden"); // XXX the consequences of this are _slow_
           dump("conversations shown\n");
         } catch (e) {
@@ -198,6 +195,7 @@
         <setter>
         <![CDATA[
             this._message = val;
+            this.setAttribute('id', "msg" + val.id.toString());
             this._update();
           ]]>
         </setter>
@@ -339,7 +337,6 @@
         <body>
         <![CDATA[
         try {
-          dump("in binding, openMessageInTab\n");
           let tabmail = parent.document.getElementById("tabmail");
           tabmail.openTab("message", this._message.folderURI, this._message.folderMessage)
         } catch (e) {
@@ -678,14 +675,21 @@
         ]]>
         </body>
       </method>
+      <method name="expand">
+        <body>
+          <![CDATA[
+            $(this).addClass("expanded");
+            let iframe = document.getAnonymousElementByAttribute(this, "anonid", "iframe");
+            let bodyNode= iframe.contentDocument.body;
+            iframe.height = bodyNode.scrollHeight + 40; // WHY NEEDED?
+          ]]>
+        </body>
+      </method>
     </implementation>
     <handlers>
-      <handler event="click">
+      <handler event="click" phase="bubbling" preventdefault="true">
         <![CDATA[
-          $(this).addClass("expanded");
-          let iframe = document.getAnonymousElementByAttribute(this, "anonid", "iframe");
-          let bodyNode= iframe.contentDocument.body;
-          iframe.height = bodyNode.scrollHeight + 40; // WHY NEEDED?
+          this.expand();
         ]]>
       </handler>
     </handlers>
@@ -725,6 +729,82 @@
         </html:div></content>
   </binding>
 
+  <binding id="threadnode" extends="chrome://experimentaltoolbar/content/bindings.xml#message">
+    <!--this is an li of type='threadnode' -->
+    <handlers>
+      <handler event="click" phase="bubbling">
+        <![CDATA[
+        try {
+          event.stopPropagation();
+          // find the message with the right glodaMsgId
+          let id = "msg"+this.message.id;
+          let topbinding = document.getElementById('conversation-contents')
+          let message =  document.getAnonymousElementByAttribute(topbinding, 'id', id);
+          // $(".thread.top li").removeClass("selected");
+          let lastselected =  document.getAnonymousElementByAttribute(topbinding, 'selected', 'true');
+          if (lastselected)
+          {
+            lastselected.removeAttribute('selected');
+            $(lastselected).removeClass('selected');
+          }
+          $(this).addClass("selected");
+          this.setAttribute('selected', 'true');
+          message.expand();
+
+
+          // we use getClientRects() instead of offset() because offset recalcuates 
+          // position against the page which doesn't work for fixed elements above 
+          // scrolling pages
+          let targetOffset = $(message).offset().top - event.target.getClientRects()[0].top;
+          $(document.getElementById('html')).animate( { scrollTop : targetOffset }, "fast" );
+
+        } catch (e) {
+          dumpExc(e);
+        }
+        ]]>
+      </handler>
+    </handlers>
+    <implementation>
+      <property name="glodaMessage">
+        <!--This is the GlodaConversation object-->
+        <getter>
+            <![CDATA[
+            return this.message;
+            ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+        try {
+            this.message = val;
+
+            let nameNode = document.getAnonymousElementByAttribute(this, 'anonid', 'span')
+            nameNode.textContent = this.message.from.contact.name;
+
+            if (this.message['children']) {
+              let ulNode = document.createElement('ul');
+              ulNode.setAttribute('class', 'thread');
+              this.parentNode.appendChild(ulNode);
+              for each (let child in this.message['children'])
+              {
+                let threadNode = document.createElement('li');
+                threadNode.setAttribute('type', 'threadnode');
+                ulNode.appendChild(threadNode);
+                threadNode.glodaMessage = child;
+              }
+            }
+
+        } catch (e) {
+          dumpExc(e);
+        }
+        ]]>
+        </setter>
+      </property>
+    </implementation>
+    <content>
+      <html:span anonid="span" class="name"></html:span>
+    </content>
+  </binding>
+  
   <binding id="conversation-reader" extends="chrome://experimentaltoolbar/content/bindings.xml#message">
     <resources>
       <stylesheet src="chrome://experimentaltoolbar/content/conversationBindings.css"/>
@@ -772,29 +852,28 @@
         <parameter name="parent"/>
         <body><![CDATA[
           try {
-            let liNode = document.createElement('li');
-            let nameNode = document.createElement('span');
-            nameNode.setAttribute('class', 'name');
-            nameNode.textContent = node.from.contact.name;
-            dump("node.from = " + node.from.contact.name + '\n')
-            liNode.appendChild(nameNode);
-            parent.appendChild(liNode);
-
+            let threadNode = document.createElement('li');
+            threadNode.setAttribute('type', 'threadnode');
+            parent.appendChild(threadNode);
+            threadNode.glodaMessage = node;
+          } catch (e) {
+            dumpExc(e);
+          }
+          ]]>
+        </body>
+      </method>
+      <method name="addMessageNode">
+        <parameter name="node"/>
+        <body><![CDATA[
+          try {
             let messagesNode = document.getAnonymousElementByAttribute(this, "anonid", "messages");
             let messageNode = document.createElement("message-in-conversation");
             messagesNode.appendChild(messageNode);
             messageNode.glodaMessage = node;
-            liNode.messageNode = messageNode;
-            
-            if (node['children']) {
-              dump("has children: " + node['children'].length + "\n");
-              let ulNode = document.createElement('ul');
-              ulNode.setAttribute('class', 'thread');
-              for each (let child in node['children'])
-              {
-                this.addThreadNode(child, ulNode);
-              }
-              parent.appendChild(ulNode);
+            this.messageNode = messageNode;
+            for each (let child in node['children'])
+            {
+              this.addMessageNode(child)
             }
           } catch (e) {
             dumpExc(e);
@@ -810,20 +889,27 @@
             let subjectNode = document.getAnonymousElementByAttribute(this, "anonid", "subject");
             subjectNode.textContent = this.conversation.subject;
             
-            // thread the messages
+            // Thread the messages.
+            // Make an array of phantoms so we don't end up modifying the actual
+            // messages.
+            let phantoms = [];
+            for each (let [,item] in Iterator(this.messages)) {
+              phantoms.push({__proto__: item});
+            }
+
             let threadmap = new GlodaThreader('edge', 'children');
-            let topnodes = threadmap.map(this.messages);
+            let topnodes = threadmap.map(phantoms);
             for each (let [,topnode] in Iterator(topnodes))
             {
-              dump("adding a top node " + topnode + "\n")
               this.addThreadNode(topnode, document.getAnonymousElementByAttribute(this, "anonid", "threadroot"));
+              this.addMessageNode(topnode);
             }
 
             let firstmessage = topnodes[0];
             let participants = {};
             this.addParticipantNode('participants', firstmessage.from, "recipient from")
             participants[firstmessage.from] = true;
-            for each (let message in this.messages)
+            for each (let message in phantoms)
             {
               //ddumpObject(message, "message", 0);
               //ddumpObject(message['edge'], "message['edge']", 0);
