@@ -77,15 +77,16 @@
           let convcount = 0;
           for (let i in conversations.slice(0, 20))
           {
+            convcount++;
             let conv = conversations[i];
             dump("conv = " + conv + '\n')
-            //let conv = conversations[i]; 
             let convid = 'conv'+conv.id.toString();
             let node = document.getElementById(convid);
             if (!node) {
               node = document.createElementNS("http://www.w3.org/1999/xhtml", "conversation");
               conversationsNode.appendChild(node);
               node.id = 'conv' + conv.id.toString()
+              node.setAttribute("tabindex", convcount);
               node.glodaConversation = conv; // XXX this is _slow_
             }
           }
@@ -142,11 +143,10 @@
               dump("ERROR: Setting something false to identity");
               throw("Bad identity");
             }
-            var name = document.getAnonymousElementByAttribute(this, "anonid", "name");
             if (val.contact == parent.Gloda.myContact) {
-              name.textContent = "You"; // localize XXX
+              this.textContent = "you"; // localize XXX
             } else {
-              name.textContent = makeFriendlyName(val.contact.name);
+              this.textContent = makeFriendlyName(val.contact.name);
             }
         } catch (e) {
            dumpExc(e, 'identity');
@@ -155,7 +155,7 @@
         </setter>
       </property>
     </implementation>
-    <content><html:span xbl:inherits="class=divclass" anonid="name"></html:span></content>
+    <content></content>
   </binding>
 
 
@@ -174,7 +174,7 @@
             let participantNode = document.createElement('identity');
             let participantsNode = document.getAnonymousElementByAttribute(this, "anonid", participantsNodeId);
             participantsNode.appendChild(participantNode);
-            participantNode.setAttribute("divclass", participantType);
+            participantNode.setAttribute("class", participantType);
 
             participantNode.glodaIdentity = participant;
         } catch (e) {
@@ -248,8 +248,7 @@
         </body>
       </method>
     </implementation>
-    <content><html:div class="snippet" anonid="snippet"></html:div>
-    </content>
+    <content><html:div class="snippet" anonid="snippet"></html:div></content>
   </binding>  <!--message-->
 
   <binding id="fullmessage" extends="chrome://experimentaltoolbar/content/bindings.xml#message">
@@ -318,7 +317,7 @@
 
             //let participantNode = document.createElement('identity');
             //let fromNode = document.getAnonymousElementByAttribute(this, "anonid", "from");
-            //participantNode.setAttribute("divclass", "reply from");
+            //participantNode.setAttribute("class", "reply from");
             //participantNode.glodaIdentity = this._message.from;
             //parent.MsgHdrToMimeMessage(this._message.folderMessage, this, this.addMessageBody)
             if (this._message.date)
@@ -351,13 +350,11 @@
       </method>
     </implementation>
     <content>
-      <html:div class="reply">
-        <html:div class="author" onclick="document.getBindingParent(this).openMessageInTab()">
-          <html:span anonid="from" class="name"></html:span>
-          <html:span anonid="date" class="date"></html:span>
-        </html:div>
-        <html:div anonid="snippet" class="body"></html:div>
+      <html:div class="author">
+        <html:span anonid="from" class="name"></html:span>
+        <html:span anonid="date" class="date"></html:span>
       </html:div>
+      <html:div anonid="snippet" class="body"></html:div>
     </content>
   </binding>
 
@@ -486,6 +483,8 @@
                   this.addParticipantNode('recipients', identity, "recipient cc")
                 }
               }
+              if ( ! message.read ) 
+                this.setAttribute("unread", "true"); /* conversation is unread */
             }
 
 
@@ -508,7 +507,7 @@
               if (replyMsg.id in hitMessageMap)
               {
                 let replyNode = document.createElement('reply');
-                replies.insertBefore(replyNode, replyInsertionNode);
+                replies.appendChild(replyNode);
                 replyNode.glodaMessage = replyMsg;
                 //dump("hit\n");
               }
@@ -551,7 +550,8 @@
             {
               replyInsertionNode.none = true;
               let allReplies = document.getAnonymousElementByAttribute(this, "anonid", "reply_other")
-              allReplies.parentNode.removeChild(allReplies);
+//              this.removeChild(allReplies);
+              allReplies.setAttribute("hidden", "true");
             }
         } catch (e) {
            dumpExc(e, 'reply');
@@ -570,56 +570,32 @@
     </implementation>
 
     <handlers>
-      <handler event="focus" phase="capturing" preventdefault="true">
+      <handler event="click" preventdefault="true">
         <![CDATA[
-          $("#toolbox").css("top", $(this).offset().top);
-          selectedConversation = $(this);
-        ]]>
-      </handler>
-      <handler event="mouseover">
-        <![CDATA[
-            $("#toolbox").css("top", $(this).offset().top);
-            selectedConversation = $(this);
+        this.openConversationInTab();
         ]]>
       </handler>
     </handlers>
     <content>
-      <html:a class="conversation">
-        <html:div class="toolbox">
-          <html:div class="toolbar">
-            <html:button class="archive">Archive</html:button>
-            <html:button class="delete">Delete</html:button>
-            <html:button class="junk">Junk</html:button>
+      <html:div class="checkbox"><html:input type="checkbox" tabindex="-1" /></html:div>
+      <html:div class="header">
+          <html:div anonid="subject" class="subject"></html:div>
+          <html:div class="addressing">
+            <html:span anonid="author" class="author"></html:span>
+              <html:span anonid="verb" class="verb">writes</html:span>
+              <html:div anonid="recipients" class="recipients"/> 
+              <html:span anonid="date" class="date"></html:span>
           </html:div>
-          <html:div>
-            <html:button>Reply</html:button>
-            <html:button>Forward</html:button>
-            <html:button>&#8744;</html:button>
-          </html:div>
+          <html:div anonid="tags" class="tags"></html:div>
+      </html:div>
+      <html:div anonid="snippet" class="body"></html:div>
+      <html:div class="replies" anonid="replies"></html:div>
+      <html:div class="other" anonid="reply_other">
+        <html:div class="see-all">
+          <html:span anonid="other_reply_count"></html:span>
+          <html:span anonid="unread_reply_count" class="unread"></html:span>
         </html:div>
-
-        <html:div class="image"><html:img src="bryan" /></html:div>
-        <html:div class="message">
-          <html:div class="header">
-              <html:div class="addressing" onclick="document.getBindingParent(this).openMessageInTab()">
-                <html:span anonid="author" class="author"></html:span> writes 
-                  <html:div anonid="recipients" class="recipients"/> 
-                  <html:span anonid="date" class="date"></html:span>
-              </html:div>
-              <html:div anonid="subject" class="subject" onclick="document.getBindingParent(this).openConversationInTab()"></html:div>
-              <html:div anonid="tags" class="tags"></html:div>
-          </html:div>
-          <html:blockquote anonid="snippet" class="body">
-          </html:blockquote>
-        </html:div>
-        <html:div class="replies" anonid="replies">
-          <html:div class="reply other" anonid="reply_other">
-            <html:div class="see-all">
-              <html:span anonid="other_reply_count"></html:span><html:span anonid="unread_reply_count" class="unread"></html:span>
-            </html:div>
-          </html:div>
-        </html:div>
-      </html:a>
+      </html:div>
     </content>  
   </binding>
   
