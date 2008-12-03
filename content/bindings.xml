@@ -716,7 +716,12 @@
     <handlers>
       <handler event="click" phase="bubbling" preventdefault="true">
         <![CDATA[
-          this.expand();
+        try {
+          let conversation = document.getElementById('conversation-contents');
+          conversation.selectMessage(this._message);
+        } catch (e) {
+          dumpExc(e);
+        }
         ]]>
       </handler>
     </handlers>
@@ -763,8 +768,8 @@
         <![CDATA[
         try {
           event.stopPropagation();
-          let topbinding = document.getElementById('conversation-contents');
-          topbinding.selectMessage(this.message); // this will select this threadnode
+          let conversation = document.getElementById('conversation-contents');
+          conversation.selectMessage(this.message); // this will select this threadnode
         } catch (e) {
           dumpExc(e);
         }
@@ -812,8 +817,8 @@
         <![CDATA[
         try {
           // do the CSS work for threadnode selection
-          let topbinding = document.getElementById('conversation-contents');
-          let lastselected =  document.getAnonymousElementByAttribute(topbinding, 'selected', 'true');
+          let conversation = document.getElementById('conversation-contents');
+          let lastselected =  document.getAnonymousElementByAttribute(conversation, 'selected', 'true');
           if (lastselected)
           {
             lastselected.removeAttribute('selected');
@@ -882,10 +887,9 @@
         <body>
         <![CDATA[
         try {
-          let topbinding = document.getElementById('conversation-contents');
           for each (let [,message] in Iterator(messages)) {
             let id = "msg" + message.id.toString();
-            let messageNode =  document.getAnonymousElementByAttribute(topbinding, 'id', id);
+            let messageNode =  document.getAnonymousElementByAttribute(this, 'id', id);
             if (messageNode) {
               messageNode.expand();
             }
@@ -899,22 +903,28 @@
       </method>
       <method name="selectMessage">
         <parameter name="message"/>
+        <parameter name="direct"/>  <!--Is this from user clicking on it?-->
         <body>
         <![CDATA[
         try {
-          if (!message) return;
-          let topbinding = document.getElementById('conversation-contents');
+          if (!message)
+            return;
+
+          if (direct == undefined) direct = false;
+
           let id = "msg" + message.id.toString();
-          let messageNode =  document.getAnonymousElementByAttribute(topbinding, 'id', id);
+          let messageNode =  document.getAnonymousElementByAttribute(this, 'id', id);
+
           if (messageNode) {
             messageNode.expand();
-            messageNode.ensureVisible();
+            if (!direct)
+              messageNode.ensureVisible();
           }
           this.selectedMessage = message;
 
           // select the corresponding threadnode
           id = "thread" + message.id.toString();;
-          let threadNode =  document.getAnonymousElementByAttribute(topbinding, 'id', id);
+          let threadNode =  document.getAnonymousElementByAttribute(this, 'id', id);
           if (threadNode) 
             threadNode.select();
           
