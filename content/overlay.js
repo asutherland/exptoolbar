@@ -47,11 +47,10 @@ var conversationTabType = {
       type: "conversation"
     }
   },
-  openTab: function (aTab, aConstraints) {
+  openTab: function (aTab, aConstraints, expandedMessages, selectedMessage) {
     aTab.panel.contentWindow.addEventListener("load",
-      function(e) { experimentaltoolbar.showConversation(aConstraints); }, false);
+      function(e) { experimentaltoolbar.showConversation(aConstraints, expandedMessages, selectedMessage); }, false);
     aTab.constraints = aConstraints;
-    dump("subject = " + aConstraints[0].subject + '\n');
     aTab.panel.setAttribute("src",
       "chrome://experimentaltoolbar/content/conversation.xhtml");
     aTab.title = aConstraints[0].subject;
@@ -186,9 +185,7 @@ var experimentaltoolbar = {
         this._data = arguments;
 
       try {
-        dump("about to enter while: " + this.activeStack.length + "\n");
         while (this.activeStack.length) {
-          dump("callback driving!\n");
           switch (this.activeIterator.send(this._data)) {
             case Gloda.kWorkSync:
               this._data = undefined;
@@ -283,19 +280,15 @@ var experimentaltoolbar = {
   },
 
   _constrainEmailWorker: function(aFullMailName) {
-    dump("in _constrainEmailWorker: " + aFullMailName + "\n");
     let [identities] = yield this._callbackHandle.pushAndGo(
       Gloda.getOrCreateMailIdentities(this._callbackHandle, aFullMailName));
-    dump("got identities: " + identities + "\n");
 
     let tabmail = document.getElementById("tabmail");
 
-    dump("opening tab\n");
     if (identities.length)
       tabmail.openTab("searchAll", [[identities[0].contact,
                                      Gloda.lookupNounDef("contact"),
                                      false]]);
-    dump("opened tab\n");
     yield Gloda.kWorkDone;
   },
 
@@ -401,18 +394,15 @@ var experimentaltoolbar = {
     this._constraintsChanged = true;
   },
   
-  showConversation: function(aConstraints) {
+  showConversation: function(aConstraints, expandedMessages, selectedMessage) {
     try {
-      dump("in showConversation!\n");
       let conversation = aConstraints[0];
-      //ddumpObject(conversation, "conversation", 1);
-      
       let doc = this.tabmail.currentTabInfo.panel.contentDocument;
       let win = this.tabmail.currentTabInfo.panel.contentWindow;
-  
       let conversationNode = doc.getElementById("conversation-contents");
       conversationNode.glodaConversation = conversation;
-      dump("set the glodaconv object\n");
+      conversationNode.expandMessages(expandedMessages);
+      conversationNode.selectMessage(selectedMessage);
     } catch (e) {
       dumpExc(e);
     }
@@ -521,8 +511,6 @@ var experimentaltoolbar = {
   
   applyQueryToDocument: function applyQueryToDocument (aQuery) {
   try {
-    dump("applyQueryToDocument !\n");
-
     this.clearSearchResults();
 
     let doc = this.tabmail.currentTabInfo.panel.contentDocument;
@@ -747,10 +735,10 @@ var experimentaltoolbar = {
     }
   },
   onInput: function() {
-    dump("on input\n");
+    //dump("on input\n");
   },
   onTextEntered : function() {
-    dump("Text entered!\n");
+    //dump("Text entered!\n");
 
     if (this.tabmail.currentTabInfo.mode.tabType.name != "search") {
       this.makeSearchTab();
@@ -759,10 +747,8 @@ var experimentaltoolbar = {
       this.applyConstraints();
     }
 
-    dump("Text value: " + this.searchInput.textValue + "\n");
   },
   onTextReverted: function() {
-    dump("Text reverted!\n");
   },
 };
 window.addEventListener("load", function(e) { experimentaltoolbar.onLoad(e); }, false);

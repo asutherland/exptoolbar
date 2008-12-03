@@ -46,7 +46,6 @@
         <body>
         <![CDATA[
         try {
-          //dump("in query.addItems\n");
           // We want to keep track of which messages were found in the query
           // and of the conversations that they belong to.  The former
           // will be displayed in the latter with special styling, etc.
@@ -61,7 +60,6 @@
           // most relevant conversations first, but recency is a good first cut.
           
           for each (let message in items) {
-            //dump("message.id = " + message.id + '\n');
             this.hitMessageMap[message.id] = true;
             let conv = message.conversation;
             if (!(conv.id in conversationMap)) {
@@ -69,9 +67,6 @@
               conversations.push(conv);
             }
           }
-          //dump("conversations = " + conversations + "\n");
-          //ddumpObject(conversations[0], "conversations[0]", 1);
-
           conversationsNode.setAttribute("hidden", "true");
           let convcount = 0;
           for (let i in conversations.slice(0, 20))
@@ -164,7 +159,6 @@
         <parameter name="participantType"/>
         <body><![CDATA[
         try {
-          //dump("adding participantnode, participant = "+ participant + " and participantType = " + participantType + "\n");
           if (!participant) {
             throw("BAD PARTICIPANT");
           }
@@ -195,7 +189,8 @@
         <setter>
         <![CDATA[
             this._message = val;
-            this.setAttribute('id', "msg" + val.id.toString());
+            let id = "msg" + val.id.toString()
+            this.setAttribute('id', id);
             this._update();
           ]]>
         </setter>
@@ -266,10 +261,8 @@
             try {
               bodyNode.appendChild(bodyDOM);
             } catch (e) {
-              //dump("body = " + body + '\n\n');
               dumpExc(e);
             }
-            //dump("bodyHTML" + bodyHTML + '\n');
             // XXX crashes -- talk to bz about it.
             //bodyNode.innerHTML = "<html:p>foo<html:b>bar</html:b></html:p>";
             this.addParticipantNode('from', this._message.from, 'from');
@@ -359,6 +352,7 @@
     <resources>
     </resources>
     <implementation>
+      <field name="selected">false</field>
       <property name="glodaConversation">
         <!--This is the GlodaConversation object-->
         <getter>
@@ -374,13 +368,36 @@
         ]]>
         </setter>
       </property>
+      <method name="select">
+        <body>
+        <![CDATA[
+        try {
+          this.selected = true;
+          // tell someone above us XXX
+        } catch (e) {
+           dumpExc(e, 'conversation');
+        }
+        ]]>
+        </body>
+      </method>
       <method name="openConversationInTab">
         <body>
         <![CDATA[
         try {
-          //dump("in conversation binding, openConversationInTab\n");
           let tabmail = parent.document.getElementById("tabmail");
-          tabmail.openTab("conversation", [this.conversation])
+          // find what messages we want to highlight
+          let hitmap = document.getElementById('query').hitMessageMap
+          let searchHits = [];
+          let firsthit = null;
+          for each (let [i,message] in Iterator(this.messages)) {
+            if (message.id in hitmap)
+            {
+              searchHits.push(message);
+              if (!firsthit)
+                firsthit = message;
+            }
+          }
+          tabmail.openTab("conversation", [this.conversation], searchHits, firsthit);
         } catch (e) {
            dumpExc(e, 'conversation');
         }
@@ -391,7 +408,6 @@
         <body>
         <![CDATA[
         try {
-          //dump("in conversation binding, openMessageInTab\n");
           let tabmail = parent.document.getElementById("tabmail");
           let firstmessage;
           for each (let message in this.messages)
@@ -493,38 +509,23 @@
             messageIter.next()
             let replies = document.getAnonymousElementByAttribute(this, "anonid", "replies");
             let replyInsertionNode = document.getAnonymousElementByAttribute(this, "anonid", "reply_other");
-            //while (replies.firstChild && ! replies.firstChild.getAttribute("keep"))
-            //  replies.removeChild(replies.firstChild);
             let nOthers = 0;
             let nUnread = 0;
 
-            //dump("replyInsertionNode = " + replyInsertionNode + '\n');
             for each (let [i,replyMsg] in messageIter) {
-              //dump("looking at message "+  i + '\n');
               if (replyMsg.id in hitMessageMap)
               {
                 let replyNode = document.createElement('reply');
                 replies.appendChild(replyNode);
                 replyNode.glodaMessage = replyMsg;
-                //dump("hit\n");
               }
               else
               {
-                //dump("other, ");
                 nOthers++;
-                //dump("replyMsg.read = "+ replyMsg.read + '\n');
                 if (! replyMsg.read)
-                {
-                  //dump("unread\n")
                   nUnread++;
-                }
-                else
-                {
-                  //dump("read\n")
-                }
               }
             }
-            //dump("nOthers = " + nOthers + ", nUnread = " + nUnread + '\n');
             if (nOthers)
             {
               let allReplyCount = document.getAnonymousElementByAttribute(this, "anonid", "other_reply_count")
@@ -533,8 +534,6 @@
               {
                 let unreadReplyCount = document.getAnonymousElementByAttribute(this, "anonid", "unread_reply_count")
                 unreadReplyCount.textContent =  nUnread.toString() + " unread"; // XXX l10n
-                //dump("unreadReplyCount = " + unreadReplyCount + '\n')
-                //dump("unreadReplyCount.textContent = " + unreadReplyCount.textContent + '\n')
               }
               else
               {
@@ -574,7 +573,9 @@
       </handler>
     </handlers>
     <content>
-      <html:div class="checkbox"><html:input type="checkbox" tabindex="-1" /></html:div>
+      <html:div class="checkbox"><html:input type="checkbox" tabindex="-1"
+                                             onclick="event.stopPropagation();
+                                             document.getBindingParent(this).select()"/></html:div>
       <html:div class="header">
           <html:div anonid="subject" class="subject"></html:div>
           <html:div class="addressing">
@@ -608,7 +609,6 @@
             var dateNode = document.getAnonymousElementByAttribute(this, "anonid", "date");
             dateNode.textContent = makeDateFriendly(this._message.date);
             
-            //dump("attachmentNames = " + this._message.attachmentNames + '\n');
             let attachmentCountNode = document.getAnonymousElementByAttribute(this, "anonid", "attachmentcount");
             let attachmentsList = document.getAnonymousElementByAttribute(this, "anonid", "attachments-list");
             let attachmentsNode = document.getAnonymousElementByAttribute(this, "anonid", "attachments");
@@ -658,15 +658,20 @@
             body = content.getContentString();
             let bodyHTML = makeHTML(body);
             
-            //dump("bodyHTML = " + bodyHTML + '\n');
             let bodyDOM = stringToDOM(bodyHTML);
             let iframe = document.getAnonymousElementByAttribute(this, "anonid", "iframe");
             let bodyNode= iframe.contentDocument.body;
             try {
               bodyNode.appendChild(bodyDOM);
             } catch (e) {
-              //dump("body = " + body + '\n\n');
               dumpExc(e);
+            }
+            if ($(this).hasClass("expanded"))
+            {
+              let iframe = document.getAnonymousElementByAttribute(this, "anonid", "iframe");
+              let bodyNode= iframe.contentDocument.body;
+              // XXX without this we have a scrollbar, i have no idea why.
+              iframe.height = bodyNode.scrollHeight + 28;
             }
             this._message.domContribute(snippetNode);
         } catch (e) {
@@ -681,10 +686,32 @@
             $(this).addClass("expanded");
             let iframe = document.getAnonymousElementByAttribute(this, "anonid", "iframe");
             let bodyNode= iframe.contentDocument.body;
-            iframe.height = bodyNode.scrollHeight + 40; // WHY NEEDED?
+            iframe.height = bodyNode.scrollHeight + 28; // XXX?
           ]]>
         </body>
       </method>
+      
+      <method name="ensureVisible">
+        <body>
+          <![CDATA[
+          try {
+            // this needs to be in a timeout because the offsets won't be
+            // correct until all the messages are laid out.
+            let messageNode = this;
+            window.setTimeout(function() {
+              let targetOffset = $(messageNode).offset().top; 
+              $(document.getElementById('html')).animate( { scrollTop : targetOffset }, "fast" );
+              $(messageNode).animate( { backgroundColor:"#FCF19E" }, { queue:true, duration:500 } )
+                 .animate( { backgroundColor:"white" }, 500 );
+            }, 200);
+          } catch (e) {
+            dumpExc(e);
+          }
+          ]]>
+        </body>
+      </method>
+
+      
     </implementation>
     <handlers>
       <handler event="click" phase="bubbling" preventdefault="true">
@@ -736,28 +763,8 @@
         <![CDATA[
         try {
           event.stopPropagation();
-          // find the message with the right glodaMsgId
-          let id = "msg"+this.message.id;
-          let topbinding = document.getElementById('conversation-contents')
-          let message =  document.getAnonymousElementByAttribute(topbinding, 'id', id);
-          // $(".thread.top li").removeClass("selected");
-          let lastselected =  document.getAnonymousElementByAttribute(topbinding, 'selected', 'true');
-          if (lastselected)
-          {
-            lastselected.removeAttribute('selected');
-            $(lastselected).removeClass('selected');
-          }
-          $(this).addClass("selected");
-          this.setAttribute('selected', 'true');
-          message.expand();
-
-
-          // we use getClientRects() instead of offset() because offset recalcuates 
-          // position against the page which doesn't work for fixed elements above 
-          // scrolling pages
-          let targetOffset = $(message).offset().top - event.target.getClientRects()[0].top;
-          $(document.getElementById('html')).animate( { scrollTop : targetOffset }, "fast" );
-
+          let topbinding = document.getElementById('conversation-contents');
+          topbinding.selectMessage(this.message); // this will select this threadnode
         } catch (e) {
           dumpExc(e);
         }
@@ -788,6 +795,7 @@
               {
                 let threadNode = document.createElement('li');
                 threadNode.setAttribute('type', 'threadnode');
+                threadNode.setAttribute('id', 'thread' + child.id.toString());
                 ulNode.appendChild(threadNode);
                 threadNode.glodaMessage = child;
               }
@@ -799,6 +807,26 @@
         ]]>
         </setter>
       </property>
+      <method name="select">
+        <body>
+        <![CDATA[
+        try {
+          // do the CSS work for threadnode selection
+          let topbinding = document.getElementById('conversation-contents');
+          let lastselected =  document.getAnonymousElementByAttribute(topbinding, 'selected', 'true');
+          if (lastselected)
+          {
+            lastselected.removeAttribute('selected');
+            $(lastselected).removeClass('selected');
+          }
+          $(this).addClass("selected");
+          this.setAttribute('selected', 'true');
+        } catch (e) {
+          dumpExc(e);
+        }
+        ]]>
+        </body>
+      </method>
     </implementation>
     <content>
       <html:span anonid="span" class="name"></html:span>
@@ -821,6 +849,8 @@
         <![CDATA[
         try {
             this.conversation = val;
+            this.expandedMessageIds = {};
+            this.selectedMessage = null;
             this.messagesCollection =
               this.conversation.getMessagesCollection(this);
         } catch (e) {
@@ -847,6 +877,53 @@
         ]]>
         </body>
       </method>
+      <method name="expandMessages">
+        <parameter name="messages"/>
+        <body>
+        <![CDATA[
+        try {
+          let topbinding = document.getElementById('conversation-contents');
+          for each (let [,message] in Iterator(messages)) {
+            let id = "msg" + message.id.toString();
+            let messageNode =  document.getAnonymousElementByAttribute(topbinding, 'id', id);
+            if (messageNode) {
+              messageNode.expand();
+            }
+            this.expandedMessageIds[message.id] = true;
+          }
+        } catch (e) {
+           dumpExc(e, 'Exception in expandedMessages');
+        }
+        ]]>
+        </body>
+      </method>
+      <method name="selectMessage">
+        <parameter name="message"/>
+        <body>
+        <![CDATA[
+        try {
+          if (!message) return;
+          let topbinding = document.getElementById('conversation-contents');
+          let id = "msg" + message.id.toString();
+          let messageNode =  document.getAnonymousElementByAttribute(topbinding, 'id', id);
+          if (messageNode) {
+            messageNode.expand();
+            messageNode.ensureVisible();
+          }
+          this.selectedMessage = message;
+
+          // select the corresponding threadnode
+          id = "thread" + message.id.toString();;
+          let threadNode =  document.getAnonymousElementByAttribute(topbinding, 'id', id);
+          if (threadNode) 
+            threadNode.select();
+          
+        } catch (e) {
+           dumpExc(e, 'Exception in selectMessage');
+        }
+        ]]>
+        </body>
+      </method>
       <method name="addThreadNode">
         <parameter name="node"/>
         <parameter name="parent"/>
@@ -854,6 +931,7 @@
           try {
             let threadNode = document.createElement('li');
             threadNode.setAttribute('type', 'threadnode');
+            threadNode.setAttribute('id', 'thread' + node.id.toString());
             parent.appendChild(threadNode);
             threadNode.glodaMessage = node;
           } catch (e) {
@@ -870,6 +948,9 @@
             let messageNode = document.createElement("message-in-conversation");
             messagesNode.appendChild(messageNode);
             messageNode.glodaMessage = node;
+            if (node.id in this.expandedMessageIds) {
+              messageNode.expand();
+            }
             this.messageNode = messageNode;
             for each (let child in node['children'])
             {
@@ -905,15 +986,26 @@
               this.addMessageNode(topnode);
             }
 
+            if (this.selectedMessage)
+            {
+              let id = "thread" + this.selectedMessage.id.toString();
+              let threadNode = document.getAnonymousElementByAttribute(this, "id", id);
+              if (threadNode)
+                threadNode.select();
+
+              id = "msg" + this.selectedMessage.id.toString();
+              let messageNode = document.getAnonymousElementByAttribute(this, "id", id);
+              if (messageNode) {
+                messageNode.ensureVisible();
+              }
+            }
+            
             let firstmessage = topnodes[0];
             let participants = {};
             this.addParticipantNode('participants', firstmessage.from, "recipient from")
             participants[firstmessage.from] = true;
             for each (let message in phantoms)
             {
-              //ddumpObject(message, "message", 0);
-              //ddumpObject(message['edge'], "message['edge']", 0);
-              //ddumpObject(message['children'], "message['children']", 0);
               let sender = message.from;
               if (! (sender in participants))
               {
