@@ -25,8 +25,10 @@ body { font-family: sans-serif; font-size: 80%; margin: 0px; padding: 0px;
 /* CONVERSATION */
 conversation { padding: 0em; padding-top: 1em; margin: 0px; padding-bottom: 1em;
                border-bottom: 1px solid #ddd; display: block;
-               color: #1a1a1a; background-color: #e8eef7; /* default read */
+               color: #1a1a1a; background-color: #f5f6f7; /* default read */
               }
+conversation:focus { background-color: #f5f6f7; }
+conversation[unread="true"]:focus { background-color: #f5f6f7; }
 conversation { cursor: pointer; }
 conversation:last-child { margin-bottom: 0em; border-bottom: none; }
 conversation:first-child { border-top: 1px solid #ddd; }
