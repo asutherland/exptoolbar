@@ -807,7 +807,7 @@
   
   <binding id="conversation-reader" extends="chrome://experimentaltoolbar/content/bindings.xml#message">
     <resources>
-      <stylesheet src="chrome://experimentaltoolbar/content/conversationBindings.css"/>
+      <stylesheet src="chrome://experimentaltoolbar/content/conversation.css"/>
     </resources>
     <implementation>
       <property name="glodaConversation">
