@@ -56,7 +56,7 @@ message-in-conversation .body .attachments-list { font-size: small; margin: 0.5e
                                    padding: 0em; }
 message-in-conversation .body .attachments-list { background-color: #efefef; padding: 0.5em; -moz-border-radius: 0.3em; }
 message-in-conversation .body .attachments-list ul { margin-left: 0.5em; }
-message-in-conversation .body .content { color: #111; padding: 1em 1.5em; }
+message-in-conversation .body .content { color: #111; padding: 0.5em 1.5em; }
 message-in-conversation .body .attachments-area { }
 message-in-conversation .body .actions { margin: 0.5em; }
 
