@@ -37,14 +37,14 @@ message-in-conversations { max-width: 40em;  margin: 0.2em 0em; }
 
 message-in-conversation { max-width: 38em; min-width: 22em; border: 1px solid #ddd; 
            border-bottom: none; 
-           margin: -0.3em 1em; padding: 0.3em 0.5em; 
+           margin: -0.3em 1em; 
            -moz-border-radius-topright: 0.3em; 
            -moz-border-radius-topleft: 0.3em; }
 message-in-conversation:last-child { border-bottom: 1px solid #ddd; 
                       -moz-border-radius-bottomright: 0.3em; 
                       -moz-border-radius-bottomleft: 0.3em; }
 
-message-in-conversation .header { padding-bottom: 0.2em; }
+message-in-conversation .header { padding: 0.3em 0.5em; }
 
 message-in-conversation .header .actions { display: none; text-align: right; }
 message-in-conversation .header .actions button { font-size: x-small; padding: 0em 0.2em; }
@@ -70,11 +70,13 @@ message-in-conversation .body { display: none; }
 message-in-conversation .body .attachments-list { font-size: small; margin: 0.5em; 
                                    margin-left: 1em; list-style: none; 
                                    padding: 0em; }
-message-in-conversation .body .attachments-list { background-color: #efefef; padding: 0.5em; -moz-border-radius: 0.3em; }
+message-in-conversation .body .attachments-list { background-color: #f3f3f3; padding: 0.5em; -moz-border-radius: 0.3em; }
 message-in-conversation .body .attachments-list ul { margin-left: 0.5em; }
-message-in-conversation .body .content { color: #111; padding: 0.5em 1.5em; }
+message-in-conversation .body .content { color: #111; padding: 0.5em; }
 message-in-conversation .body .attachments-area { }
-message-in-conversation .body .actions { margin: 0.5em; }
+message-in-conversation .body .actions { padding: 0.5em; background-color: #f3f3f3; 
+                                         -moz-border-radius-bottomright: 0.3em; 
+                                         -moz-border-radius-bottomleft: 0.3em; }
 
 iframe.content { width: 36em; border: none; overflow: visible}
 
@@ -88,7 +90,7 @@ message-in-conversation.expanded + message-in-conversation:not(.expanded) { bord
 message-in-conversation.expanded + message-in-conversation.expanded { margin-top: 0.5em; }
 
 message-in-conversation.expanded .body { display: block; }
-message-in-conversation.expanded .header .actions { display: block }
+message-in-conversation.expanded .header .actions { display: block; }
 message-in-conversation.expanded .header .headers .meta .toggle { display: block }
 message-in-conversation.expanded .header .headers .details .snippet { visibility: hidden; }
 message-in-conversation.expanded .header .headers .details .toggle { display: inline; }
