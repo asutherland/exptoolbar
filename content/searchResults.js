@@ -59,7 +59,7 @@ function makeDateFriendly(date)
 {
   if (!date) {
     dump("ERROR: date passed to makeDateFriendly is false\n");
-    return;
+    return "";
   }
   let dts = Cc["@mozilla.org/intl/scriptabledateformat;1"].
             getService(Ci.nsIScriptableDateFormat);
