@@ -546,7 +546,6 @@
             {
               replyInsertionNode.none = true;
               let allReplies = document.getAnonymousElementByAttribute(this, "anonid", "reply_other")
-//              this.removeChild(allReplies);
               allReplies.setAttribute("hidden", "true");
             }
         } catch (e) {
@@ -699,10 +698,11 @@
             // correct until all the messages are laid out.
             let messageNode = this;
             window.setTimeout(function() {
-              let targetOffset = $(messageNode).offset().top; 
+              let toolbox = document.getElementById('conversation-contents').toolbox;
+              let targetOffset = $(messageNode).offset().top - $(toolbox).height() - 10; // XXX constant
               $(document.getElementById('html')).animate( { scrollTop : targetOffset }, "fast" );
-              $(messageNode).animate( { backgroundColor:"#FCF19E" }, { queue:true, duration:500 } )
-                 .animate( { backgroundColor:"white" }, 500 );
+              $(messageNode).animate( { backgroundColor:"#ffffcc" }, { queue:true, duration:500 } )
+                 .animate( { backgroundColor:"#ffffff" }, 500 );
             }, 200);
           } catch (e) {
             dumpExc(e);
@@ -863,6 +863,13 @@
         }
         ]]>
         </setter>
+      </property>
+      <property name="toolbox">
+        <getter>
+            <![CDATA[
+            return document.getAnonymousElementByAttribute(this, 'anonid', 'toolbox');
+            ]]>
+        </getter>
       </property>
       <method name="openMessageInTab">
         <body>
@@ -1038,8 +1045,7 @@
                   this.addParticipantNode('participants', identity, "recipient cc")
                 }
               }
-            }
-
+            }            
         } catch (e) {
            dumpExc(e, 'reply');
         }
@@ -1054,11 +1060,50 @@
       <method name="onQueryCompleted">
         <body/>
       </method>
+      <method name="positionFixedElements">
+        <body><![CDATA[
+          try {
+            let toolboxNode = document.getAnonymousElementByAttribute(this, "anonid", "toolbox");
+            $(toolboxNode).width($(this).width());
+           
+            let top = ($(toolboxNode).height() + 10);  // XXX constant
+            
+            let threaderNode = document.getAnonymousElementByAttribute(this, "anonid", "threader");
+            $(threaderNode).css("top", top);
+            
+            let conversationNode = document.getAnonymousElementByAttribute(this, "anonid", "conversation");
+            $(conversationNode).css("top", top);
+
+          } catch (e) {
+            dumpExc(e);
+          }
+          ]]>
+        </body>
+      </method>
     </implementation>
 
     <handlers>
+      <handler event="load">
+        <![CDATA[
+        this.positionFixedElements();
+        let creader = this;
+        $(window).resize(function() {
+          creader.positionFixedElements();
+        });
+        ]]>
+      </handler>
     </handlers>
     <content>
+      <html:div anonid="toolbox" class="toolbox" onoverflow="document.getBindingParent(this).positionFixedElements()">
+        <html:div class="toolbar">
+          <html:button style="font-weight:bold;">Archive</html:button>
+          <html:button>Junk</html:button>
+          <html:button>Delete</html:button>
+        </html:div>
+        <html:div anonid="subject" class="subject"></html:div>
+        <html:div class="between">Between <html:span anonid="participants" class="recipients"></html:span>
+        </html:div>
+      </html:div>
       <html:div anonid="threader" class="threader">
         <html:ul anonid="threadroot" class="thread top"></html:ul>
         <html:div style="font-size:x-small;margin-top:2em;">
@@ -1067,13 +1112,8 @@
         </html:div>
       </html:div>
       <html:div anonid="conversation" class="main">
-        <html:div class="toolbar">
-          <html:button style="font-weight:bold;">Archive</html:button>
-          <html:button>Junk</html:button>
-          <html:button>Delete</html:button>
-        </html:div>
-        <html:div anonid="subject" class="subject"></html:div>
-        <html:div class="between">Between <html:span anonid="participants" class="recipients"></html:span></html:div><html:div anonid="messages" class="messages"/></html:div>
+        <html:div anonid="messages" class="messages"/>
+      </html:div>
     </content>
   </binding>
 </bindings>

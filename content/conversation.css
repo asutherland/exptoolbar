@@ -10,13 +10,28 @@ body { font-family: sans-serif; margin-bottom: 2em;  background: white;}
 .recipient:after { content: ", "; }
 .recipient:last-child:after { content: ""; }
 
-.main { margin-left:12em; max-width:40em; }
+#conversation-contents { display: block; max-width: 50em; padding: 0em;
+                         padding-right: 1em;
+                         padding-bottom: 10em; }
 
-.main > .toolbar { float: right; }
-.main > .toolbar button { font-size: small; }
+.main { margin-left:12em; max-width:40em; position: relative; }
 
-.subject { font-weight: bold; font-size: large; }
-.between { font-size: small; margin-bottom: 1em; }
+.toolbox { margin-bottom: 1em; 
+           padding-left:1em; padding-right: 2em;
+           width: 100%; /* .main + .thread */
+           z-index: 1; /* push above the pos:relative .main element */
+           background-color: #f8f8f8; 
+           border-bottom: 1px solid #ccc; 
+           border-right: 1px solid #ccc; -moz-border-radius-bottomright: 0.4em; 
+           position: fixed; top: 0em; left: 0em; opacity: 0.9; 
+         }
+.toolbox:hover { opacity: 1; }
+
+.toolbox > .toolbar { float: right; margin-top: 0.5em; }
+.toolbox > .toolbar button { font-size: small; }
+
+.subject { font-weight: bold; margin: 0.5em 0em; }
+.between { font-size: small; margin: 0.5em 0em; }
 
 message-in-conversations { max-width: 40em;  margin: 0.2em 0em; }
 
@@ -40,6 +55,7 @@ message-in-conversation .header .headers .meta { float: right; padding-left: 1em
 message-in-conversation .header .headers .meta .attachments { }
 message-in-conversation .header .headers .meta .attachments .count { font-size: small; }
 message-in-conversation .header .headers .meta .attachments img { vertical-align: middle; }
+message-in-conversation .header .headers .meta .time { font-size: small; color: #444; }
 
 message-in-conversation .header .headers .details .participants { }
 message-in-conversation .header .headers .details .participants .sender { }
