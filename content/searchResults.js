@@ -5,7 +5,7 @@ let Ci = Components.interfaces;
 function OnLoad() {
   try {
     $(".conversations").css("marginTop", $("#toolbox").height() );
-    $(".toolbox").width($(".conversations").width());
+    $("#toolbox").width($(".conversations").width());
     
     $(window).resize(function() { $("#toolbox").width($(".conversations").width()); });
     
@@ -27,3 +27,4 @@ function removeConversations() {
   $(":checked").parent().slideUp("fast");
 }
 
+let gSelectedConversationNodes = {};

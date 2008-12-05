@@ -27,6 +27,8 @@
   <script type="application/javascript;version=1.8"
       src="chrome://experimentaltoolbar/content/jquery.min.js"></script>
   <script type="application/javascript;version=1.8"
+      src="chrome://experimentaltoolbar/content/jquery.color.js"></script>
+  <script type="application/javascript;version=1.8"
       src="chrome://experimentaltoolbar/content/innerDOM.js"></script>
   <script type="application/javascript;version=1.8"
       src="chrome://experimentaltoolbar/content/utils.js"></script>
@@ -40,18 +42,8 @@
     </div>
   </div>
   <div class="messagelist" id="messagelist"/>
-
-  <div id="toolbox" class="toolbox">
-    <div class="toolbar">
-      <button tabindex="-1" class="archive"><u>A</u>rchive</button>
-      <button tabindex="-1" class="delete"><u>D</u>elete</button>
-      <button tabindex="-1" class="junk"><u>J</u>unk</button>
-      <button tabindex="-1" type="menu">other actions &#8744;</button>
-    </div>
-    <div class="notifications">
-      <div class="info">Use tab to navigate conversations</div>
-    </div>
-  </div>
+  <div class="notice" id="notice"/>
+  <search-toolbox id="toolbox"/>
   <query id="query"/>
 </body>
 </html>

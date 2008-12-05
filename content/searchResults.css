@@ -92,10 +92,10 @@ conversation[unread="true"] { background-color: #fff; }
 conversation[unread="true"] > .header > .subject { font-weight: bold; }
 
 /* BUTTON TOOLBOX */
-.toolbox { }
+search-toolbox { display: block; }
 button.archive { font-weight: bold; }
 button[type="menu"] { font-size: small; border: 1px solid #bed1df; background-color: #cee1ef; color: #666; }
-.toolbox > .notifications { float: right; }
+search-toolbox > .notifications { float: right; }
 .notifications div { padding: 0.3em 1em; -moz-border-radius: 0.3em; }
 .notifications .alert { background-color: #fcaf3e; color: #111; }
-.notifications .info { background-color: inherit; color: #666; display: none; }
+.notifications .info { background-color: inherit; color: #666; }

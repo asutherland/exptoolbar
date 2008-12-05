@@ -118,6 +118,85 @@
     </content>
   </binding>
 
+  <binding id="search-toolbox">
+    <implementation>
+      <method name="junkSelectedConversations">
+        <body><![CDATA[
+          try {
+            let conversationNodes = Iterator(gSelectedConversationNodes);
+            let num = 0;
+            for each ([id,conversationNode] in conversationNodes) {
+              // iterate over messages in each conversation
+              dump("id = " + id + '\n');
+              dump("conversationNode = " + conversationNode + '\n');
+              let conversation = conversationNode.glodaConversation;
+              dump("would be junking conversation: " + conversation + '\n');
+              // conversation.junk(); XXX TBD
+              conversationNode.dissappear();
+              num++;
+            }
+            this.highlightNotification(num.toString() + " conversations deleted");
+          } catch (e) {
+            dumpExc(e);
+          }
+          ]]>
+        </body>
+      </method>
+      <method name="deleteSelectedConversations">
+        <body><![CDATA[
+          try {
+            ddumpObject(gSelectedConversationNodes, "selected", 0);
+            let conversationNodes = Iterator(gSelectedConversationNodes);
+            let num = 0;
+            for each ([id,conversationNode] in conversationNodes) {
+              // iterate over messages in each conversation
+              let conversation = conversationNode.glodaConversation;
+              dump("would be deleting conversation" + conversation + '\n');
+              // conversation.delete_(); XXX TBD
+              conversationNode.dissappear();
+              num++;
+            }
+            this.highlightNotification(num.toString() + " conversations deleted");
+          } catch (e) {
+            dumpExc(e);
+          }
+          ]]>
+        </body>
+      </method>
+      <method name="highlightNotification">
+        <parameter name="message"/>
+        <body><![CDATA[
+          try {
+            let infoNode = document.getAnonymousElementByAttribute(this, "anonid", "info");
+            infoNode.textContent = message;
+            // for theming, we should actually move jquery code that hard-codes
+            // colors into a theme-specific JS file.
+            $(infoNode).animate( { backgroundColor:"#FDFD9B", color: "#000000" }, { queue:true, duration:200 } )
+              .animate( {backgroundColor: "#eaf3fa", color: "#666" }, {duration: 2000 });
+          } catch (e) {
+            dumpExc(e);
+          }
+          ]]>
+        </body>
+      </method>
+    </implementation>
+    <content>
+      <html:div class="toolbar">
+        <!--<html:button tabindex="-1" class="archive"><html:u>A</html:u>rchive</html:button>-->
+        <html:button tabindex="-1" class="delete"
+                     onclick="document.getBindingParent(this).deleteSelectedConversations()"
+                     ><html:u>D</html:u>elete</html:button>
+        <html:button tabindex="-1" class="junk"
+                     onclick="document.getBindingParent(this).junkSelectedConversations()"
+                     ><html:u>J</html:u>unk</html:button>
+        <html:button tabindex="-1" type="menu">other actions &#8744;</html:button>
+      </html:div>
+      <html:div class="notifications">
+        <html:div anonid="info" class="info">Use tab to navigate conversations</html:div>
+      </html:div>
+    </content>
+  </binding>
+
   <binding id="identity">
     <implementation>
       <property name="glodaIdentity">
@@ -363,17 +442,46 @@
         <setter>
         <![CDATA[
             this.conversation = val;
+            this.selected = false;
             this.messagesCollection =
               this.conversation.getMessagesCollection(this);
         ]]>
         </setter>
       </property>
-      <method name="select">
+      <method name="dissappear">
         <body>
         <![CDATA[
         try {
-          this.selected = true;
-          // tell someone above us XXX
+          $(this).slideUp("fast");
+          this.unselect();
+        } catch (e) {
+           dumpExc(e, 'conversation.dissappear');
+        }
+        ]]>
+        </body>
+      </method>
+      <method name="unselect">
+        <body>
+        <![CDATA[
+        try {
+          this.selected = 0;
+          if (this.id in gSelectedConversationNodes)
+            delete gSelectedConversationNodes[this.id];
+        } catch (e) {
+           dumpExc(e, 'conversation');
+        }
+        ]]>
+        </body>
+      </method>
+      <method name="toggleSelect">
+        <body>
+        <![CDATA[
+        try {
+          this.selected = ! this.selected;
+          if (this.id in gSelectedConversationNodes)
+            delete gSelectedConversationNodes[this.id];
+          else
+            gSelectedConversationNodes[this.id] = this;
         } catch (e) {
            dumpExc(e, 'conversation');
         }
@@ -562,6 +670,7 @@
       <method name="onQueryCompleted">
         <body/>
       </method>
+      
     </implementation>
 
     <handlers>
@@ -574,7 +683,7 @@
     <content>
       <html:div class="checkbox"><html:input type="checkbox" tabindex="-1"
                                              onclick="event.stopPropagation();
-                                             document.getBindingParent(this).select()"/></html:div>
+                                             document.getBindingParent(this).toggleSelect()"/></html:div>
       <html:div class="header">
           <html:div anonid="subject" class="subject"></html:div>
           <html:div class="addressing">
@@ -1087,9 +1196,9 @@
     <content>
       <html:div anonid="toolbox" class="toolbox">
         <html:div class="toolbar">
-          <html:button style="font-weight:bold;">Archive</html:button>
-          <html:button>Junk</html:button>
-          <html:button>Delete</html:button>
+          <!--<html:button style="font-weight:bold;">Archive</html:button>-->
+          <html:button onclick="document.getBindingParent(this).junkSelectedConversations()">Junk</html:button>
+          <html:button onclick="document.getBindingParent(this).deleteSelectedConversations()">Delete</html:button>
         </html:div>
         <html:div anonid="subject" class="subject"></html:div>
         <html:div class="between">Between <html:span anonid="participants" class="recipients"></html:span>

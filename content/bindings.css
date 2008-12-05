@@ -2,6 +2,10 @@ li[type='threadnode'] {
   -moz-binding: url('chrome://experimentaltoolbar/content/bindings.xml#threadnode');
 }
 
+search-toolbox {
+  -moz-binding: url('chrome://experimentaltoolbar/content/bindings.xml#search-toolbox');
+}
+
 query {
   -moz-binding: url('chrome://experimentaltoolbar/content/bindings.xml#query');
 }
