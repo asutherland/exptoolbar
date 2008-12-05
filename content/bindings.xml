@@ -598,6 +598,7 @@
   
   <binding id="message-in-conversation" extends="chrome://experimentaltoolbar/content/bindings.xml#message">
     <implementation>
+      <field name="expanded">false</field>
       <method name="_update">
         <body>
         <![CDATA[
@@ -683,6 +684,7 @@
         <body>
           <![CDATA[
             $(this).addClass("expanded");
+            this.expanded = true;
             let iframe = document.getAnonymousElementByAttribute(this, "anonid", "iframe");
             let bodyNode= iframe.contentDocument.body;
             iframe.height = bodyNode.scrollHeight + 28; // XXX?
@@ -717,8 +719,10 @@
       <handler event="click" phase="bubbling" preventdefault="true">
         <![CDATA[
         try {
-          let conversation = document.getElementById('conversation-contents');
-          conversation.selectMessage(this._message);
+          if (!this.expanded) {
+            let conversation = document.getElementById('conversation-contents');
+            conversation.selectMessage(this._message);
+          }
         } catch (e) {
           dumpExc(e);
         }
@@ -839,9 +843,6 @@
   </binding>
   
   <binding id="conversation-reader" extends="chrome://experimentaltoolbar/content/bindings.xml#message">
-    <resources>
-      <stylesheet src="chrome://experimentaltoolbar/content/conversation.css"/>
-    </resources>
     <implementation>
       <property name="glodaConversation">
         <!--This is the GlodaConversation object-->
@@ -1046,6 +1047,11 @@
                 }
               }
             }            
+            this.positionFixedElements();
+            let creader = this;
+            $(window).resize(function() {
+              creader.positionFixedElements();
+            });
         } catch (e) {
            dumpExc(e, 'reply');
         }
@@ -1065,15 +1071,12 @@
           try {
             let toolboxNode = document.getAnonymousElementByAttribute(this, "anonid", "toolbox");
             $(toolboxNode).width($(this).width());
-           
             let top = ($(toolboxNode).height() + 10);  // XXX constant
-            
             let threaderNode = document.getAnonymousElementByAttribute(this, "anonid", "threader");
             $(threaderNode).css("top", top);
             
             let conversationNode = document.getAnonymousElementByAttribute(this, "anonid", "conversation");
             $(conversationNode).css("top", top);
-
           } catch (e) {
             dumpExc(e);
           }
@@ -1081,20 +1084,8 @@
         </body>
       </method>
     </implementation>
-
-    <handlers>
-      <handler event="load">
-        <![CDATA[
-        this.positionFixedElements();
-        let creader = this;
-        $(window).resize(function() {
-          creader.positionFixedElements();
-        });
-        ]]>
-      </handler>
-    </handlers>
     <content>
-      <html:div anonid="toolbox" class="toolbox" onoverflow="document.getBindingParent(this).positionFixedElements()">
+      <html:div anonid="toolbox" class="toolbox">
         <html:div class="toolbar">
           <html:button style="font-weight:bold;">Archive</html:button>
           <html:button>Junk</html:button>
