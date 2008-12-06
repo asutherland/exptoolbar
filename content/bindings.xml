@@ -405,19 +405,14 @@
         ]]>
         </body>
       </method>
-      <method name="openMessageInTab">
-        <body>
-        <![CDATA[
-        try {
-          let tabmail = parent.document.getElementById("tabmail");
-          tabmail.openTab("message", this._message.folderURI, this._message.folderMessage)
-        } catch (e) {
-           dumpExc(e, 'reply');
-        }
-        ]]>
-        </body>
-      </method>
     </implementation>
+    <handlers>
+      <handler event="click" preventdefault="true">
+        <![CDATA[
+          this.parentNode.parentNode.openConversationInTab(this._message);
+        ]]>
+      </handler>
+    </handlers>
     <content>
       <html:div class="author">
         <html:span anonid="from" class="name"></html:span>
@@ -488,7 +483,24 @@
         ]]>
         </body>
       </method>
+      <method name="toggleSelectHelper">
+        <body>
+        <![CDATA[
+        try {
+          var e = document.createEvent('MouseEvents');
+          e.initEvent( 'click', true, true );
+          
+          let checkbox = document.getAnonymousElementByAttribute(this, "anonid", "checkbox");
+          checkbox.dispatchEvent(e);
+
+        } catch (e) {
+           dumpExc(e, 'conversation.toggleSelectHelper');
+        }
+        ]]>
+        </body>
+      </method>
       <method name="openConversationInTab">
+        <parameter name="messageToSelect"/>
         <body>
         <![CDATA[
         try {
@@ -496,16 +508,15 @@
           // find what messages we want to highlight
           let hitmap = document.getElementById('query').hitMessageMap
           let searchHits = [];
-          let firsthit = null;
           for each (let [i,message] in Iterator(this.messages)) {
             if (message.id in hitmap)
             {
               searchHits.push(message);
-              if (!firsthit)
-                firsthit = message;
+              if (!messageToSelect)
+                messageToSelect = message;
             }
           }
-          tabmail.openTab("conversation", [this.conversation], searchHits, firsthit);
+          tabmail.openTab("conversation", [this.conversation], searchHits, messageToSelect);
         } catch (e) {
            dumpExc(e, 'conversation');
         }
@@ -536,26 +547,20 @@
             this.messages = this.messagesCollection.items;
             
             let participants = {};
-            let firstmessage;
+            let firstmessage = this.messages[0];
 
-            for each (let message in this.messages)
-            {
-              firstmessage = message;
-              break;
-            }
             if (! (firstmessage)) 
             {
               dump("ERROR: no message 0\n")
               return;
             }
-            //parent.ddumpObject(firstmessage, "message 0", 1);
+
             let originator = firstmessage.from;
             if (!originator) {
               dump("ERROR: from of first message is false\n");
-              //ddumpObject(firstmessage, "ProblemMessage", 1);
               return;
             }
-            //dump("Originator = " + originator + "\n");
+
             // figure out participants, and add them
             // note: added in order of
             //   -  sender of first message is special (conversation originator)
@@ -567,9 +572,16 @@
             authorNode.glodaIdentity = originator;
             this.addParticipantNode('author', firstmessage.from, 'author');
 
+            let oldestMessageDate = document.getAnonymousElementByAttribute(this, "anonid", "oldestMessageDate");
+            // XXX hack to get the date for the conversation 
+            //     oldestMessageDate isn't available in Gloda yet
+            oldestMessageDate.textContent = makeDateFriendly( (this.conversation.oldestMessageDate)? 
+                                                               this.conversation.oldestMessageDate : 
+                                                               this.messages[this.messages.length - 1].date);
+
             let dateNode = document.getAnonymousElementByAttribute(this, "anonid", "date");
             dateNode.textContent = makeDateFriendly(firstmessage.date);
-
+            
             let subjectNode = document.getAnonymousElementByAttribute(this, "anonid", "subject");
             subjectNode.textContent = this.conversation.subject;
             
@@ -616,9 +628,6 @@
             let messageIter = Iterator(this.messages);
             messageIter.next()
             let replies = document.getAnonymousElementByAttribute(this, "anonid", "replies");
-            let replyInsertionNode = document.getAnonymousElementByAttribute(this, "anonid", "reply_other");
-            let nOthers = 0;
-            let nUnread = 0;
 
             for each (let [i,replyMsg] in messageIter) {
               if (replyMsg.id in hitMessageMap)
@@ -627,34 +636,6 @@
                 replies.appendChild(replyNode);
                 replyNode.glodaMessage = replyMsg;
               }
-              else
-              {
-                nOthers++;
-                if (! replyMsg.read)
-                  nUnread++;
-              }
-            }
-            if (nOthers)
-            {
-              let allReplyCount = document.getAnonymousElementByAttribute(this, "anonid", "other_reply_count")
-              allReplyCount.textContent =  nOthers.toString() + " other replies"; // XXX l10n
-              if (nUnread)
-              {
-                let unreadReplyCount = document.getAnonymousElementByAttribute(this, "anonid", "unread_reply_count")
-                unreadReplyCount.textContent =  nUnread.toString() + " unread"; // XXX l10n
-              }
-              else
-              {
-                let unreadReplyCount = document.getAnonymousElementByAttribute(this, "anonid", "unread_reply_count")
-                unreadReplyCount.parentNode.removeChild(unreadReplyCount);
-              }
-              replyInsertionNode.none = false;
-            }
-            else
-            {
-              replyInsertionNode.none = true;
-              let allReplies = document.getAnonymousElementByAttribute(this, "anonid", "reply_other")
-              allReplies.setAttribute("hidden", "true");
             }
         } catch (e) {
            dumpExc(e, 'reply');
@@ -672,36 +653,29 @@
       </method>
       
     </implementation>
-
-    <handlers>
-      <handler event="click" preventdefault="true">
-        <![CDATA[
-        this.openConversationInTab();
-        ]]>
-      </handler>
-    </handlers>
     <content>
-      <html:div class="checkbox"><html:input type="checkbox" tabindex="-1"
-                                             onclick="event.stopPropagation();
-                                             document.getBindingParent(this).toggleSelect()"/></html:div>
-      <html:div class="header">
-          <html:div anonid="subject" class="subject"></html:div>
-          <html:div class="addressing">
-            <html:span anonid="author" class="author"></html:span>
-              <html:span anonid="verb" class="verb">writes</html:span>
-              <html:div anonid="recipients" class="recipients"/> 
-              <html:span anonid="date" class="date"></html:span>
-          </html:div>
-          <html:div anonid="tags" class="tags"></html:div>
+      <html:div class="checkbox" 
+                onclick="event.stopPropagation();
+                         document.getBindingParent(this).toggleSelectHelper();">
+        <html:input anonid="checkbox" type="checkbox" tabindex="-1" 
+                    onclick="event.stopPropagation();
+                             document.getBindingParent(this).toggleSelect();"/>
       </html:div>
-      <html:div anonid="snippet" class="body"></html:div>
-      <html:div class="replies" anonid="replies"></html:div>
-      <html:div class="other" anonid="reply_other">
-        <html:div class="see-all">
-          <html:span anonid="other_reply_count"></html:span>
-          <html:span anonid="unread_reply_count" class="unread"></html:span>
+      <html:div class="target" onclick="document.getBindingParent(this).openConversationInTab();">
+        <html:div class="header">
+            <html:span anonid="oldestMessageDate" class="oldestMessageDate"></html:span>
+            <html:div anonid="subject" class="subject"></html:div>
+            <html:div class="addressing">
+              <html:span anonid="author" class="author"></html:span>
+                <html:span anonid="verb" class="verb">writes</html:span>
+                <html:div anonid="recipients" class="recipients"/> 
+                <html:span anonid="date" class="date"></html:span>
+            </html:div>
+            <html:div anonid="tags" class="tags"></html:div>
         </html:div>
+        <html:div anonid="snippet" class="body"></html:div>
       </html:div>
+      <html:div class="replies" anonid="replies"></html:div>
     </content>  
   </binding>
   
@@ -759,7 +733,7 @@
             else
               snippet = findSnippetInMimeMsg(this.mimeMsg);
             if (!snippet)
-              snippet = "(blank)";
+              snippet = "";
             snippetNode.textContent = snippet;
 
             // the following should be replaced by a real mozilla text-to-html
