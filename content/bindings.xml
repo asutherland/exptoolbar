@@ -425,6 +425,14 @@
   <binding id="conversation" extends="chrome://experimentaltoolbar/content/bindings.xml#message">
     <resources>
     </resources>
+    <handlers>
+      <handler event="keydown" keycode="VK_SPACE" phase="capturing"
+               preventdefault="true" action="this.toggleSelect()">
+      </handler>
+      <handler event="keydown" keycode="VK_RETURN" phase="capturing"
+               preventdefault="true" action="this.openConversationInTab()">
+      </handler>
+    </handlers>
     <implementation>
       <field name="selected">false</field>
       <property name="glodaConversation">
@@ -473,6 +481,9 @@
         <![CDATA[
         try {
           this.selected = ! this.selected;
+          // let's make sure that the checkbox matches the state
+          let checkbox = document.getAnonymousElementByAttribute(this, "anonid", "checkbox");
+          checkbox.checked = this.selected;
           if (this.id in gSelectedConversationNodes)
             delete gSelectedConversationNodes[this.id];
           else
