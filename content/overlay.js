@@ -111,7 +111,7 @@ var searchTabMonitor = {
 
 
 var experimentaltoolbar = {
-  log: Log4Moz.Service.getLogger("exptoolbar.overlay"),
+  log: Log4Moz.repository.getLogger("exptoolbar.overlay"),
 
   SEARCH_INPUT_HELPER_TEXT : "Search messages, events, people...",
 
