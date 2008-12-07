@@ -214,7 +214,7 @@
               dump("ERROR: Setting something false to identity");
               throw("Bad identity");
             }
-            if (val.contact == parent.Gloda.myContact) {
+            if (val.contact == parent.parent.Gloda.myContact) {
               this.textContent = "you"; // localize XXX
             } else {
               this.textContent = makeFriendlyName(val.contact.name);
@@ -278,7 +278,7 @@
         <body>
         <![CDATA[
         try {
-            parent.MsgHdrToMimeMessage(this._message.folderMessage, this, this.addMessageBody)
+            parent.parent.MsgHdrToMimeMessage(this._message.folderMessage, this, this.addMessageBody)
         } catch (e) {
            dumpExc(e, 'message');
         }
@@ -303,7 +303,7 @@
         <body><![CDATA[
         try {
             var snippetNode = document.getAnonymousElementByAttribute(this, "anonid", "snippet");
-            let content = parent.Gloda.getMessageContent(this._message, this.mimeMsg);
+            let content = parent.parent.Gloda.getMessageContent(this._message, this.mimeMsg);
             let snippet;
             if (content && content.hasContent())
               snippet = content.getContentSnippet(100);
@@ -329,7 +329,7 @@
         <body><![CDATA[
         try {
             let body;
-            let content = parent.Gloda.getMessageContent(this._message, this.mimeMsg);
+            let content = parent.parent.Gloda.getMessageContent(this._message, this.mimeMsg);
             if (content && content.hasContent())
               body = content.getContentString();
             else
@@ -389,7 +389,7 @@
             //let fromNode = document.getAnonymousElementByAttribute(this, "anonid", "from");
             //participantNode.setAttribute("class", "reply from");
             //participantNode.glodaIdentity = this._message.from;
-            //parent.MsgHdrToMimeMessage(this._message.folderMessage, this, this.addMessageBody)
+            //parent.parent.MsgHdrToMimeMessage(this._message.folderMessage, this, this.addMessageBody)
             if (this._message.date)
             {
               var date = document.getAnonymousElementByAttribute(this, "anonid", "date");
@@ -398,7 +398,7 @@
               dump("ERROR: No date on this message?\n");
             }
             
-            parent.MsgHdrToMimeMessage(this._message.folderMessage, this, this.addMessageBody)
+            parent.parent.MsgHdrToMimeMessage(this._message.folderMessage, this, this.addMessageBody)
         } catch (e) {
            dumpExc(e, 'reply');
         }
@@ -515,7 +515,7 @@
         <body>
         <![CDATA[
         try {
-          let tabmail = parent.document.getElementById("tabmail");
+          let tabmail = parent.parent.document.getElementById("tabmail");
           // find what messages we want to highlight
           let hitmap = document.getElementById('query').hitMessageMap
           let searchHits = [];
@@ -538,7 +538,7 @@
         <body>
         <![CDATA[
         try {
-          let tabmail = parent.document.getElementById("tabmail");
+          let tabmail = parent.parent.document.getElementById("tabmail");
           let firstmessage;
           for each (let message in this.messages)
           {
@@ -598,7 +598,7 @@
             
             if (firstmessage.folderMessage) {
               this._message = firstmessage;
-              parent.MsgHdrToMimeMessage(firstmessage.folderMessage, this, this.addMessageBody)
+              parent.parent.MsgHdrToMimeMessage(firstmessage.folderMessage, this, this.addMessageBody)
             } else {
               dump("ERROR: Message from " + originator + " has no folderMessage\n");
             }
@@ -697,7 +697,7 @@
         <body>
         <![CDATA[
         try {
-            parent.MsgHdrToMimeMessage(this._message.folderMessage, this, this.addMessageBody)
+            parent.parent.MsgHdrToMimeMessage(this._message.folderMessage, this, this.addMessageBody)
             this.addParticipantNode('sender', this._message.from, 'sender');
 
             var dateNode = document.getAnonymousElementByAttribute(this, "anonid", "date");
@@ -737,7 +737,7 @@
         <body><![CDATA[
         try {
             var snippetNode = document.getAnonymousElementByAttribute(this, "anonid", "snippet");
-            let content = parent.Gloda.getMessageContent(this._message, this.mimeMsg);
+            let content = parent.parent.Gloda.getMessageContent(this._message, this.mimeMsg);
             let snippet;
             if (content && content.hasContent())
               snippet = content.getContentSnippet(100);
@@ -970,7 +970,7 @@
         <body>
         <![CDATA[
         try {
-          let tabmail = parent.document.getElementById("tabmail");
+          let tabmail = parent.parent.document.getElementById("tabmail");
           let firstmessage;
           for each (let message in this.messages)
           {
@@ -1038,13 +1038,13 @@
       </method>
       <method name="addThreadNode">
         <parameter name="node"/>
-        <parameter name="parent"/>
+        <parameter name="localparent"/>
         <body><![CDATA[
           try {
             let threadNode = document.createElement('li');
             threadNode.setAttribute('type', 'threadnode');
             threadNode.setAttribute('id', 'thread' + node.id.toString());
-            parent.appendChild(threadNode);
+            localparent.appendChild(threadNode);
             threadNode.glodaMessage = node;
           } catch (e) {
             dumpExc(e);

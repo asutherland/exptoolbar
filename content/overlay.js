@@ -52,7 +52,7 @@ var conversationTabType = {
       function(e) { experimentaltoolbar.showConversation(aConstraints, expandedMessages, selectedMessage); }, false);
     aTab.constraints = aConstraints;
     aTab.panel.setAttribute("src",
-      "chrome://experimentaltoolbar/content/conversation.xhtml");
+      "chrome://experimentaltoolbar/content/conversation.xul");
     aTab.title = aConstraints[0].subject;
   },
   closeTab: function (aTab) {
@@ -79,7 +79,7 @@ var searchTabType = {
       function(e) { experimentaltoolbar.applyConstraints(); }, false);
     aTab.constraints = aConstraints;
     aTab.panel.setAttribute("src",
-      "chrome://experimentaltoolbar/content/searchResults.xhtml");
+      "chrome://experimentaltoolbar/content/searchResults.xul");
     aTab.title = "Search";
   },
   closeTab: function (aTab) {
@@ -397,7 +397,8 @@ var experimentaltoolbar = {
   showConversation: function(aConstraints, expandedMessages, selectedMessage) {
     try {
       let conversation = aConstraints[0];
-      let doc = this.tabmail.currentTabInfo.panel.contentDocument;
+      let outerdoc = this.tabmail.currentTabInfo.panel.contentDocument;
+      let doc = outerdoc.getElementById('browser').contentDocument;
       let win = this.tabmail.currentTabInfo.panel.contentWindow;
       let conversationNode = doc.getElementById("conversation-contents");
       conversationNode.glodaConversation = conversation;
@@ -497,7 +498,8 @@ var experimentaltoolbar = {
   clearSearchResults: function () {
     try {
       // XXX this fails sometimes, why?
-      let doc = this.tabmail.currentTabInfo.panel.contentDocument;
+      let outerdoc = this.tabmail.currentTabInfo.panel.contentDocument;
+      let doc = outerdoc.getElementById('browser').contentDocument;
       let conversationsNode = doc.getElementById("conversations");
       while (conversationsNode.firstChild) {
         conversationsNode.removeChild(conversationsNode.firstChild);
@@ -513,7 +515,8 @@ var experimentaltoolbar = {
   try {
     this.clearSearchResults();
 
-    let doc = this.tabmail.currentTabInfo.panel.contentDocument;
+    let outerdoc = this.tabmail.currentTabInfo.panel.contentDocument;
+    let doc = outerdoc.getElementById('browser').contentDocument;
     let queryNode = doc.getElementById("query");
     queryNode.glodaQuery = aQuery;
 
