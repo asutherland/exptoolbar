@@ -552,10 +552,40 @@
         ]]>
         </body>
       </method>
+      <method name="_processSubThread">
+        <parameter name="collection"/>
+        <parameter name="node"/>
+        <body>
+        <![CDATA[
+          collection.push(node);
+          for each (let child in node['children'])
+            this._processSubThread(collection, child);
+        ]]>
+        </body>
+      </method>
       <method name="onItemsAdded">
         <body><![CDATA[
           try {
-            this.messages = this.messagesCollection.items;
+            let messagesUnsorted = this.messagesCollection.items;
+
+            // XXX remove duplicates -- this should be replaced w/ a utility
+            // function in Gloda
+            // Thread the messages.
+            // Make an array of phantoms so we don't end up modifying the actual
+            // messages.
+            let phantoms = [];
+            for each (let [,item] in Iterator(messagesUnsorted)) {
+              phantoms.push({__proto__: item});
+            }
+
+            let threadmap = new GlodaThreader('edge', 'children');
+            let topnodes = threadmap.map(phantoms);
+            let messages = [];
+            for each (let [,topnode] in Iterator(topnodes))
+            {
+              this._processSubThread(messages, topnode);
+            }
+            this.messages = messages;
             
             let participants = {};
             let firstmessage = this.messages[0];
@@ -768,6 +798,7 @@
               iframe.height = bodyNode.scrollHeight + 28;
             }
             this._message.domContribute(snippetNode);
+            if (this._cb) this._cb();
         } catch (e) {
           dumpExc(e);
         }
@@ -1052,21 +1083,52 @@
           ]]>
         </body>
       </method>
+      <field name="_setterQueue">[]</field>
+      <method name="_tweakQueue">
+        <body><![CDATA[
+          try {
+            // we have a queue of setters, because if we set all messages
+            // in a long conversation at once, sqlite ends up hammered,
+            // and gloda is unable to optimize things like identity management
+            // so this makes them happen one after the other.  much faster
+            // response.
+            if (this._setterQueue.length == 0) return;
+            let front = this._setterQueue[0];
+            this._setterQueue = this._setterQueue.slice(1);
+            let node = front[0];
+            let message = front[1];
+            let self = this;
+            let cb = function () { self._tweakQueue() };
+            node._cb = cb;
+            node.glodaMessage = message; // this will call the cb when it's done.
+          } catch (e) {
+            dumpExc(e);
+          }
+          ]]>
+        </body>
+      </method>
+      
       <method name="addMessageNode">
         <parameter name="node"/>
+        <parameter name="queue"/>
         <body><![CDATA[
           try {
             let messagesNode = document.getAnonymousElementByAttribute(this, "anonid", "messages");
             let messageNode = document.createElement("message-in-conversation");
             messagesNode.appendChild(messageNode);
-            messageNode.glodaMessage = node;
+            if (!queue) {
+              messageNode.glodaMessage = node;
+            } else {
+              this._setterQueue.push([messageNode, node])
+              this._tweakQueue();
+            }
             if (node.id in this.expandedMessageIds) {
               messageNode.expand();
             }
             this.messageNode = messageNode;
             for each (let child in node['children'])
             {
-              this.addMessageNode(child)
+              this.addMessageNode(child, queue)
             }
           } catch (e) {
             dumpExc(e);
@@ -1082,6 +1144,8 @@
             let subjectNode = document.getAnonymousElementByAttribute(this, "anonid", "subject");
             subjectNode.textContent = this.conversation.subject;
             
+            // XXX remove duplicates -- this should be replaced w/ a utility
+            // function in Gloda
             // Thread the messages.
             // Make an array of phantoms so we don't end up modifying the actual
             // messages.
@@ -1095,7 +1159,7 @@
             for each (let [,topnode] in Iterator(topnodes))
             {
               this.addThreadNode(topnode, document.getAnonymousElementByAttribute(this, "anonid", "threadroot"));
-              this.addMessageNode(topnode);
+              this.addMessageNode(topnode, true); // queue, as these can be slow.
             }
 
             if (this.selectedMessage)
