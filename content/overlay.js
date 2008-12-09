@@ -113,8 +113,6 @@ var searchTabMonitor = {
 var experimentaltoolbar = {
   log: Log4Moz.repository.getLogger("exptoolbar.overlay"),
 
-  SEARCH_INPUT_HELPER_TEXT : "Search messages, events, people...",
-
   onLoad: function() {
     // initialization code
     this._callbackHandle.init();
@@ -157,16 +155,8 @@ var experimentaltoolbar = {
   },
 
   onBlurSearchInput : function(event) {
-    var searchInput = document.getElementById("searchInput2");
-    if (searchInput.value == "") {
-      searchInput.value = this.SEARCH_INPUT_HELPER_TEXT;
-    }
   },
   onFocusSearchInput : function(event) {
-    var searchInput = document.getElementById("searchInput2");
-    if (searchInput.value == this.SEARCH_INPUT_HELPER_TEXT) {
-      searchInput.value = "";
-    }
   },
   getMailBar: function() {
     return document.getElementById("mail-bar2") ||
