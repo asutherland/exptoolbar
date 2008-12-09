@@ -59,11 +59,14 @@ message-in-conversation .header .headers .meta .time { font-size: small; color: 
 
 message-in-conversation .header .headers .details .participants { }
 message-in-conversation .header .headers .details .participants .sender { }
+message-in-conversation[unread="true"] .header .headers .details .participants .sender { font-weight: bold; }
 message-in-conversation .header .headers .details .participants .delta { }
 message-in-conversation .header .headers .details .snippet { color: #777; padding-left: 2em; 
                                               font-size: small; 
                                               white-space: nowrap; 
                                               overflow: hidden; }  
+message-in-conversation[unread="true"] .header .headers .details .snippet { font-weight: bold; }
+
 message-in-conversation { display: block; }
 
 message-in-conversation .body { display: none; }

@@ -432,6 +432,9 @@
       <handler event="keydown" keycode="VK_RETURN" phase="capturing"
                preventdefault="true" action="this.openConversationInTab()">
       </handler>
+      <handler event="keypress" keycode="VK_DELETE" phase="capturing"
+               preventdefault="true" action="alert('deleteSelectedConversations()')">
+      </handler>
     </handlers>
     <implementation>
       <field name="selected">false</field>
@@ -733,6 +736,8 @@
             var dateNode = document.getAnonymousElementByAttribute(this, "anonid", "date");
             dateNode.textContent = makeDateFriendly(this._message.date);
             
+            this.setAttribute("unread", !this._message.read);
+            
             let attachmentCountNode = document.getAnonymousElementByAttribute(this, "anonid", "attachmentcount");
             let attachmentsList = document.getAnonymousElementByAttribute(this, "anonid", "attachments-list");
             let attachmentsNode = document.getAnonymousElementByAttribute(this, "anonid", "attachments");
@@ -921,6 +926,8 @@
             let nameNode = document.getAnonymousElementByAttribute(this, 'anonid', 'span')
             nameNode.textContent = this.message.from.contact.name;
 
+            this.setAttribute('unread', !this.message.read);
+            
             if (this.message['children']) {
               let ulNode = document.createElement('ul');
               ulNode.setAttribute('class', 'thread');
@@ -930,6 +937,7 @@
                 let threadNode = document.createElement('li');
                 threadNode.setAttribute('type', 'threadnode');
                 threadNode.setAttribute('id', 'thread' + child.id.toString());
+                threadNode.setAttribute('unread', !child.read);
                 ulNode.appendChild(threadNode);
                 threadNode.glodaMessage = child;
               }
@@ -952,8 +960,10 @@
           {
             lastselected.removeAttribute('selected');
             $(lastselected).removeClass('selected');
+            $(lastselected).parent().removeClass('selected');
           }
           $(this).addClass("selected");
+          $(this).parent().addClass("selected");
           this.setAttribute('selected', 'true');
         } catch (e) {
           dumpExc(e);
@@ -997,24 +1007,6 @@
             ]]>
         </getter>
       </property>
-      <method name="openMessageInTab">
-        <body>
-        <![CDATA[
-        try {
-          let tabmail = parent.parent.document.getElementById("tabmail");
-          let firstmessage;
-          for each (let message in this.messages)
-          {
-            firstmessage = message;
-            break;
-          }
-          tabmail.openTab("message", firstmessage.folderURI, firstmessage.folderMessage)
-        } catch (e) {
-           dumpExc(e, 'conversation');
-        }
-        ]]>
-        </body>
-      </method>
       <method name="expandMessages">
         <parameter name="messages"/>
         <body>
@@ -1246,8 +1238,8 @@
       <html:div anonid="toolbox" class="toolbox">
         <html:div class="toolbar">
           <!--<html:button style="font-weight:bold;">Archive</html:button>-->
-          <html:button onclick="document.getBindingParent(this).junkSelectedConversations()">Junk</html:button>
-          <html:button onclick="document.getBindingParent(this).deleteSelectedConversations()">Delete</html:button>
+          <html:button tabindex="-1" onclick="document.getBindingParent(this).junkSelectedConversations()">Junk</html:button>
+          <html:button tabindex="-1" onclick="document.getBindingParent(this).deleteSelectedConversations()">Delete</html:button>
         </html:div>
         <html:div anonid="subject" class="subject"></html:div>
         <html:div class="between">Between <html:span anonid="participants" class="recipients"></html:span>
