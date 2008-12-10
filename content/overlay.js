@@ -148,6 +148,17 @@ var experimentaltoolbar = {
     // XXX remove the quick search keyboard shortcut
     var qsk = document.getElementById("key_quickSearchFocus");
     qsk.parentNode.removeChild(qsk);
+    
+    try {
+      var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                  .getService(Components.interfaces.nsIPrefService);
+      /* if you didn't have the gloda indexer pref set to true we set it to
+         true and then kick GlodaIndexer for a first pass index if necessary */
+      if ( ! prefService.getBoolPref("mailnews.database.global.indexer.enabled") ) {
+        prefService.setBoolPref("mailnews.database.global.indexer.enabled", true);
+        GlodaIndexer.enabled = true;
+      }
+    } catch(ignore) {}
   },
   focusSearchInput : function(event) {
     this.searchInput.focus();
