@@ -50,9 +50,13 @@ conversation > .target { cursor: pointer; }
 
 /* HEADER */
 .header { margin-bottom: 0.5em; }
-.header .oldestMessageDate { float: right; padding-left: 2em; }
+.header .meta { float: right; padding-left: 2em; text-align: right; color: #999; font-size: 90%; }
+.header .meta .attachments { padding-right: 18px; background: url("chrome://messenger/skin/icons/attachment.png") transparent no-repeat center right; display: none; }
+.header .meta .attachments[count] { display: inline; }
+.header .meta .attachments:before { content: "("; }
+.header .meta .attachments:after { content: ")"; }
 .header .addressing .verb { font-size: 90%; color: #777; }
-.header .addressing .date, .header .oldestMessageDate { color: #999; font-size: 90%; }
+.header .addressing .date { color: #999; font-size: 90%; }
 .header .addressing .date:before { content: "\2014  "; }
 
 .recipients { display: inline; color: #222; }

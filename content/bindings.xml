@@ -636,6 +636,8 @@
               dump("ERROR: Message from " + originator + " has no folderMessage\n");
             }
 
+            let attachmentCount = 0;
+            
             for each (let message in this.messages)
             {
               let sender = message.from;
@@ -662,6 +664,15 @@
               }
               if ( ! message.read ) 
                 this.setAttribute("unread", "true"); /* conversation is unread */
+                
+              if ( message.attachmentNames ) {
+                attachmentCount += firstmessage.attachmentNames.length;
+                if ( attachmentCount > 0 ) {
+                  let attachments = document.getAnonymousElementByAttribute(this, "anonid", "attachments");
+                  attachments.textContent = attachmentCount.toString();
+                  attachments.setAttribute("count", attachmentCount);
+                }
+              }
             }
 
 
@@ -707,7 +718,10 @@
       </html:div>
       <html:div class="target" onclick="document.getBindingParent(this).openConversationInTab();">
         <html:div class="header">
-            <html:span anonid="oldestMessageDate" class="oldestMessageDate"></html:span>
+            <html:div class="meta">
+              <html:div anonid="oldestMessageDate" class="oldestMessageDate"></html:div>
+              <html:div anonid="attachments" class="attachments"></html:div>
+            </html:div>
             <html:div anonid="subject" class="subject"></html:div>
             <html:div class="addressing">
               <html:span anonid="author" class="author"></html:span>
