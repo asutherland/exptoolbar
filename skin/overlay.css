@@ -4,28 +4,34 @@
 
 #button-write
 {
+  /*height: 24px !important;*/
   font-family: sans-serif;
-  font-weight: bold;
+  /*font-weight: bold;*/
   /*-moz-appearance: button;*/
   -moz-appearance: none;
-  -moz-border-image: url("chrome://experimentaltoolbar/skin/thinbutton.png")  2 2 2 2 stretch stretch;
+  border-width: 0 11px 0 11px;
+  -moz-border-image: url("chrome://experimentaltoolbar/skin/thinbutton.png")  0 11 0 11 stretch stretch;
   font-size: 110%;
-  padding: 0em .5em;
-  margin-top: 4px;
-  margin-bottom: 4px;
+  background: transparent;
+  color: white;
+  padding-top: 4px;
+  padding-left: .5em;
+  /*padding: 0em .5em;*/
+  margin-top: 6px;
+  margin-bottom: 6px;
   padding-right: 5px;
-  letter-spacing: 3px;
+  text-shadow: #13446d;
+  letter-spacing: 1px;
 }
 
 #button-write:hover
 {
-  -moz-border-image: url("chrome://experimentaltoolbar/skin/thinbutton-active.png")  2 2 2 2 stretch stretch;
+  -moz-border-image: url("chrome://experimentaltoolbar/skin/thinbutton-active.png")  0 11 0 11 stretch stretch;
 }
 
 #messengerWindow:not([active="true"]) #button-write
 {
-  -moz-border-image: url("chrome://experimentaltoolbar/skin/thinbutton-inactive.png")  2 2 2 2 stretch stretch;
-  color: darkgrey;
+  -moz-border-image: url("chrome://experimentaltoolbar/skin/thinbutton-inactive.png")  0 11 0 11 stretch stretch;
 }
 
 

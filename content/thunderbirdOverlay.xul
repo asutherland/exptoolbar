@@ -62,7 +62,7 @@
   </popupset>
 
   <toolbox id="mail-toolbox">
-    <toolbar id="mail-bar2" collapsed="true"/>
+    <toolbar id="mail-bar2" collapsed="true" align="baseline"/>
   <!--<toolbarpalette id="MailToolbarPalette">-->
     
       <toolbar id="mail-search-bar" class="toolbar-primary" toolbarname="Mail Toolbar" accesskey="o" fullscreentoolbar="true" mode="full" customizable="true" context="toolbar-context-menu" 
@@ -77,7 +77,8 @@
 
       <toolbarspacer class="mail-search-bar-spacer"/>
 
-      <toolbarbutton id="button-write" label="Write" oncommand="MsgNewMessage(event)">Write</toolbarbutton>
+      <toolbarbutton id="button-write" label="Write"
+                     oncommand="MsgNewMessage(event)">Write</toolbarbutton>
 
       <toolbarspacer class="mail-search-bar-spacer"/>
 
