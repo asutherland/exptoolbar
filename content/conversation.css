@@ -55,7 +55,7 @@ message-in-conversation .header .headers .meta { float: right; padding-left: 1em
 message-in-conversation .header .headers .meta .attachments { }
 message-in-conversation .header .headers .meta .attachments .count { font-size: small; }
 message-in-conversation .header .headers .meta .attachments img { vertical-align: middle; }
-message-in-conversation .header .headers .meta .time { font-size: small; color: #444; }
+message-in-conversation .header .headers .meta .time { font-size: small; color: #444; text-align: right; display: block; }
 
 message-in-conversation .header .headers .details .participants { }
 message-in-conversation .header .headers .details .participants .sender { }

@@ -856,6 +856,30 @@
           ]]>
         </body>
       </method>
+      <method name="reply">
+        <body><![CDATA[
+          try {
+            let hdr = this._message.folderMessage;
+            let messageUri = this._message.folderMessageURI;
+
+            let type = Components.interfaces.nsIMsgCompType.ReplyToSender;
+            let format = Components.interfaces.nsIMsgCompFormat.Default;
+
+            let msgComposeService = Components.classes["@mozilla.org/messengercompose;1"].getService();
+                msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
+
+            let identity = msgComposeService.defaultIdentity;
+            let msgWindow = Components.classes["@mozilla.org/messenger/msgwindow;1"].createInstance();
+                msgWindow = msgWindow.QueryInterface(Components.interfaces.nsIMsgWindow);
+            
+            msgComposeService.OpenComposeWindow(null, hdr, messageUri, type, format, identity, msgWindow);
+
+          } catch (e) {
+            dumpExc(e);
+          }
+          ]]>
+        </body>
+      </method>
       <method name="replyAll">
         <body><![CDATA[
           try {
@@ -931,6 +955,7 @@
                 <html:span anonid="date" class="time"></html:span>
               </html:div>
               <html:div class="actions">
+                <html:button tabindex="-1" onclick="document.getBindingParent(this).reply()">reply</html:button>
                 <html:button tabindex="-1" onclick="document.getBindingParent(this).replyAll()">reply all</html:button>
                 <html:button tabindex="-1" onclick="document.getBindingParent(this).forward()">forward</html:button>
               </html:div>
@@ -950,6 +975,7 @@
           <html:iframe anonid="iframe" class="content" src="chrome://experimentaltoolbar/content/message.html"></html:iframe>
           <html:div class="attachments-area"></html:div>
           <html:div class="actions">
+            <html:button tabindex="-1" onclick="document.getBindingParent(this).reply()">reply</html:button>
             <html:button tabindex="-1" onclick="document.getBindingParent(this).replyAll()">reply all</html:button>
             <html:button tabindex="-1" onclick="document.getBindingParent(this).forward()">forward</html:button>
           </html:div>
