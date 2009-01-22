@@ -880,6 +880,31 @@
           ]]>
         </body>
       </method>
+      <method name="forward">
+        <body><![CDATA[
+          try {
+            let hdr = this._message.folderMessage;
+            let messageUri = this._message.folderMessageURI;
+
+            /* there is a pref - mail.forward_message_mode that we aren't caring about */
+            let type = Components.interfaces.nsIMsgCompType.ForwardInline;
+            let format = Components.interfaces.nsIMsgCompFormat.Default;
+
+            let msgComposeService = Components.classes["@mozilla.org/messengercompose;1"].getService();
+                msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
+
+            let identity = msgComposeService.defaultIdentity;
+            let msgWindow = Components.classes["@mozilla.org/messenger/msgwindow;1"].createInstance();
+                msgWindow = msgWindow.QueryInterface(Components.interfaces.nsIMsgWindow);
+            
+            msgComposeService.OpenComposeWindow(null, hdr, messageUri, type, format, identity, msgWindow);
+
+          } catch (e) {
+            dumpExc(e);
+          }
+          ]]>
+        </body>
+      </method>
     </implementation>
     <handlers>
       <handler event="click" phase="bubbling" preventdefault="true">
@@ -907,7 +932,7 @@
               </html:div>
               <html:div class="actions">
                 <html:button tabindex="-1" onclick="document.getBindingParent(this).replyAll()">reply all</html:button>
-                <html:button>forward</html:button>
+                <html:button tabindex="-1" onclick="document.getBindingParent(this).forward()">forward</html:button>
               </html:div>
             </html:div>
             <html:div class="details">
@@ -926,7 +951,7 @@
           <html:div class="attachments-area"></html:div>
           <html:div class="actions">
             <html:button tabindex="-1" onclick="document.getBindingParent(this).replyAll()">reply all</html:button>
-            <html:button>forward</html:button>
+            <html:button tabindex="-1" onclick="document.getBindingParent(this).forward()">forward</html:button>
           </html:div>
         </html:div></content>
   </binding>
