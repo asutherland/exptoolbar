@@ -168,9 +168,11 @@ function makeConversationRadarVis(_aCanvas, _aConversations) {
     // data is the message itself
     //.data(function (d) d)
     .size(function (msg) msg.starred ? 16 : 10)
-    .shape(function (msg) msg.starred ? "diamond" : "circle")
+    .shape(function (msg) msg.starred ? "diamond" :
+                            (msg.from.popularity > 100) ? "circle" : "cross")
+    .strokeStyle(colorMessage)
     .visible(function (msg, convInfo) !(msg.id in convInfo.hitIds))
-    .strokeStyle(null)
+    .strokeStyle(colorMessage)
     .fillStyle(colorMessage);
 
   let convMessageMagicHits = convMessageMagicAll.add(pv.Wedge)
