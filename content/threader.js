@@ -10,7 +10,13 @@ GlodaThreader.prototype = {
     }
     // now find their closest parent...
     for each (let message in messageIdMap) {
-      let msgHdr = message.folderMessage;
+      let msgHdr;
+      try {
+        msgHdr = message.folderMessage;
+      }
+      catch (ex) {
+        continue;
+      }
       // references are ordered from old (0) to new (n-1), so walk backwards
       for (let iRef = msgHdr.numReferences-1; iRef >= 0; iRef--) {
         let ref = msgHdr.getStringReference(iRef);
