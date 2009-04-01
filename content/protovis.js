@@ -4,7 +4,8 @@ Function.prototype.extend = function() {
   a.prototype = this.prototype;
   return new a()
 };
-Array.prototype.dict = function(g, h) {
+/* messing with the Array prototype is bad */
+function array2Dict(g, h) {
   var a = {};
   for (var d = 0; d < this.length; d++) {
     if (d in this) {
