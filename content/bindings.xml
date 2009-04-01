@@ -49,10 +49,10 @@
           // We want to keep track of which messages were found in the query
           // and of the conversations that they belong to.  The former
           // will be displayed in the latter with special styling, etc.
-          let conversationMap = {};
+          let conversationMap = this.conversationMap = {};
           let conversationsNode = document.getElementById("conversations");
           this.hitMessageMap = {};
-          let conversations = [];
+          let conversations = this.conversations = [];
 
           // XXX TBD: we should have the messages sorted w/ most recent first,
           // that way we'll have 'free' sorting of the conversations.
@@ -63,8 +63,13 @@
             this.hitMessageMap[message.id] = true;
             let conv = message.conversation;
             if (!(conv.id in conversationMap)) {
-              conversationMap[conv.id] = conv;
-              conversations.push(conv);
+              let convInfo = {conv: conv, hits: [message]};
+              conversationMap[conv.id] = convInfo;
+              conversations.push(convInfo);
+            }
+            else {
+              let convInfo = this.conversationMap[conv.id];
+              convInfo.hits.push(message);
             }
           }
           conversationsNode.setAttribute("hidden", "true");
@@ -72,7 +77,8 @@
           for (let i in conversations.slice(0, 20))
           {
             convcount++;
-            let conv = conversations[i];
+            let convInfo = conversations[i];
+            let conv = convInfo.conv;
             let convid = 'conv'+conv.id.toString();
             let node = document.getElementById(convid);
             if (!node) {
@@ -81,6 +87,7 @@
               node.id = 'conv' + conv.id.toString()
               node.setAttribute("tabindex", convcount);
               node.glodaConversation = conv; // XXX this is _slow_
+              convInfo.messagesColl = node.messageCollection;
             }
           }
           conversationsNode.removeAttribute("hidden"); // XXX the consequences of this are _slow_
@@ -116,6 +123,33 @@
         <html:div xbl:inherits="class=divclass" anonid="name"></html:div>
       </html:div>
     </content>
+  </binding>
+
+  <!-- a query that visualizes stuffs -->
+  <binding id="vis-query"
+           extends="chrome://experimentaltoolbar/content/bindings.xml#query">
+    <implementation>
+      <method name="addItems">
+        <parameter name="items"/>
+        <body>
+        <![CDATA[
+        try {
+          // call the superclass method, why not
+          this.__proto__.__proto__.addItems(items);
+
+          let visNode = document.getElementById("vis");
+
+          this.radarVis = makeConversationRadarVis(visNode,
+            this.conversations);
+          this.radarVis.vis.render();
+        }
+        catch (e) {
+          dumpExc(e);
+        }
+        ]]>
+        </body>
+     </method>
+    </implementation>
   </binding>
 
   <binding id="search-toolbox">

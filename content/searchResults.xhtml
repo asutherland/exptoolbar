@@ -38,15 +38,16 @@
       src="chrome://experimentaltoolbar/content/searchResults.js"></script>
   <script type="application/javascript;version=1.8"
       src="chrome://experimentaltoolbar/content/protovis.js"></script>
+  <script type="application/javascript;version=1.8"
+      src="chrome://experimentaltoolbar/content/vis_radar.js"></script>
   </head>
 <body onload="OnLoad()">
   <div id="window">
     <div class="results" id="results">
+      <canvas id="vis" width="720" height="720"></canvas>
       <div class="conversations" id="conversations"/>
     </div>
   </div>
-  <div class="messagelist" id="messagelist"/>
-  <div class="notice" id="notice"/>
   <search-toolbox id="toolbox"/>
   <query id="query"/>
 </body>

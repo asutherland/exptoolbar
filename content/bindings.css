@@ -7,7 +7,7 @@ search-toolbox {
 }
 
 query {
-  -moz-binding: url('chrome://experimentaltoolbar/content/bindings.xml#query');
+  -moz-binding: url('chrome://experimentaltoolbar/content/bindings.xml#vis-query');
 }
 
 conversation {

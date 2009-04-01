@@ -4,11 +4,11 @@ let Ci = Components.interfaces;
 
 function OnLoad() {
   try {
-    $(".conversations").css("marginTop", $("#toolbox").height() );
+    $("#vis").css("marginTop", $("#toolbox").height() );
     $("#toolbox").width($(".conversations").width());
-    
+
     $(window).resize(function() { $("#toolbox").width($(".conversations").width()); });
-    
+
     $("button.archive").click(function() {
       removeConversations();
     });
