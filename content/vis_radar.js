@@ -97,6 +97,11 @@ function makeConversationRadarVis(_aCanvas, _aConversations) {
        return this.index % 2 ? "#eeeeee" : "#fafafa";
        });
 */
+  convWedge.anchor("center").add(pv.Label)
+    .textAlign("center")
+    .textStyle("#555")
+    .text(function (convInfo) convInfo.conv.subject.substr(0, 40));
+
   function positionMessage(message) {
     let p = innerRadius +
             dateLogTransform(message.date) * radiusSpan;
@@ -150,7 +155,7 @@ function makeConversationRadarVis(_aCanvas, _aConversations) {
     if (msg.id in convInfo.hitIds)
       a = 1.0;
     else
-      a = 0.5;
+      a = 0.3;
     return "rgba(" + r + "," + g + "," + b + "," + a + ")";
   }
 
@@ -169,8 +174,9 @@ function makeConversationRadarVis(_aCanvas, _aConversations) {
     // data is the message itself
     //.data(function (d) d)
     .size(function (msg) msg.starred ? 16 : 10)
-    .shape(function (msg) msg.starred ? "diamond" : "circle")
-    .strokeStyle(null)
+    .shape(function (msg) msg.starred ? "diamond" :
+                            (msg.from.popularity > 100) ? "circle" : "cross")
+    .strokeStyle(colorMessage)
     .fillStyle(colorMessage);
 
   return {
@@ -243,7 +249,9 @@ function setupDateTransform(aNow) {
 
 function decodeHexColor(aHexColor) {
   let r, g, b;
-  let aHexColor = aHexColor.substr(1);
+  if (aHexColor[0] == "#")
+    aHexColor = aHexColor.substr(1);
+  dump("length: " + aHexColor.length + "\n");
   if (aHexColor.length == 6) {
     r = parseInt(aHexColor.substr(0, 2), 16);
     g = parseInt(aHexColor.substr(2, 4), 16);
@@ -260,6 +268,18 @@ function decodeHexColor(aHexColor) {
   return [r, g, b];
 }
 
+var TANGO_COLORS = [
+  '#fcaf3e', '#f57900', '#ce5c00', // orange
+  '#8ae234', '#73d216', '#4e9a06', // chameleon
+  '#729fcf', '#3a65a4', '#204a87', // sky blue
+  '#ad7fa8', '#75507b', '#5c3566', // plum
+  '#ef2929', '#cc0000', '#a40000', // scarlet red
+  '#fce94f', '#edd400', '#c4a000', // butter
+  '#e9b97e', '#c17d11', '#8f5902', // chocolate
+];
+
+var PRETTY_COLORS = TANGO_COLORS;
+
 var UGLY_TO_PRETTY_CACHE = {};
 /**
  * Map an ugly hex color into a pretty [r, g, b] tuple.
@@ -271,7 +291,7 @@ function mapUglyColorToPrettyColor(aUglyHex) {
   let [r, g, b] = decodeHexColor(aUglyHex);
 
   let bestTupe, bestDist;
-  for (let [, candHexColor] in Iterator(pv.Colors.category20.values)) {
+  for (let [, candHexColor] in Iterator(PRETTY_COLORS)) {
     let candTupe = decodeHexColor(candHexColor);
     let [cr, cg, cb] = candTupe;
     let dist = (cr - r) * (cr - r) + (cg - g) * (cg - g) + (cb - b) * (cb - b);
