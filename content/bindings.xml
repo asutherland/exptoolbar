@@ -146,7 +146,6 @@
           this.__proto__.__proto__.addItems(items);
 
           let visNode = document.getElementById("vis");
-
           this.radarVis = makeConversationRadarVis(visNode,
             this.conversations);
           this.radarVis.vis.render();

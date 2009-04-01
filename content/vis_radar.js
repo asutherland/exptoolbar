@@ -1,3 +1,5 @@
+var Gloda = parent.parent.Gloda;
+
 /**
  * Create a radar-inspired visualization.
  *
@@ -42,7 +44,6 @@ function makeConversationRadarVis(_aCanvas, _aConversations) {
   let contactIdToRelPos = {};
   function updateConversations(aConversations) {
     convAngleWidth = 2.0 * Math.PI / (aConversations.length + 1);
-    dump("CONV ANGLE WIDTH: " + convAngleWidth + "\n");
     // each item should be {conv, hits, messagesColl}
     //ddumpObject(aConversations, "convs", 1);
     vis.data([aConversations]);
@@ -61,11 +62,15 @@ function makeConversationRadarVis(_aCanvas, _aConversations) {
         messages = convInfo.hits;
       for (let [, message] in Iterator(messages)) {
         for (let [, contact] in Iterator(message.involves)) {
+          // the seen stuff
           if (!(contact.id in seenContactMap)) {
             seenContactMap[contact.id] = seenContacts.length;
             seenContacts.push(contact);
           }
         }
+        // the "I ever sent a message to this thing"
+        if (message.from.id == Gloda.myContact.id)
+          convInfo.meSentToThread = true;
       }
     }
 
@@ -76,10 +81,17 @@ function makeConversationRadarVis(_aCanvas, _aConversations) {
   }
   updateConversations(_aConversations);
 
+  function colorConversation(convInfo) {
+    // alternating perturbation
+    let alt = (this.index % 2);
+    if (convInfo.meSentToThread)
+      return alt ? "#eee0e0" : "#fae8e8";
+    return alt ? "#eeeeee" : "#fafafa";
+  }
+
   convWedge
     // the data is the list of conversations...
     .data(function (d) d)
-    //.data(function(d) {ddump("DATA---------------\n"); ddumpObject(d, "data", 0); return d; })
     // center it
     .left(function() width / 2)
     .top(function() height / 2)
@@ -88,15 +100,8 @@ function makeConversationRadarVis(_aCanvas, _aConversations) {
     .startAngle(function ()
        this.index * convAngleWidth + convAngleWidth / 2 - Math.PI / 2)
     .angle(function() convAngleWidth)
-    .fillStyle(function (d) this.index % 2 ? "#eeeeee" : "#fafafa");
-    //.fillStyle(function (d) this.index % 2 ? "#222" : "#333");
-  /*
-    .fillStyle(function (d) {
-       dump("---filling:\n");
-       ddumpObject(d, "data", 0);
-       return this.index % 2 ? "#eeeeee" : "#fafafa";
-       });
-*/
+    .fillStyle(colorConversation);
+
   convWedge.anchor("center").add(pv.Label)
     .textAlign("center")
     .textStyle("#555")
@@ -251,7 +256,6 @@ function decodeHexColor(aHexColor) {
   let r, g, b;
   if (aHexColor[0] == "#")
     aHexColor = aHexColor.substr(1);
-  dump("length: " + aHexColor.length + "\n");
   if (aHexColor.length == 6) {
     r = parseInt(aHexColor.substr(0, 2), 16);
     g = parseInt(aHexColor.substr(2, 4), 16);
