@@ -63,13 +63,15 @@
             this.hitMessageMap[message.id] = true;
             let conv = message.conversation;
             if (!(conv.id in conversationMap)) {
-              let convInfo = {conv: conv, hits: [message]};
+              let convInfo = {conv: conv, hitIds: {}, hits: [message]};
+              convInfo.hitIds[message.id] = true;
               conversationMap[conv.id] = convInfo;
               conversations.push(convInfo);
             }
             else {
               let convInfo = this.conversationMap[conv.id];
               convInfo.hits.push(message);
+              convInfo.hitIds[message.id] = true;
             }
           }
           conversationsNode.setAttribute("hidden", "true");
@@ -87,7 +89,7 @@
               node.id = 'conv' + conv.id.toString()
               node.setAttribute("tabindex", convcount);
               node.glodaConversation = conv; // XXX this is _slow_
-              convInfo.messagesColl = node.messageCollection;
+              convInfo.messagesColl = node.messagesCollection;
             }
           }
           conversationsNode.removeAttribute("hidden"); // XXX the consequences of this are _slow_
@@ -107,6 +109,12 @@
       </method>
       <method name="removeItems">
         <parameter name="items"/>
+        <body>
+          <![CDATA[
+          ]]>
+        </body>
+      </method>
+      <method name="someQueryCompleted">
         <body>
           <![CDATA[
           ]]>
@@ -149,6 +157,19 @@
         ]]>
         </body>
      </method>
+      <method name="someQueryCompleted">
+        <body>
+          <![CDATA[
+            if (this.radarVis) {
+              //this.radarVis.updateConversations(this.conversations);
+              let visNode = document.getElementById("vis");
+              this.radarVis = makeConversationRadarVis(visNode,
+                this.conversations);
+              this.radarVis.vis.render();
+            }
+          ]]>
+        </body>
+      </method>
     </implementation>
   </binding>
 
@@ -738,7 +759,11 @@
         <body/>
       </method>
       <method name="onQueryCompleted">
-        <body/>
+        <body>
+          <![CDATA[
+            document.getElementById("query").someQueryCompleted();
+          ]]>
+        </body>
       </method>
       
     </implementation>

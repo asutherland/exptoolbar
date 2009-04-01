@@ -37,6 +37,9 @@ function makeConversationRadarVis(_aCanvas, _aConversations) {
 
   let convAngleWidth;
   let convWedge = vis.add(pv.Wedge);
+  // map a contact id to a (0.0, 1.0) range
+  // (this should probably be accomplished using protovis or gloda)
+  let contactIdToRelPos = {};
   function updateConversations(aConversations) {
     convAngleWidth = 2.0 * Math.PI / (aConversations.length + 1);
     dump("CONV ANGLE WIDTH: " + convAngleWidth + "\n");
@@ -45,6 +48,31 @@ function makeConversationRadarVis(_aCanvas, _aConversations) {
     vis.data([aConversations]);
     //convWedge.data(aConversations);
     setupDateTransform();
+
+    // Traverse all the messages...
+    //  - populating seenContact* for the benefit of contactIdToRelPos
+    let seenContacts = [];
+    let seenContactMap = {};
+    for (let [, convInfo] in Iterator(aConversations)) {
+      let messages;
+      if (convInfo.messagesColl && convInfo.messagesColl.items.length)
+        messages = convInfo.messagesColl.items;
+      else
+        messages = convInfo.hits;
+      for (let [, message] in Iterator(messages)) {
+        for (let [, contact] in Iterator(message.involves)) {
+          if (!(contact.id in seenContactMap)) {
+            seenContactMap[contact.id] = seenContacts.length;
+            seenContacts.push(contact);
+          }
+        }
+      }
+    }
+
+    for (let [iContact, contact] in Iterator(seenContacts)) {
+      contactIdToRelPos[contact.id] = (1 + iContact) /
+                                      (seenContacts.length + 1);
+    }
   }
   updateConversations(_aConversations);
 
@@ -61,6 +89,7 @@ function makeConversationRadarVis(_aCanvas, _aConversations) {
        this.index * convAngleWidth + convAngleWidth / 2 - Math.PI / 2)
     .angle(function() convAngleWidth)
     .fillStyle(function (d) this.index % 2 ? "#eeeeee" : "#fafafa");
+    //.fillStyle(function (d) this.index % 2 ? "#222" : "#333");
   /*
     .fillStyle(function (d) {
        dump("---filling:\n");
@@ -90,30 +119,59 @@ function makeConversationRadarVis(_aCanvas, _aConversations) {
   // create synthetic wedges so that we can anchor dots for the actual messages
   let convPanel = vis.add(pv.Panel)
     .data(function(d) d);
-  let convMessageMagic = convPanel.add(pv.Wedge)
+  let convMessageMagicAll = convPanel.add(pv.Wedge)
     // data for our children is our hits
     // we are operating in the
-    .data(function(d, d2) {
-            //ddump("DATA---------------\n");
-            //ddumpObject(d, "d1", 1);
-            //ddumpObject(d2, "d2", 1);
-            return d.hits; })
+    .data(function(d, d2) (d.messagesColl && d.messagesColl.items.length) ?
+          d.messagesColl.items : [] )
     .left(function() width / 2)
     .top(function() height / 2)
-  //    .data(function (d) [c.hits for (c in d)])
     .innerRadius(positionMessage)
     .outerRadius(positionMessage)
-    .startAngle(function ()
-       this.parent.index * convAngleWidth + convAngleWidth - Math.PI / 2)
+    .startAngle(function (message)
+       this.parent.index * convAngleWidth + convAngleWidth / 2 - Math.PI / 2 +
+               convAngleWidth * (contactIdToRelPos[message.from.id] || 0))
     .fillStyle("rgb(255,0,0)")
     .angle(0);
 
-  let hitMessage = convMessageMagic.anchor("center").add(pv.Dot)
+  function colorMessage(msg, convInfo) {
+    let r, g, b, a;
+    // messages with tags get colored based on the tag's color!
+    if (msg.tags && msg.tags.length) {
+      [r, g, b] = mapUglyColorToPrettyColor(msg.tags[0].color);
+    }
+    // otherwise, starred = yellow
+    else if (msg.starred) {
+      [r, g, b] = mapUglyColorToPrettyColor("#ff0");
+    }
+    else {
+      r = g = b = 128;
+    }
+    if (msg.id in convInfo.hitIds)
+      a = 1.0;
+    else
+      a = 0.5;
+    return "rgba(" + r + "," + g + "," + b + "," + a + ")";
+  }
+
+  let nonHitMessage = convMessageMagicAll.anchor("center").add(pv.Dot)
     // data is the message itself
     //.data(function (d) d)
-    .size(10)
-    .strokeStyle("#fcc")
-    .fillStyle("#fee");
+    .size(function (msg) msg.starred ? 16 : 10)
+    .shape(function (msg) msg.starred ? "diamond" : "circle")
+    .visible(function (msg, convInfo) !(msg.id in convInfo.hitIds))
+    .strokeStyle(null)
+    .fillStyle(colorMessage);
+
+  let convMessageMagicHits = convMessageMagicAll.add(pv.Wedge)
+    .data(function (d) d.hits);
+  let hitMessage = convMessageMagicHits.anchor("center").add(pv.Dot)
+    // data is the message itself
+    //.data(function (d) d)
+    .size(function (msg) msg.starred ? 16 : 10)
+    .shape(function (msg) msg.starred ? "diamond" : "circle")
+    .strokeStyle(null)
+    .fillStyle(colorMessage);
 
   return {
     vis: vis,
@@ -181,4 +239,48 @@ function setupDateTransform(aNow) {
   DATE_RANGES.push([0.95, 1.0, tsnow, 0]);
   // never-used value to help with labeling...
   DATE_RANGES.push([1.0, 1.0, null, null]);
+}
+
+function decodeHexColor(aHexColor) {
+  let r, g, b;
+  let aHexColor = aHexColor.substr(1);
+  if (aHexColor.length == 6) {
+    r = parseInt(aHexColor.substr(0, 2), 16);
+    g = parseInt(aHexColor.substr(2, 4), 16);
+    b = parseInt(aHexColor.substr(4, 6), 16);
+  }
+  else {
+    r = parseInt(aHexColor.substr(0, 1), 16);
+    g = parseInt(aHexColor.substr(1, 2), 16);
+    b = parseInt(aHexColor.substr(2, 3), 16);
+    r = r * 16 + r;
+    g = g * 16 + g;
+    b = b * 16 + b;
+  }
+  return [r, g, b];
+}
+
+var UGLY_TO_PRETTY_CACHE = {};
+/**
+ * Map an ugly hex color into a pretty [r, g, b] tuple.
+ */
+function mapUglyColorToPrettyColor(aUglyHex) {
+  if (aUglyHex in UGLY_TO_PRETTY_CACHE) {
+    return UGLY_TO_PRETTY_CACHE[aUglyHex];
+  }
+  let [r, g, b] = decodeHexColor(aUglyHex);
+
+  let bestTupe, bestDist;
+  for (let [, candHexColor] in Iterator(pv.Colors.category20.values)) {
+    let candTupe = decodeHexColor(candHexColor);
+    let [cr, cg, cb] = candTupe;
+    let dist = (cr - r) * (cr - r) + (cg - g) * (cg - g) + (cb - b) * (cb - b);
+    if (bestTupe === undefined || dist < bestDist) {
+      bestTupe = candTupe;
+      bestDist = dist;
+    }
+  }
+
+  UGLY_TO_PRETTY_CACHE[aUglyHex] = bestTupe;
+  return bestTupe;
 }
