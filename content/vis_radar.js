@@ -213,7 +213,7 @@ function dateLogTransform(aDate) {
   for (let i = 0; i < DATE_RANGES.length; i++) {
     let [outLow, outHigh, tsRecent, tsOld] = DATE_RANGES[i];
     if (ts >= tsOld && ts <= tsRecent)
-      return outLow + (outHigh - outLow) * ((ts - tsOld) / (tsRecent - tsOld));
+      return outHigh + (outLow - outHigh) * ((ts - tsOld) / (tsRecent - tsOld));
   }
   return 6.0;
 }
