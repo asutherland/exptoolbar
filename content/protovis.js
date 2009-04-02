@@ -1,814 +1,789 @@
 var undefined;
 Function.prototype.extend = function() {
-  function a() {}
-  a.prototype = this.prototype;
-  return new a()
+  function f() {}
+  f.prototype = this.prototype;
+  return new f();
 };
-/* messing with the Array prototype is bad */
-function array2Dict(g, h) {
-  var a = {};
-  for (var d = 0; d < this.length; d++) {
-    if (d in this) {
-      var b = this[d];
-      a[b] = g.call(h, b, d, this)
+Array.prototype.dict = function(f, o) {
+  var m = {};
+  for (var i = 0; i < this.length; i++) {
+    if (i in this) {
+      var k = this[i];
+      m[k] = f.call(o, k, i, this);
     }
   }
-  return a
+  return m;
 };
+
 if (!Array.prototype.reduce) {
-  Array.prototype.reduce = function(g, b) {
-    var a = this.length;
-    if (!a && (arguments.length == 1)) {
-      throw new Error()
+  Array.prototype.reduce = function(f, v) {
+    var len = this.length;
+    if (!len && (arguments.length == 1)) {
+      throw new Error();
     }
-    var d = 0;
+
+    var i = 0;
     if (arguments.length < 2) {
       while (true) {
-        if (d in this) {
-          b = this[d++];
-          break
+        if (i in this) {
+          v = this[i++];
+          break;
         }
-        if (++d >= a) {
-          throw new Error()
+        if (++i >= len) {
+          throw new Error();
         }
       }
     }
-    for (; d < a; d++) {
-      if (d in this) {
-        b = g.call(null, b, this[d], d, this)
+
+    for (; i < len; i++) {
+      if (i in this) {
+        v = f.call(null, v, this[i], i, this);
       }
     }
-    return b
-  }
+    return v;
+  };
 }
 Date.__parse__ = Date.parse;
-Date.parse = function(f, g) {
+
+Date.parse = function(s, format) {
   if (arguments.length == 1) {
-    return Date.__parse__(f)
+    return Date.__parse__(s);
   }
-  var h = new Date(1970, 1, 1);
-  var a = [function() {}];
-  g = g.replace(/[\\\^\$\*\+\?\[\]\(\)\.\{\}]/g, "\\$&");
-  g = g.replace(/%[a-zA-Z0-9]/g,
-  function(d) {
-    switch (d) {
-    case "%S":
-      a.push(function(i) {
-        h.setSeconds(i)
-      });
-      return "([0-9]+)";
-    case "%M":
-      a.push(function(i) {
-        h.setMinutes(i)
-      });
-      return "([0-9]+)";
-    case "%H":
-      a.push(function(i) {
-        h.setHours(i)
-      });
-      return "([0-9]+)";
-    case "%d":
-      a.push(function(i) {
-        h.setDate(i)
-      });
-      return "([0-9]+)";
-    case "%m":
-      a.push(function(i) {
-        h.setMonth(i - 1)
-      });
-      return "([0-9]+)";
-    case "%Y":
-      a.push(function(i) {
-        h.setYear(i)
-      });
-      return "([0-9]+)";
-    case "%%":
-      a.push(function() {});
-      return "%";
-    case "%y":
-      a.push(function(i) {
-        i = Number(i);
-        h.setYear(i + (((0 <= i) && (i < 69)) ? 2000 : (((i >= 69) && (i < 100) ? 1900 : 0))))
-      });
-      return "([0-9]+)"
-    }
-    return d
-  });
-  var b = f.match(g);
-  if (b) {
-    b.forEach(function(d, j) {
-      a[j](d)
-    })
-  }
-  return h
-};
-if (Date.prototype.toLocaleFormat) {
-  Date.prototype.format = Date.prototype.toLocaleFormat
-} else {
-  Date.prototype.format = function(a) {
-    var b = this;
-    return a.replace(/%[a-zA-Z0-9]/g,
-    function(d) {
-      switch (d) {
-      case "%a":
-        return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", ][b.getDay()];
-      case "%b":
-        return ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][b.getMonth()];
-      case "%S":
-        return b.getSeconds();
-      case "%M":
-        return b.getMinutes();
-      case "%H":
-        return b.getHours();
-      case "%d":
-        return b.getDate();
-      case "%m":
-        return b.getMonth() + 1;
-      case "%Y":
-        return b.getYear();
-      case "%%":
-        return "%";
-      case "%y":
-        return b.getYear() % 100
+
+  var d = new Date(1970, 1, 1); // local time
+
+  var fields = [function() {}];
+  format = format.replace(/[\\\^\$\*\+\?\[\]\(\)\.\{\}]/g, "\\$&");
+  format = format.replace(/%[a-zA-Z0-9]/g, function(s) {
+      switch (s) {
+        case '%S': {
+          fields.push(function(x) { d.setSeconds(x); });
+          return "([0-9]+)";
+        }
+        case '%M': {
+          fields.push(function(x) { d.setMinutes(x); });
+          return "([0-9]+)";
+        }
+        case '%H': {
+          fields.push(function(x) { d.setHours(x); });
+          return "([0-9]+)";
+        }
+        case '%d': {
+          fields.push(function(x) { d.setDate(x); });
+          return "([0-9]+)";
+        }
+        case '%m': {
+          fields.push(function(x) { d.setMonth(x - 1); });
+          return "([0-9]+)";
+        }
+        case '%Y': {
+          fields.push(function(x) { d.setYear(x); });
+          return "([0-9]+)";
+        }
+        case '%%': {
+          fields.push(function() {});
+          return "%";
+        }
+        case '%y': {
+          fields.push(function(x) {
+              x = Number(x);
+              d.setYear(x + (((0 <= x) && (x < 69)) ? 2000
+                  : (((x >= 69) && (x < 100) ? 1900 : 0))));
+            });
+          return "([0-9]+)";
+        }
       }
-      return d
-    })
+      return s;
+    });
+
+  var match = s.match(format);
+  if (match) {
+    match.forEach(function(m, i) { fields[i](m); });
   }
+
+  return d;
+};
+
+if (Date.prototype.toLocaleFormat) {
+  Date.prototype.format = Date.prototype.toLocaleFormat;
+} else {
+  Date.prototype.format = function(format) {
+    var d = this;
+    return format.replace(/%[a-zA-Z0-9]/g, function(s) {
+        switch (s) {
+          case '%a': return [
+              "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat",
+            ][d.getDay()];
+        case '%b': return [
+              "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
+              "Aug", "Sep", "Oct", "Nov", "Dec"
+            ][d.getMonth()];
+          case '%S': return d.getSeconds();
+          case '%M': return d.getMinutes();
+          case '%H': return d.getHours();
+          case '%d': return d.getDate();
+          case '%m': return d.getMonth() + 1;
+          case '%Y': return d.getYear();
+          case '%%': return "%";
+          case '%y': return d.getYear() % 100;
+        }
+        return s;
+      });
+    };
 }
 if (typeof CanvasRenderingContext2D == "undefined") {
-  var CanvasRenderingContext2D = document.createElement("canvas").getContext("2d").constructor
+  var CanvasRenderingContext2D = document
+      .createElement("canvas").getContext("2d").constructor;
 }
+
 var c = CanvasRenderingContext2D.prototype;
 if (c.mozDrawText) {
   if (!c.measureText) {
-    c.measureText = function(a) {
+    c.measureText = function(s) {
       this.mozTextStyle = this.font;
-      return {
-        width: this.mozMeasureText(a)
-      }
-    }
+      return { width: this.mozMeasureText(s) };
+    };
   }
   if (!c.fillText) {
-    c.fillText = function(b, a, d) {
+    c.fillText = function(s, x, y) {
       this.mozTextStyle = this.font;
       this.save();
-      this.translate(a, d);
-      this.mozDrawText(b);
-      this.restore()
-    }
+      this.translate(x, y);
+      this.mozDrawText(s);
+      this.restore();
+    };
   }
 } else {
   if (!c.measureText) {
-    c.measureText = function() {
-      return {
-        width: -1
-      }
-    }
+    c.measureText = function() { return { width: -1 }; };
   }
   if (!c.fillText) {
-    c.fillText = function() {}
+    c.fillText = function() {};
   }
 }
-window.addEventListener("load",
-function() {
-  var scripts = document.getElementsByTagName("script");
-  for (var i = 0; i < scripts.length; i++) {
-    if (scripts[i].type == "text/javascript+protovis") {
-      try {
-        pv.Panel.$dom = scripts[i];
-        eval(pv.parse(scripts[i].textContent))
-      } catch(ignored) {}
-      delete pv.Panel.$dom
+window.addEventListener("load", function() {
+    var scripts = document.getElementsByTagName("script");
+    for (var i = 0; i < scripts.length; i++) {
+      if (scripts[i].type == "text/javascript+protovis") {
+        try {
+          pv.Panel.$dom = scripts[i];
+          eval(pv.parse(scripts[i].textContent));
+        } catch (ignored) {}
+        delete pv.Panel.$dom;
+      }
     }
-  }
-},
-false);
+  }, false);
 var pv = {};
+
+/* Function expression support. */
 try {
-  eval("pv.parse = function(x) x;")
-} catch(e) {
-  pv.parse = function(k) {
-    var g = new RegExp("function([^)]*)", "g"),
-    a,
-    d = 0;
-    var f = "";
-    while (a = g.exec(k)) {
-      var b = a.index + a[0].length;
-      while (k[++b] == " ") {}
-      if (k[b--] != "{") {
-        f += k.substring(d, b) + "{return ";
-        d = b;
-        for (var h = 0; h >= 0 && b < k.length; b++) {
-          switch (k[b]) {
-          case "[":
-          case "(":
-            h++;
-            break;
-          case "]":
-          case ")":
-            h--;
-            break;
-          case ";":
-          case ",":
-            if (h == 0) {
-              h--
-            }
-            break
+  eval("pv.parse = function(x) x;"); // native support
+} catch (e) {
+  pv.parse = function(js) { // hacky regex support
+    var re = new RegExp("function([^)]*)", "g"), m, i = 0;
+    var s = "";
+    while (m = re.exec(js)) {
+      var j = m.index + m[0].length;
+      while (js[++j] == ' ');
+      if (js[j--] != '{') {
+        s += js.substring(i, j) + "{return ";
+        i = j;
+        for (var p = 0; p >= 0 && j < js.length; j++) {
+          switch (js[j]) {
+            case '[': case '(': p++; break;
+            case ']': case ')': p--; break;
+            case ';':
+            case ',': if (p == 0) p--; break;
           }
         }
-        f += pv.parse(k.substring(d, --b)) + ";}";
-        d = b
+        s += pv.parse(js.substring(i, --j)) + ";}";
+        i = j;
       }
-      g.lastIndex = b
+      re.lastIndex = j;
     }
-    f += k.substring(d);
-    return f
-  }
+    s += js.substring(i);
+    return s;
+  };
 }
-pv.identity = function(a) {
-  return a
-};
-pv.range = function(f, a, b) {
+
+pv.identity = function(x) { return x; };
+
+pv.range = function(start, end, step) {
   if (arguments.length == 1) {
-    a = f;
-    f = 0
+    end = start;
+    start = 0;
   }
-  if (b == undefined) {
-    b = 1
+  if (step == undefined) {
+    step = 1;
   }
-  var d = [];
-  while (f < a) {
-    d.push(f);
-    f += b
+  var array = []
+  while (start < end) {
+    array.push(start);
+    start += step;
   }
-  return d
+  return array;
 };
-pv.cross = function(h, g) {
-  var p = [];
-  for (var l = 0, o = h.length, f = g.length; l < o; l++) {
-    for (var k = 0, d = h[l]; k < f; k++) {
-      p.push([d, g[k]])
+
+pv.cross = function(a, b) {
+  var array = [];
+  for (var i = 0, n = a.length, m = b.length; i < n; i++) {
+    for (var j = 0, x = a[i]; j < m; j++) {
+      array.push([x, b[j]]);
     }
   }
-  return p
+  return array;
 };
-pv.nest = function(a) {
-  return new pv.Nest(a)
+
+pv.nest = function(array) {
+  return new pv.Nest(array);
 };
-pv.blend = function(a) {
-  return Array.prototype.concat.apply([], a)
+
+pv.blend = function(arrays) {
+  return Array.prototype.concat.apply([], arrays);
 };
-pv.keys = function(b) {
-  var d = [];
-  for (var a in b) {
-    d.push(a)
+
+pv.keys = function(map) {
+  var array = [];
+  for (var key in map) {
+    array.push(key);
   }
-  return d
+  return array;
 };
-pv.entries = function(b) {
-  var d = [];
-  for (var a in b) {
-    d.push({
-      key: a,
-      value: b[a]
-    })
+
+pv.entries = function(map) {
+  var array = [];
+  for (var key in map) {
+    array.push({ key: key, value: map[key] });
   }
-  return d
+  return array;
 };
-pv.values = function(b) {
-  var d = [];
-  for (var a in b) {
-    d.push(b[a])
+
+pv.values = function(map) {
+  var array = [];
+  for (var key in map) {
+    array.push(map[key]);
   }
-  return d
+  return array;
 };
-pv.normalize = function(d, b) {
-  if (!b) {
-    b = pv.identity
+
+pv.normalize = function(array, f) {
+  if (!f) {
+    f = pv.identity;
   }
-  var a = d.reduce(function(f, g) {
-    return f + b(g)
-  },
-  0);
-  return d.map(function(f) {
-    return b(f) / a
-  })
+  var sum = array.reduce(function(p, d) { return p + f(d); }, 0);
+  return array.map(function(d) { return f(d) / sum; });
 };
-pv.count = function(a) {
-  return a.length
+
+pv.count = function(array) {
+  return array.length;
 };
-pv.sum = function(b, a) {
-  if (!a) {
-    a = pv.identity
+
+pv.sum = function(array, f) {
+  if (!f) {
+    f = pv.identity;
   }
-  return b.reduce(function(f, g) {
-    return f + a(g)
-  },
-  0)
+  return array.reduce(function(p, d) { return p + f(d); }, 0);
 };
-pv.max = function(b, a) {
-  if (!a) {
-    a = pv.identity
+
+pv.max = function(array, f) {
+  if (!f) {
+    f = pv.identity;
   }
-  return b.reduce(function(f, g) {
-    return Math.max(f, a(g))
-  },
-  -Infinity)
+  return array.reduce(function(p, d) { return Math.max(p, f(d)); }, -Infinity);
 };
-pv.max.index = function(j, g) {
-  if (!g) {
-    g = pv.identity
+
+pv.max.index = function(array, f) {
+  if (!f) {
+    f = pv.identity;
   }
-  var b = -1,
-  h = -Infinity;
-  for (var d = 0; d < j.length; d++) {
-    var a = g(j[d]);
-    if (a > h) {
-      h = a;
-      b = d
+  var maxi = -1, maxx = -Infinity;
+  for (var i = 0; i < array.length; i++) {
+    var x = f(array[i]);
+    if (x > maxx) {
+      maxx = x;
+      maxi = i;
     }
   }
-  return b
-};
-pv.min = function(b, a) {
-  if (!a) {
-    a = pv.identity
+  return maxi;
+}
+
+pv.min = function(array, f) {
+  if (!f) {
+    f = pv.identity;
   }
-  return b.reduce(function(f, g) {
-    return Math.min(f, a(g))
-  },
-  Infinity)
+  return array.reduce(function(p, d) { return Math.min(p, f(d)); }, Infinity);
 };
-pv.min.index = function(j, h) {
-  if (!h) {
-    h = pv.identity
+
+pv.min.index = function(array, f) {
+  if (!f) {
+    f = pv.identity;
   }
-  var g = -1,
-  b = Infinity;
-  for (var d = 0; d < j.length; d++) {
-    var a = h(j[d]);
-    if (a < b) {
-      b = a;
-      g = d
+  var mini = -1, minx = Infinity;
+  for (var i = 0; i < array.length; i++) {
+    var x = f(array[i]);
+    if (x < minx) {
+      minx = x;
+      mini = i;
     }
   }
-  return g
+  return mini;
+}
+
+pv.mean = function(array, f) {
+  return pv.sum(array, f) / array.length;
 };
-pv.mean = function(b, a) {
-  return pv.sum(b, a) / b.length
-};
-pv.median = function(d, b) {
-  if (!b) {
-    b = pv.identity
+
+pv.median = function(array, f) {
+  if (!f) {
+    f = pv.identity;
   }
-  d = d.map(b).sort(function(g, f) {
-    return g - f
-  });
-  if (d.length % 2) {
-    return d[Math.floor(d.length / 2)]
+  array = array.map(f).sort(function(a, b) { return a - b; });
+  if (array.length % 2) {
+    return array[Math.floor(array.length / 2)];
   }
-  var a = d.length / 2;
-  return (d[a - 1] + d[a]) / 2
+  var i = array.length / 2;
+  return (array[i - 1] + array[i]) / 2;
 };
-pv.permute = function(g, a, b) {
-  if (!b) {
-    b = pv.identity
+
+pv.permute = function(array, permutation, f) {
+  if (!f) {
+    f = pv.identity;
   }
-  var d = new Array(g.length);
-  a.forEach(function(f, h) {
-    d[h] = b(g[f])
-  });
-  return d
+  var p = new Array(array.length);
+  permutation.forEach(function(j, i) { p[i] = f(array[j]); });
+  return p;
 };
-pv.numerate = function(d, a) {
-  if (!a) {
-    a = pv.identity
+
+pv.numerate = function(array, f) {
+  if (!f) {
+    f = pv.identity;
   }
-  var b = {};
-  d.forEach(function(f, g) {
-    b[a(f)] = g
-  });
-  return b
+  var map = {};
+  array.forEach(function(x, i) { map[f(x)] = i; });
+  return map;
 };
-pv.reverseOrder = function(d, f) {
-  return (f < d) ? -1 : ((f > d) ? 1 : 0)
+
+pv.reverseOrder = function(b, a) {
+  return (a < b) ? -1 : ((a > b) ? 1 : 0);
 };
-pv.naturalOrder = function(f, d) {
-  return (f < d) ? -1 : ((f > d) ? 1 : 0)
+
+pv.naturalOrder = function(a, b) {
+  return (a < b) ? -1 : ((a > b) ? 1 : 0);
 };
+
 pv.gradient = function() {
   if (arguments.length < 2) {
-    return arguments[0]
+    return arguments[0];
   }
-  var b = new pv.Gradient();
-  for (var a = 0, d = arguments.length - 1; a <= d; a++) {
-    b.color(a / d, arguments[a])
+  var g = new pv.Gradient();
+  for (var i = 0, n = arguments.length - 1; i <= n; i++) {
+    g.color(i / n, arguments[i]);
   }
-  return b
+  return g;
 };
-pv.css = function(b, a) {
-  return parseFloat(self.getComputedStyle(b, null).getPropertyValue(a))
+
+pv.css = function(e, p) {
+  return parseFloat(self.getComputedStyle(e, null).getPropertyValue(p));
 };
-pv.Nest = function(a) {
-  this.array = a;
-  this.keys = []
+pv.Nest = function(array) {
+  this.array = array;
+  this.keys = [];
 };
-pv.Nest.prototype.key = function(a) {
-  this.keys.push(a);
-  return this
+
+pv.Nest.prototype.key = function(key) {
+  this.keys.push(key);
+  return this;
 };
-pv.Nest.prototype.sortKeys = function(a) {
-  this.keys[this.keys.length - 1].order = a || pv.naturalOrder;
-  return this
+
+pv.Nest.prototype.sortKeys = function(order) {
+  this.keys[this.keys.length - 1].order = order || pv.naturalOrder;
+  return this;
 };
-pv.Nest.prototype.sortValues = function(a) {
-  this.order = a || pv.naturalOrder;
-  return this
+
+pv.Nest.prototype.sortValues = function(order) {
+  this.order = order || pv.naturalOrder;
+  return this;
 };
-pv.Nest.prototype.rollup = function(b) {
-  var d = this.map();
-  function a(h) {
-    for (var f in h) {
-      var g = h[f];
-      if (g instanceof Array) {
-        h[f] = b(g)
+
+pv.Nest.prototype.rollup = function(f) {
+  var map = this.map();
+
+  function rollup(map) {
+    for (var key in map) {
+      var e = map[key];
+      if (e instanceof Array) {
+        map[key] = f(e);
       } else {
-        a(g)
+        rollup(e);
       }
     }
   }
-  a(d);
-  return d
+
+  rollup(map);
+  return map;
 };
+
 pv.Nest.prototype.entries = function() {
-  function a(g) {
-    var h = [];
-    for (var f in g) {
-      var d = g[f];
-      h.push({
-        key: f,
-        values: (d instanceof Array) ? d: a(d)
-      })
-    }
-    return h
+
+  function entries(map) {
+    var array = [];
+    for (var k in map) {
+      var v = map[k];
+      array.push({ key: k, values: (v instanceof Array) ? v : entries(v) });
+    };
+    return array;
   }
-  function b(h, f) {
-    var g = this.keys[f].order;
-    if (g) {
-      h.sort(function(j, i) {
-        return g(j.key, i.key)
-      })
+
+  function sort(array, i) {
+    var o = this.keys[i].order;
+    if (o) {
+      array.sort(function(a, b) { return o(a.key, b.key); });
     }
-    if (++f < this.keys.length) {
-      for (var d = 0; d < h.length; d++) {
-        b.call(this, h[d].values, f)
+    if (++i < this.keys.length) {
+      for (var j = 0; j < array.length; j++) {
+        sort.call(this, array[j].values, i);
       }
     }
-    return h
+    return array;
   }
-  return b.call(this, a(this.map()), 0)
+
+  return sort.call(this, entries(this.map()), 0);
 };
+
 pv.Nest.prototype.map = function() {
   if (!this.keys.length) {
-    return this.array
+    return this.array;
   }
-  var o = {},
-  h = [];
-  for (var n, l = 0; l < this.array.length; l++) {
-    var d = this.array[l];
-    var b = o;
-    for (n = 0; n < this.keys.length - 1; n++) {
-      var g = this.keys[n](d);
-      if (!b[g]) {
-        b[g] = {}
+
+  var map = {}, values = [];
+  for (var i, j = 0; j < this.array.length; j++) {
+    var x = this.array[j];
+    var m = map;
+    for (i = 0; i < this.keys.length - 1; i++) {
+      var k = this.keys[i](x);
+      if (!m[k]) {
+        m[k] = {};
       }
-      b = b[g]
+      m = m[k];
     }
-    g = this.keys[n](d);
-    if (!b[g]) {
-      var f = [];
-      h.push(f);
-      b[g] = f
+    k = this.keys[i](x);
+    if (!m[k]) {
+      var a = [];
+      values.push(a);
+      m[k] = a;
     }
-    b[g].push(d)
+    m[k].push(x);
   }
+
   if (this.order) {
-    for (var n = 0; n < h.length; n++) {
-      h[n].sort(this.order)
+    for (var i = 0; i < values.length; i++) {
+      values[i].sort(this.order);
     }
   }
-  return o
+
+  return map;
 };
 pv.Scales = {};
 pv.Scales.epsilon = 1e-30;
 pv.Scales.defaultBase = 10;
 pv.Scales.defaultNice = false;
-pv.Scales.step = function(b, a, d) {
-  if (!d) {
-    d = pv.Scales.defaultBase
-  }
-  var f = Math.round(Math.log(a - b) / Math.log(d)) - 1;
-  return Math.pow(d, f)
+
+pv.Scales.step = function(min, max, base) {
+  if (!base) base = pv.Scales.defaultBase;
+  var exp = Math.round(Math.log(max-min)/Math.log(base)) - 1;
+  return Math.pow(base, exp);
 };
-pv.Scales.ordinal = function(b) {
-  var d = pv.numerate(b);
-  function a(f) {
-    var g = d[f];
-    return (g == undefined) ? -1 : g
+
+// -- Ordinal Scale ----
+
+pv.Scales.ordinal = function(ordinals) {
+  var map = pv.numerate(ordinals);
+  function f(x) {
+    var i = map[x];
+    return (i == undefined) ? -1 : i;
   }
-  a.values = function() {
-    return b
-  };
-  a.interp = function(f) {
-    return b[f]
-  };
-  return a
+  f.values = function() { return ordinals; };
+  f.interp = function(i) { return ordinals[i]; };
+  return f;
 };
-pv.Scales.linear = function(g, a, i) {
-  if (i == undefined) {
-    i = pv.Scales.defaultBase
-  }
-  var d = a - g,
-  b = pv.Scales.epsilon;
-  function h(f) {
-    return d < b && d > -b ? 0 : (f - g) / d
-  }
-  h.values = function(f) {
-    return pv.Scales.linear.values(g, a, i, f)
-  };
-  h.interp = function(j) {
-    return g + j * d
-  };
-  return h
+
+// -- Linear Scale ----
+
+pv.Scales.linear = function(min, max, base) {
+  if (base == undefined) base = pv.Scales.defaultBase;
+  var range = max - min, eps = pv.Scales.epsilon;
+  function f(x) { return range < eps && range > -eps ? 0 : (x - min) / range; }
+  f.values = function(n) { return pv.Scales.linear.values(min, max, base, n); };
+  f.interp = function(f) { return min + f * range; };
+  return f;
 };
-pv.Scales.linear.fromData = function(j, i, h, g) {
-  if (h == undefined) {
-    h = pv.Scales.defaultBase
+
+pv.Scales.linear.fromData = function(array, f, base, nice) {
+  if (base == undefined) base = pv.Scales.defaultBase;
+  if (nice == undefined) nice = pv.Scales.defaultNice;
+  var min = pv.min(array, f);
+  var max = pv.max(array, f);
+  if (!nice) {
+    var r = pv.Scales.linear.range(min, max, base);
+    min = r.min;
+    max = r.max;
   }
-  if (g == undefined) {
-    g = pv.Scales.defaultNice
-  }
-  var b = pv.min(j, i);
-  var a = pv.max(j, i);
-  if (!g) {
-    var d = pv.Scales.linear.range(b, a, h);
-    b = d.min;
-    a = d.max
-  }
-  return pv.Scales.linear(b, a, h)
+  return pv.Scales.linear(min, max, base);
 };
-pv.Scales.linear.values = function(g, j, b, d) {
-  if (b == undefined) {
-    b = pv.Scales.defaultBase
-  }
-  if (d == undefined) {
-    d = -1
-  }
-  var h = j - g;
-  if (h == 0) {
-    return [g]
+
+pv.Scales.linear.values = function(min, max, base, n) {
+  if (base == undefined) base = pv.Scales.defaultBase;
+  if (n == undefined) n = -1;
+  var range = max - min;
+  if (range == 0) {
+    return [min];
   } else {
-    var f = pv.Scales.step(g, j, b);
-    var a = d < 0 ? 1 : Math.max(1, Math.floor(h / (f * d)));
-    var i = [];
-    for (var k = g; k <= j; k += a * f) {
-      i.push(k)
-    }
-    return i
+    var step = pv.Scales.step(min, max, base);
+    var stride = n<0 ? 1 : Math.max(1, Math.floor(range/(step*n)));
+    var array = [];
+    for (var x=min; x <= max; x += stride*step)
+      array.push(x);
+    return array;
   }
 };
-pv.Scales.linear.range = function(b, a, f) {
-  var d = pv.Scales.step(b, a, f);
+
+pv.Scales.linear.range = function(min, max, base) {
+  var step = pv.Scales.step(min, max, base);
   return {
-    min: Math.floor(b / d) * d,
-    max: Math.ceil(a / d) * d
-  }
-};
-pv.Scales.root = function(i, a, k) {
-  if (k == undefined) {
-    k = 2
-  }
-  function d(f) {
-    var l = (f < 0) ? -1 : 1;
-    return l * Math.pow(l * f, 1 / k)
-  }
-  var h = d(i),
-  g = d(a) - h,
-  b = pv.Scales.epsilon;
-  function j(f) {
-    return (d(f) - h) / g
-  }
-  j.values = function(f) {
-    return pv.Scales.linear.values(i, a, k, 10)
+    min: Math.floor(min / step) * step,
+    max: Math.ceil(max / step) * step
   };
-  j.interp = function(n) {
-    var m = h + n * g,
-    l = (m < 0) ? -1 : 1;
-    return l * Math.pow(l * m, k)
+};
+
+// -- Root Scale ----
+
+pv.Scales.root = function(min, max, base) {
+  if (base == undefined) base = 2;
+  function root(x) {
+    var s = (x < 0) ? -1 : 1;
+    return s * Math.pow(s * x, 1 / base);
+  }
+  var rmin = root(min), range = root(max) - rmin, eps = pv.Scales.epsilon;
+  function f(x) { return (root(x) - rmin) / range; }
+  f.values = function(n) { return pv.Scales.linear.values(min, max, base, 10); };
+  f.interp = function(f) {
+    var g = rmin + f * range, s = (g < 0) ? -1 : 1;
+    return s * Math.pow(s * g, base);
   };
-  return j
+  return f;
 };
-pv.Scales.root.fromData = function(j, i, h, g) {
-  if (h == undefined) {
-    h = 2
+
+pv.Scales.root.fromData = function(array, f, base, nice) {
+  if (base == undefined) base = 2;
+  if (nice == undefined) nice = pv.Scales.defaultNice;
+  var min = pv.min(array, f);
+  var max = pv.max(array, f);
+  if (!nice) {
+    var r = pv.Scales.linear.range(min, max, 10);
+    min = r.min;
+    max = r.max;
   }
-  if (g == undefined) {
-    g = pv.Scales.defaultNice
-  }
-  var b = pv.min(j, i);
-  var a = pv.max(j, i);
-  if (!g) {
-    var d = pv.Scales.linear.range(b, a, 10);
-    b = d.min;
-    a = d.max
-  }
-  return pv.Scales.root(b, a, h)
+  return pv.Scales.root(min, max, base);
 };
-pv.Scales.log = function(g, a, j) {
-  if (j == undefined) {
-    j = pv.Scales.defaultBase
+
+// -- Log Scale ----
+
+pv.Scales.log = function(min, max, base) {
+  if (base == undefined) base = pv.Scales.defaultBase;
+  var lg = (min < 0 && max > 0) ? pv.Scales.log.zlog : pv.Scales.log.log;
+  var lmin = lg(min, base), lrange = lg(max, base) - lmin, eps = pv.Scales.epsilon;
+  function f(x) {
+    return (lrange < eps && lrange > -eps) ? 0 : (lg(x, base) - lmin) / lrange;
   }
-  var d = (g < 0 && a > 0) ? pv.Scales.log.zlog: pv.Scales.log.log;
-  var k = d(g, j),
-  h = d(a, j) - k,
-  b = pv.Scales.epsilon;
-  function i(f) {
-    return (h < b && h > -b) ? 0 : (d(f, j) - k) / h
-  }
-  i.values = function(f) {
-    return pv.Scales.log.values(g, a, 10, f)
+  f.values = function(n) {
+    return pv.Scales.log.values(min, max, 10, n);
   };
-  i.interp = function(n) {
-    var m = k + n * h,
-    l = (m < 0) ? -1 : 1;
-    return l * Math.pow(j, l * m)
+  f.interp = function(f) {
+    var g = lmin + f * lrange, s = (g < 0) ? -1 : 1;
+    return s * Math.pow(base, s * g);
   };
-  return i
+  return f;
 };
-pv.Scales.log.fromData = function(j, i, h, g) {
-  if (h == undefined) {
-    h = pv.Scales.defaultBase
+
+pv.Scales.log.fromData = function(array, f, base, nice) {
+  if (base == undefined) base = pv.Scales.defaultBase;
+  if (nice == undefined) nice = pv.Scales.defaultNice;
+  var min = pv.min(array, f);
+  var max = pv.max(array, f);
+  if (!nice) {
+    var r = pv.Scales.log.range(min, max, base);
+    min = r.min;
+    max = r.max;
   }
-  if (g == undefined) {
-    g = pv.Scales.defaultNice
-  }
-  var b = pv.min(j, i);
-  var a = pv.max(j, i);
-  if (!g) {
-    var d = pv.Scales.log.range(b, a, h);
-    b = d.min;
-    a = d.max
-  }
-  return pv.Scales.log(b, a, h)
+  return pv.Scales.log(min, max, base);
 };
-pv.Scales.log.log = function(d, a) {
-  return d == 0 ? 0 : d > 0 ? Math.log(d) / Math.log(a) : -Math.log( - d) / Math.log(a)
+
+pv.Scales.log.log = function(x, b) {
+  return x==0 ? 0 : x>0 ? Math.log(x)/Math.log(b) : -Math.log(-x)/Math.log(b);
 };
-pv.Scales.log.zlog = function(d, a) {
-  var f = (d < 0) ? -1 : 1;
-  d = f * d;
-  if (d < a) {
-    d += (a - d) / a
-  }
-  return f * Math.log(d) / Math.log(a)
+
+pv.Scales.log.zlog = function(x, b) {
+  var s = (x < 0) ? -1 : 1;
+  x = s*x;
+  if (x < b) x += (b-x)/b;
+  return s * Math.log(x) / Math.log(b);
 };
-pv.Scales.log.values = function(h, q, a, d) {
-  if (a == undefined) {
-    a = pv.Scales.defaultBase
+
+pv.Scales.log.values = function(min, max, base, n) {
+  if (base == undefined) base = pv.Scales.defaultBase;
+  if (n == undefined) n = -1;
+  var z = (min < 0 && max > 0);
+  var lg = z ? pv.Scales.log.zlog : pv.Scales.log.log;
+  var beg = Math.round(lg(min, base));
+  var end = Math.round(lg(max, base));
+  var i, j, b, v = z?-1:1;
+
+  if (beg == end && beg>0 && Math.pow(base,beg) > min) {
+  	--beg; // decrement to generate more values
   }
-  if (d == undefined) {
-    d = -1
-  }
-  var m = (h < 0 && q > 0);
-  var t = m ? pv.Scales.log.zlog: pv.Scales.log.log;
-  var o = Math.round(t(h, a));
-  var f = Math.round(t(q, a));
-  var k, g, p, s = m ? -1 : 1;
-  if (o == f && o > 0 && Math.pow(a, o) > h) {--o
-  }
-  var l = [];
-  for (k = o; k <= f; ++k) {
-    if (k == 0 && s <= 0) {
-      l.push(s);
-      l.push(0)
-    }
-    s = m && k < 0 ? -Math.pow(a, -k) : Math.pow(a, k);
-    p = m && k < 0 ? Math.pow(a, -k - 1) : s;
-    for (g = 1; g < a; ++g, s += p) {
-      if (s > q) {
-        break
-      }
-      l.push(s)
+  var array = [];
+  for (i = beg; i <= end; ++i) {
+    if (i==0 && v<=0) { array.push(v); array.push(0); }
+    v = z && i<0 ? -Math.pow(base,-i) : Math.pow(base,i);
+    b = z && i<0 ? Math.pow(base,-i-1) : v;
+
+    for (j = 1; j < base; ++j, v += b) {
+      if (v > max) break;
+      array.push(v);
     }
   }
-  return l
+  return array;
 };
-pv.Scales.log.range = function(d, a, g) {
-  if (g == undefined) {
-    g = pv.Scales.defaultBase
-  }
-  function b(h) {
-    return Math.log(h) / Math.log(g)
-  }
-  var f = {
-    min: (d > 0 ? Math.pow(g, Math.floor(b(d))) : -Math.pow(g, -Math.floor( - b( - d)))),
-    max: (a > 0 ? Math.pow(g, Math.ceil(b(a))) : -Math.pow(g, -Math.ceil( - b( - a))))
+
+pv.Scales.log.range = function(min, max, base) {
+  if (base == undefined) base = pv.Scales.defaultBase;
+  function lg(x) { return Math.log(x) / Math.log(base); }
+  var r = {
+    min: (min > 0 ?  Math.pow(base,  Math.floor(lg(min)))
+			: -Math.pow(base, -Math.floor(-lg(-min)))),
+    max: (max > 0 ?  Math.pow(base,  Math.ceil(lg(max)))
+			: -Math.pow(base, -Math.ceil(-lg(-max))))
   };
-  if (d < 0 && a > 0) {
-    if (Math.abs(d) < g) {
-      f.min = Math.floor(d)
-    }
-    if (Math.abs(a) < g) {
-      f.max = Math.ceil(a)
-    }
+  if (min < 0 && max > 0) {
+    if (Math.abs(min) < base) r.min = Math.floor(min);
+    if (Math.abs(max) < base) r.max = Math.ceil(max);	
   }
-  return f
+  return r;
 };
-pv.Colors = function(b) {
-  var f = {};
-  var d = {};
-  function a() {
+
+// -- Quantile Scale ----
+
+// TODO?
+
+// -- DateTime Scale ----
+
+// TODO
+pv.Colors = function(values) {
+  var idToColor = {}; // from type-childIndex to assigned color
+  var typeToCount = {}; // from type to number of marks seen (of that type)
+
+  function color() {
+
+    /* TODO Blech. Need a better solution than this... */
     if (!this.root.scene._resetColors) {
-      f = {};
-      d = {};
-      this.root.scene._resetColors = true
+      idToColor = {};
+      typeToCount = {};
+      this.root.scene._resetColors = true;
     }
-    var h = this.type.toString();
-    var j = h + "-" + this.childIndex;
-    var g = f[j];
-    if (g == undefined) {
-      var i = d[h] = (d[h] || 0) + 1;
-      f[j] = g = b[(i - 1) % b.length]
+
+    var type = this.type.toString();
+    var id = type + "-" + this.childIndex;
+    var color = idToColor[id];
+    if (color == undefined) {
+      var count = typeToCount[type] = (typeToCount[type] || 0) + 1;
+      idToColor[id] = color = values[(count - 1) % values.length];
     }
-    return g
+    return color;
   }
-  a.values = b;
-  a.unique = function() {
-    var g = (this.index == -1) ? this.parent.index: this.index;
-    return b[g % b.length]
-  };
-  return a
+
+  color.values = values;
+  color.unique = function() {
+      var index = (this.index == -1) ? this.parent.index : this.index;
+      return values[index % values.length];
+    };
+  return color;
 };
-pv.Colors.category10 = pv.Colors(["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"]);
-pv.Colors.category20 = pv.Colors(["#1f77b4", "#aec7e8", "#ff7f0e", "#ffbb78", "#2ca02c", "#98df8a", "#d62728", "#ff9896", "#9467bd", "#c5b0d5", "#8c564b", "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7", "#bcbd22", "#dbdb8d", "#17becf", "#9edae5"]);
-pv.Colors.category19 = pv.Colors(["#9c9ede", "#7375b5", "#4a5584", "#cedb9c", "#b5cf6b", "#8ca252", "#637939", "#e7cb94", "#e7ba52", "#bd9e39", "#8c6d31", "#e7969c", "#d6616b", "#ad494a", "#843c39", "#de9ed6", "#ce6dbd", "#a55194", "#7b4173"]);
+
+/* From Flare. */
+
+pv.Colors.category10 = pv.Colors([
+  "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
+  "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"
+]);
+
+pv.Colors.category20 = pv.Colors([
+  "#1f77b4", "#aec7e8", "#ff7f0e", "#ffbb78", "#2ca02c",
+  "#98df8a", "#d62728", "#ff9896", "#9467bd", "#c5b0d5",
+  "#8c564b", "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f",
+  "#c7c7c7", "#bcbd22", "#dbdb8d", "#17becf", "#9edae5"
+]);
+
+pv.Colors.category19 = pv.Colors([
+  "#9c9ede", "#7375b5", "#4a5584", "#cedb9c", "#b5cf6b",
+  "#8ca252", "#637939", "#e7cb94", "#e7ba52", "#bd9e39",
+  "#8c6d31", "#e7969c", "#d6616b", "#ad494a", "#843c39",
+  "#de9ed6", "#ce6dbd", "#a55194", "#7b4173"
+]);
 pv.Gradient = function() {
   this.colors = [];
-  this.$orientation = "vertical"
+  this.$orientation = "vertical";
 };
-pv.Gradient.prototype.color = function(b, a) {
-  this.colors.push({
-    offset: b,
-    color: a
-  });
-  return this
+
+pv.Gradient.prototype.color = function(offset, color) {
+  this.colors.push({ offset: offset, color: color });
+  return this;
 };
-pv.Gradient.prototype.orientation = function(a) {
-  this.$orientation = a;
-  return this
+
+pv.Gradient.prototype.orientation = function(orientation) {
+  this.$orientation = orientation;
+  return this;
 };
-pv.Gradient.prototype.create = function(k, a, f) {
+
+pv.Gradient.prototype.create = function(c, w, h) {
   switch (this.$orientation) {
-  case "vertical":
-    a = 0;
-    break;
-  case "horizontal":
-    f = 0;
-    break
+    case "vertical": w = 0; break;
+    case "horizontal": h = 0; break;
   }
-  var j = k.createLinearGradient(0, 0, a, f);
-  for (var b = 0; b < this.colors.length; b++) {
-    var d = this.colors[b];
-    j.addColorStop(d.offset, d.color)
+  var g = c.createLinearGradient(0, 0, w, h);
+  for (var i = 0; i < this.colors.length; i++) {
+    var s = this.colors[i];
+    g.addColorStop(s.offset, s.color);
   }
-  return j
+  return g;
 };
 pv.Mark = function() {};
+
 pv.Mark.toString = function() {
-  return "mark"
+  return "mark";
 };
-pv.Mark.property = function(a) {
-  return function(b) {
-    if (arguments.length) {
-      if (this.scene) {
-        this.scene[this.index][a] = b
-      } else {
-        this["$" + a] = (b instanceof Function) ? b: function() {
-          return b
+
+pv.Mark.property = function(name) {
+  return function(v) {
+      if (arguments.length) {
+        if (this.scene) {
+          this.scene[this.index][name] = v;
+        } else {
+          this["$" + name] = (v instanceof Function) ? v : function() { return v; };
         }
+        return this;
       }
-      return this
-    }
-    return this.scene[this.index][a]
-  }
+      return this.scene[this.index][name];
+    };
 };
-pv.Mark.prototype.defineProperty = function(a) {
+
+pv.Mark.prototype.defineProperty = function(name) {
   if (!this.hasOwnProperty("properties")) {
-    this.properties = (this.properties || []).concat()
+    this.properties = (this.properties || []).concat();
   }
-  this.properties.push(a);
-  this[a] = pv.Mark.property(a)
+  this.properties.push(name);
+  this[name] = pv.Mark.property(name);
 };
+
 pv.Mark.prototype.type = pv.Mark;
 pv.Mark.prototype.proto = null;
 pv.Mark.prototype.parent = null;
@@ -822,181 +797,203 @@ pv.Mark.prototype.defineProperty("left");
 pv.Mark.prototype.defineProperty("right");
 pv.Mark.prototype.defineProperty("top");
 pv.Mark.prototype.defineProperty("bottom");
-pv.Mark.defaults = new pv.Mark().data([null]).visible(true);
-pv.Mark.prototype.extend = function(a) {
-  this.proto = a;
-  return this
+
+pv.Mark.defaults = new pv.Mark()
+  .data([null])
+  .visible(true);
+
+pv.Mark.prototype.extend = function(proto) {
+  this.proto = proto;
+  return this;
 };
-pv.Mark.prototype.add = function(a) {
-  return this.parent.add(a).extend(this)
+
+pv.Mark.prototype.add = function(type) {
+  return this.parent.add(type).extend(this);
 };
+
 pv.Mark.Anchor = function() {
-  pv.Mark.call(this)
+  pv.Mark.call(this);
 };
+
 pv.Mark.Anchor.prototype = pv.Mark.extend();
 pv.Mark.Anchor.prototype.name = pv.Mark.property("name");
-pv.Mark.prototype.anchor = function(d) {
-  var a = this.type;
-  while (!a.Anchor) {
-    a = a.defaults.proto.type
+
+pv.Mark.prototype.anchor = function(name) {
+  var anchorType = this.type;
+  while (!anchorType.Anchor) {
+    anchorType = anchorType.defaults.proto.type;
   }
-  var b = new a.Anchor().extend(this).name(d);
-  b.parent = this.parent;
-  b.type = this.type;
-  return b
+  var anchor = new anchorType.Anchor().extend(this).name(name);
+  anchor.parent = this.parent;
+  anchor.type = this.type;
+  return anchor;
 };
+
 pv.Mark.prototype.anchorTarget = function() {
-  var a = this;
-  while (! (a instanceof pv.Mark.Anchor)) {
-    a = a.proto
+  var target = this;
+  while (!(target instanceof pv.Mark.Anchor)) {
+    target = target.proto;
   }
-  return a.proto
+  return target.proto;
 };
+
 pv.Mark.prototype.first = function() {
-  return this.scene[0]
+  return this.scene[0];
 };
+
 pv.Mark.prototype.last = function() {
-  return this.scene[this.scene.length - 1]
+  return this.scene[this.scene.length - 1];
 };
+
 pv.Mark.prototype.sibling = function() {
-  return (this.index == 0) ? null: this.scene[this.index - 1]
+  return (this.index == 0) ? null : this.scene[this.index - 1];
 };
-pv.Mark.prototype.cousin = function(a, b) {
-  var d = a ? a.scene[this.parent.index] : (this.parent && this.parent.sibling());
-  return (d && d.children) ? d.children[this.childIndex][(b == undefined) ? this.index: b] : null
+
+pv.Mark.prototype.cousin = function(panel, i) {
+  var s = panel
+      ? panel.scene[this.parent.index]
+      : (this.parent && this.parent.sibling());
+  return (s && s.children)
+      ? s.children[this.childIndex][(i == undefined) ? this.index : i]
+      : null;
 };
-pv.Mark.prototype.build = function(f) {
+
+pv.Mark.prototype.build = function(s) {
   if (!this.scene) {
     this.scene = [];
     if (!this.parent) {
-      f = {};
-      this.scene.data = []
+      s = {};
+      this.scene.data = [];
     }
   }
-  var g = this.get("data");
-  var a = this.root.scene.data;
-  a.unshift(null);
+
+  var data = this.get("data");
+  var stack = this.root.scene.data;
+  stack.unshift(null);
   this.index = -1;
-  for (var b = 0, h; b < g.length; b++) {
+  for (var i = 0, d; i < data.length; i++) {
     pv.Mark.prototype.index = ++this.index;
-    a[0] = h = g[b];
-    this.scene[this.index] = this.get("visible") ? this.buildInstance(f, h) : {
-      data: h,
-      visible: false
-    }
+    stack[0] = d = data[i];
+    this.scene[this.index] = this.get("visible")
+        ? this.buildInstance(s, d) : { data: d, visible: false };
   }
-  a.shift();
+  stack.shift();
   delete this.index;
   pv.Mark.prototype.index = -1;
-  return this
+
+  return this;
 };
-pv.Mark.prototype.buildInstance = function(f, h) {
-  var g = this.type.prototype;
-  f = {
-    data: h,
-    parent: f,
-    visible: true
-  };
-  for (var b = 0; b < g.properties.length; b++) {
-    var a = g.properties[b];
-    if (! (a in f)) {
-      f[a] = this.get(a)
+
+pv.Mark.prototype.buildInstance = function(s, d) {
+  var p = this.type.prototype;
+  s = { data: d, parent: s, visible: true };
+  for (var i = 0; i < p.properties.length; i++) {
+    var name = p.properties[i];
+    if (!(name in s)) {
+      s[name] = this.get(name);
     }
   }
-  this.buildImplied(f);
-  return f
+  this.buildImplied(s);
+  return s;
 };
-pv.Mark.prototype.buildImplied = function(o) {
-  var f = this.type.prototype;
-  var g = o.left;
-  var a = o.right;
-  var n = o.top;
-  var j = o.bottom;
-  var k = f.width ? o.width: 0;
-  var i = f.height ? o.height: 0;
-  var d = o.parent.width;
-  if (k == null) {
-    k = d - (a = a || 0) - (g = g || 0)
-  } else {
-    if (a == null) {
-      a = d - k - (g = g || 0)
-    } else {
-      if (g == null) {
-        g = d - k - (a = a || 0)
-      }
-    }
+
+pv.Mark.prototype.buildImplied = function(s) {
+  var p = this.type.prototype;
+
+  var l = s.left;
+  var r = s.right;
+  var t = s.top;
+  var b = s.bottom;
+  var w = p.width ? s.width : 0;
+  var h = p.height ? s.height : 0;
+
+  var width = s.parent.width;
+  if (w == null) {
+    w = width - (r = r || 0) - (l = l || 0);
+  } else if (r == null) {
+    r = width - w - (l = l || 0);
+  } else if (l == null) {
+    l = width - w - (r = r || 0);
   }
-  var m = o.parent.height;
-  if (i == null) {
-    i = m - (n = n || 0) - (j = j || 0)
-  } else {
-    if (j == null) {
-      j = m - i - (n = n || 0)
-    } else {
-      if (n == null) {
-        n = m - i - (j = j || 0)
-      }
-    }
+
+  var height = s.parent.height;
+  if (h == null) {
+    h = height - (t = t || 0) - (b = b || 0);
+  } else if (b == null) {
+    b = height - h - (t = t || 0);
+  } else if (t == null) {
+    t = height - h - (b = b || 0);
   }
-  o.left = g;
-  o.right = a;
-  o.top = n;
-  o.bottom = j;
-  if (f.width) {
-    o.width = k
-  }
-  if (f.height) {
-    o.height = i
-  }
+
+  s.left = l;
+  s.right = r;
+  s.top = t;
+  s.bottom = b;
+  if (p.width) s.width = w;
+  if (p.height) s.height = h;
 };
-pv.Mark.prototype.get = function(a) {
-  var b = this;
-  while (!b["$" + a]) {
-    b = b.proto;
-    if (!b) {
-      b = this.type.defaults;
-      while (!b["$" + a]) {
-        b = b.proto;
-        if (!b) {
-          return null
+
+pv.Mark.prototype.get = function(name) {
+  var mark = this;
+  while (!mark["$" + name]) {
+    mark = mark.proto;
+    if (!mark) {
+      mark = this.type.defaults;
+      while (!mark["$" + name]) {
+        mark = mark.proto;
+        if (!mark) {
+          return null;
         }
       }
-      break
+      break;
     }
   }
-  return b["$" + a].apply(this, this.root.scene.data)
+
+  // Note that the property function is applied to the 'this' instance (the
+  // leaf-level mark), rather than whatever mark defined the property function.
+  // This can be confusing because a property function can be called on an
+  // object of a different "class", but is useful for logic reuse.
+  return mark["$" + name].apply(this, this.root.scene.data);
 };
-pv.Mark.prototype.render = function(d) {
-  for (var a = 0; a < this.scene.length; a++) {
-    var b = this.scene[a];
-    if (b.visible) {
-      this.renderInstance(d, b)
+
+pv.Mark.prototype.render = function(g) {
+  for (var i = 0; i < this.scene.length; i++) {
+    var s = this.scene[i];
+    if (s.visible) {
+      this.renderInstance(g, s);
     }
   }
 };
-pv.Mark.prototype.renderInstance = function(b, a) {};
-pv.Mark.prototype.title = function(a) {
-  this.parent.canvas().title = a;
-  return this
+
+pv.Mark.prototype.renderInstance = function(g, s) {};
+
+pv.Mark.prototype.title = function(s) {
+  this.parent.canvas().title = s;
+  return this;
 };
-pv.Mark.prototype.cursor = function(a) {
-  this.parent.canvas().style.cursor = a;
-  return this
+
+pv.Mark.prototype.cursor = function(s) {
+  this.parent.canvas().style.cursor = s;
+  return this;
 };
-pv.Mark.prototype.event = function(b, a) {
-  this["on" + b] = a;
+
+pv.Mark.prototype.event = function(type, handler) {
+  this["on" + type] = handler;
   this.root.$interactive = true;
-  return this
+  return this;
 };
-pv.Mark.prototype.contains = function(a, d, b) {
-  return false
+
+pv.Mark.prototype.contains = function(x, y, s) {
+  return false;
 };
 pv.Area = function() {
-  pv.Mark.call(this)
+  pv.Mark.call(this);
 };
+
 pv.Area.toString = function() {
-  return "area"
+  return "area";
 };
+
 pv.Area.prototype = pv.Mark.extend();
 pv.Area.prototype.type = pv.Area;
 pv.Area.prototype.defineProperty("width");
@@ -1004,135 +1001,143 @@ pv.Area.prototype.defineProperty("height");
 pv.Area.prototype.defineProperty("lineWidth");
 pv.Area.prototype.defineProperty("strokeStyle");
 pv.Area.prototype.defineProperty("fillStyle");
-pv.Area.defaults = new pv.Area().extend(pv.Mark.defaults).width(0).height(0).lineWidth(1.5).strokeStyle(null).fillStyle(pv.Colors.category20);
+
+pv.Area.defaults = new pv.Area().extend(pv.Mark.defaults)
+    .width(0)
+    .height(0)
+    .lineWidth(1.5)
+    .strokeStyle(null)
+    .fillStyle(pv.Colors.category20);
+
 pv.Area.Anchor = function() {
-  pv.Mark.Anchor.call(this)
+  pv.Mark.Anchor.call(this);
 };
+
 pv.Area.Anchor.prototype = pv.Mark.Anchor.extend();
 pv.Area.Anchor.prototype.type = pv.Area;
-pv.Area.Anchor.prototype.$left = function(b) {
-  var a = this.anchorTarget();
+
+pv.Area.Anchor.prototype.$left = function(d) {
+  var area = this.anchorTarget();
   switch (this.get("name")) {
-  case "bottom":
-  case "top":
-  case "center":
-    return a.left() + a.width() / 2;
-  case "right":
-    return a.left() + a.width()
+    case "bottom":
+    case "top":
+    case "center": return area.left() + area.width() / 2;
+    case "right": return area.left() + area.width();
   }
-  return null
+  return null;
 };
-pv.Area.Anchor.prototype.$right = function(b) {
-  var a = this.anchorTarget();
+
+pv.Area.Anchor.prototype.$right = function(d) {
+  var area = this.anchorTarget();
   switch (this.get("name")) {
-  case "bottom":
-  case "top":
-  case "center":
-    return a.right() + a.width() / 2;
-  case "left":
-    return a.right() + a.width()
+    case "bottom":
+    case "top":
+    case "center": return area.right() + area.width() / 2;
+    case "left": return area.right() + area.width();
   }
-  return null
+  return null;
 };
-pv.Area.Anchor.prototype.$top = function(b) {
-  var a = this.anchorTarget();
+
+pv.Area.Anchor.prototype.$top = function(d) {
+  var area = this.anchorTarget();
   switch (this.get("name")) {
-  case "left":
-  case "right":
-  case "center":
-    return a.top() + a.height() / 2;
-  case "bottom":
-    return a.top() + a.height()
+    case "left":
+    case "right":
+    case "center": return area.top() + area.height() / 2;
+    case "bottom": return area.top() + area.height();
   }
-  return null
+  return null;
 };
-pv.Area.Anchor.prototype.$bottom = function(b) {
-  var a = this.anchorTarget();
+
+pv.Area.Anchor.prototype.$bottom = function(d) {
+  var area = this.anchorTarget();
   switch (this.get("name")) {
-  case "left":
-  case "right":
-  case "center":
-    return a.bottom() + a.height() / 2;
-  case "top":
-    return a.bottom() + a.height()
+    case "left":
+    case "right":
+    case "center": return area.bottom() + area.height() / 2;
+    case "top": return area.bottom() + area.height();
   }
-  return null
+  return null;
 };
-pv.Area.Anchor.prototype.$textAlign = function(a) {
+
+pv.Area.Anchor.prototype.$textAlign = function(d) {
   switch (this.get("name")) {
-  case "left":
-    return "left";
-  case "bottom":
-  case "top":
-  case "center":
-    return "center";
-  case "right":
-    return "right"
+    case "left": return "left";
+    case "bottom":
+    case "top":
+    case "center": return "center";
+    case "right": return "right";
   }
-  return null
+  return null;
 };
-pv.Area.Anchor.prototype.$textBaseline = function(a) {
+
+pv.Area.Anchor.prototype.$textBaseline = function(d) {
   switch (this.get("name")) {
-  case "right":
-  case "left":
-  case "center":
-    return "middle";
-  case "top":
-    return "top";
-  case "bottom":
-    return "bottom"
+    case "right":
+    case "left":
+    case "center": return "middle";
+    case "top": return "top";
+    case "bottom": return "bottom";
   }
-  return null
+  return null;
 };
-pv.Area.prototype.render = function(j) {
-  j.save();
-  var d = true;
-  var h = [];
-  for (var f = 0; f < this.scene.length; f++) {
-    var m = this.scene[f];
-    if (!m.visible) {
-      continue
+
+pv.Area.prototype.render = function(g) {
+  g.save();
+  var move = true;
+  var back = [];
+
+  for (var i = 0; i < this.scene.length; i++) {
+    var s = this.scene[i];
+    if (!s.visible) {
+      continue; // TODO render fragment
     }
-    var b = m.left;
-    var a = b + m.width;
-    var l = m.top;
-    var k = l + m.height;
-    if (d) {
-      d = false;
-      j.beginPath();
-      j.moveTo(b, l)
+
+    var x0 = s.left;
+    var x1 = x0 + s.width;
+    var y0 = s.top;
+    var y1 = y0 + s.height;
+
+    if (move) {
+      move = false;
+      g.beginPath();
+      g.moveTo(x0, y0);
     } else {
-      j.lineTo(b, l)
+      g.lineTo(x0, y0);
     }
-    h.push({
-      x: a,
-      y: k
-    })
+
+    back.push({ x: x1, y: y1 });
   }
-  h.reverse();
-  for (var f = 0; f < h.length; f++) {
-    j.lineTo(h[f].x, h[f].y)
+
+  back.reverse();
+  for (var i = 0; i < back.length; i++) {
+    g.lineTo(back[i].x, back[i].y);
   }
-  j.closePath();
-  if (m) {
-    if (m.fillStyle) {
-      j.fillStyle = m.fillStyle;
-      j.fill()
+  g.closePath();
+
+  /* TODO variable fillStyle, strokeStyle, lineWidth */
+  if (s) {
+    if (s.fillStyle) {
+      g.fillStyle = s.fillStyle;
+      g.fill();
     }
-    if (m.strokeStyle) {
-      j.lineWidth = m.lineWidth;
-      j.strokeStyle = m.strokeStyle;
-      j.stroke()
+    if (s.strokeStyle) {
+      g.lineWidth = s.lineWidth;
+      g.strokeStyle = s.strokeStyle;
+      g.stroke();
     }
   }
-  j.restore()
+
+  g.restore();
 };
 pv.Bar = function() {
-  pv.Mark.call(this)
+  pv.Mark.call(this);
 };
+
 pv.Bar.toString = function() {
-  return "bar"
+  return "bar";
 };
+
 pv.Bar.prototype = pv.Mark.extend();
 pv.Bar.prototype.type = pv.Bar;
 pv.Bar.prototype.defineProperty("width");
@@ -1140,119 +1145,120 @@ pv.Bar.prototype.defineProperty("height");
 pv.Bar.prototype.defineProperty("lineWidth");
 pv.Bar.prototype.defineProperty("strokeStyle");
 pv.Bar.prototype.defineProperty("fillStyle");
-pv.Bar.defaults = new pv.Bar().extend(pv.Mark.defaults).lineWidth(1.5).strokeStyle(null).fillStyle(pv.Colors.category20);
+
+pv.Bar.defaults = new pv.Bar().extend(pv.Mark.defaults)
+    .lineWidth(1.5)
+    .strokeStyle(null)
+    .fillStyle(pv.Colors.category20);
+
 pv.Bar.Anchor = function() {
-  pv.Mark.Anchor.call(this)
+  pv.Mark.Anchor.call(this);
 };
+
 pv.Bar.Anchor.prototype = pv.Mark.Anchor.extend();
 pv.Bar.Anchor.prototype.type = pv.Bar;
-pv.Bar.Anchor.prototype.$left = function(b) {
-  var a = this.anchorTarget();
+
+pv.Bar.Anchor.prototype.$left = function(d) {
+  var bar = this.anchorTarget();
   switch (this.get("name")) {
-  case "bottom":
-  case "top":
-  case "center":
-    return a.left() + a.width() / 2;
-  case "left":
-    return a.left()
+    case "bottom":
+    case "top":
+    case "center": return bar.left() + bar.width() / 2;
+    case "left": return bar.left();
   }
-  return null
+  return null;
 };
-pv.Bar.Anchor.prototype.$right = function(b) {
-  var a = this.anchorTarget();
+
+pv.Bar.Anchor.prototype.$right = function(d) {
+  var bar = this.anchorTarget();
   switch (this.get("name")) {
-  case "bottom":
-  case "top":
-  case "center":
-    return a.right() + a.width() / 2;
-  case "right":
-    return a.right()
+    case "bottom":
+    case "top":
+    case "center": return bar.right() + bar.width() / 2;
+    case "right": return bar.right();
   }
-  return null
+  return null;
 };
-pv.Bar.Anchor.prototype.$top = function(b) {
-  var a = this.anchorTarget();
+
+pv.Bar.Anchor.prototype.$top = function(d) {
+  var bar = this.anchorTarget();
   switch (this.get("name")) {
-  case "left":
-  case "right":
-  case "center":
-    return a.top() + a.height() / 2;
-  case "top":
-    return a.top()
+    case "left":
+    case "right":
+    case "center": return bar.top() + bar.height() / 2;
+    case "top": return bar.top();
   }
-  return null
+  return null;
 };
-pv.Bar.Anchor.prototype.$bottom = function(b) {
-  var a = this.anchorTarget();
+
+pv.Bar.Anchor.prototype.$bottom = function(d) {
+  var bar = this.anchorTarget();
   switch (this.get("name")) {
-  case "left":
-  case "right":
-  case "center":
-    return a.bottom() + a.height() / 2;
-  case "bottom":
-    return a.bottom()
+    case "left":
+    case "right":
+    case "center": return bar.bottom() + bar.height() / 2;
+    case "bottom": return bar.bottom();
   }
-  return null
+  return null;
 };
-pv.Bar.Anchor.prototype.$textAlign = function(b) {
-  var a = this.anchorTarget();
+
+pv.Bar.Anchor.prototype.$textAlign = function(d) {
+  var bar = this.anchorTarget();
   switch (this.get("name")) {
-  case "left":
-    return "left";
-  case "bottom":
-  case "top":
-  case "center":
-    return "center";
-  case "right":
-    return "right"
+    case "left": return "left";
+    case "bottom":
+    case "top":
+    case "center": return "center";
+    case "right": return "right";
   }
-  return null
+  return null;
 };
-pv.Bar.Anchor.prototype.$textBaseline = function(b) {
-  var a = this.anchorTarget();
+
+pv.Bar.Anchor.prototype.$textBaseline = function(d) {
+  var bar = this.anchorTarget();
   switch (this.get("name")) {
-  case "right":
-  case "left":
-  case "center":
-    return "middle";
-  case "top":
-    return "top";
-  case "bottom":
-    return "bottom"
+    case "right":
+    case "left":
+    case "center": return "middle";
+    case "top": return "top";
+    case "bottom": return "bottom";
   }
-  return null
+  return null;
 };
-pv.Bar.renderStyle = function(d, f, a, b) {
-  return (d instanceof pv.Gradient) ? d.create(f, a, b) : d
+
+pv.Bar.renderStyle = function(style, g, w, h) {
+  return (style instanceof pv.Gradient) ? style.create(g, w, h) : style;
 };
-pv.Bar.prototype.renderInstance = function(i, f) {
-  var a = f.left,
-  j = f.top,
-  b = f.width,
-  d = f.height;
-  i.save();
-  i.translate(a, j);
-  if (f.fillStyle) {
-    i.fillStyle = pv.Bar.renderStyle(f.fillStyle, i, b, d);
-    i.fillRect(0, 0, b, d)
+
+pv.Bar.prototype.renderInstance = function(g, s) {
+  var x = s.left, y = s.top, w = s.width, h = s.height;
+  g.save();
+  g.translate(x, y);
+  if (s.fillStyle) {
+    g.fillStyle = pv.Bar.renderStyle(s.fillStyle, g, w, h);
+    g.fillRect(0, 0, w, h);
   }
-  if (f.strokeStyle) {
-    i.lineWidth = f.lineWidth;
-    i.strokeStyle = pv.Bar.renderStyle(f.strokeStyle, i, b, d);
-    i.strokeRect(0, 0, b, d)
+  if (s.strokeStyle) {
+    g.lineWidth = s.lineWidth;
+    g.strokeStyle = pv.Bar.renderStyle(s.strokeStyle, g, w, h);
+    g.strokeRect(0, 0, w, h);
   }
-  i.restore()
+  g.restore();
 };
-pv.Bar.prototype.contains = function(a, f, b) {
-  var d = b.strokeStyle ? b.lineWidth: 0;
-  return ((b.left - d) <= a) && (a < (b.left + b.width + d)) && ((b.top - d) <= f) && (f < (b.top + b.height + d))
+
+pv.Bar.prototype.contains = function(x, y, s) {
+  var p = s.strokeStyle ? s.lineWidth : 0;
+  return ((s.left - p) <= x) && (x < (s.left + s.width + p))
+      && ((s.top - p) <= y) && (y < (s.top + s.height + p));
 };
 pv.Dot = function() {
-  pv.Mark.call(this)
+  pv.Mark.call(this);
 };
+
 pv.Dot.toString = function() {
-  return "dot"
+  return "dot";
 };
+
 pv.Dot.prototype = pv.Mark.extend();
 pv.Dot.prototype.type = pv.Dot;
 pv.Dot.prototype.defineProperty("size");
@@ -1261,153 +1267,165 @@ pv.Dot.prototype.defineProperty("angle");
 pv.Dot.prototype.defineProperty("lineWidth");
 pv.Dot.prototype.defineProperty("strokeStyle");
 pv.Dot.prototype.defineProperty("fillStyle");
-pv.Dot.defaults = new pv.Dot().extend(pv.Mark.defaults).size(20).shape("circle").angle(0).lineWidth(1.5).strokeStyle(pv.Colors.category10).fillStyle(null);
+
+pv.Dot.defaults = new pv.Dot().extend(pv.Mark.defaults)
+    .size(20)
+    .shape("circle")
+    .angle(0)
+    .lineWidth(1.5)
+    .strokeStyle(pv.Colors.category10)
+    .fillStyle(null);
+
 pv.Dot.Anchor = function() {
-  pv.Mark.Anchor.call(this)
+  pv.Mark.Anchor.call(this);
 };
+
 pv.Dot.Anchor.prototype = pv.Mark.Anchor.extend();
 pv.Dot.Anchor.prototype.type = pv.Dot;
-pv.Dot.Anchor.prototype.$left = function(b) {
-  var a = this.anchorTarget();
+
+pv.Dot.Anchor.prototype.$left = function(d) {
+  var dot = this.anchorTarget();
   switch (this.get("name")) {
-  case "bottom":
-  case "top":
-  case "center":
-    return a.left();
-  case "left":
-    return a.left() - a.radius()
+    case "bottom":
+    case "top":
+    case "center": return dot.left();
+    case "left": return dot.left() - dot.radius();
   }
-  return null
+  return null;
 };
-pv.Dot.Anchor.prototype.$right = function(b) {
-  var a = this.anchorTarget();
+
+pv.Dot.Anchor.prototype.$right = function(d) {
+  var dot = this.anchorTarget();
   switch (this.get("name")) {
-  case "bottom":
-  case "top":
-  case "center":
-    return a.right();
-  case "right":
-    return a.right() - a.radius()
+    case "bottom":
+    case "top":
+    case "center": return dot.right();
+    case "right": return dot.right() - dot.radius();
   }
-  return null
+  return null;
 };
-pv.Dot.Anchor.prototype.$top = function(b) {
-  var a = this.anchorTarget();
+
+pv.Dot.Anchor.prototype.$top = function(d) {
+  var dot = this.anchorTarget();
   switch (this.get("name")) {
-  case "left":
-  case "right":
-  case "center":
-    return a.top();
-  case "top":
-    return a.top() - a.radius()
+    case "left":
+    case "right":
+    case "center": return dot.top();
+    case "top": return dot.top() - dot.radius();
   }
-  return null
+  return null;
 };
-pv.Dot.Anchor.prototype.$bottom = function(b) {
-  var a = this.anchorTarget();
+
+pv.Dot.Anchor.prototype.$bottom = function(d) {
+  var dot = this.anchorTarget();
   switch (this.get("name")) {
-  case "left":
-  case "right":
-  case "center":
-    return a.bottom();
-  case "bottom":
-    return a.bottom() - a.radius()
+    case "left":
+    case "right":
+    case "center": return dot.bottom();
+    case "bottom": return dot.bottom() - dot.radius();
   }
-  return null
+  return null;
 };
-pv.Dot.Anchor.prototype.$textAlign = function(a) {
+
+pv.Dot.Anchor.prototype.$textAlign = function(d) {
   switch (this.get("name")) {
-  case "left":
-    return "right";
-  case "bottom":
-  case "top":
-  case "center":
-    return "center";
-  case "right":
-    return "left"
+    case "left": return "right";
+    case "bottom":
+    case "top":
+    case "center": return "center";
+    case "right": return "left";
   }
-  return null
+  return null;
 };
-pv.Dot.Anchor.prototype.$textBaseline = function(a) {
+
+pv.Dot.Anchor.prototype.$textBaseline = function(d) {
   switch (this.get("name")) {
-  case "right":
-  case "left":
-  case "center":
-    return "middle";
-  case "top":
-    return "bottom";
-  case "bottom":
-    return "top"
+    case "right":
+    case "left":
+    case "center": return "middle";
+    case "top": return "bottom";
+    case "bottom": return "top";
   }
-  return null
+  return null;
 };
+
 pv.Dot.prototype.radius = function() {
-  return Math.sqrt(this.size())
+  return Math.sqrt(this.size());
 };
-pv.Dot.prototype.renderInstance = function(b, a) {
-  function d(i, j) {
-    b.beginPath();
-    var f = Math.sqrt(j);
-    switch (i) {
-    case "cross":
-      b.moveTo( - f, -f);
-      b.lineTo(f, f);
-      b.moveTo(f, -f);
-      b.lineTo( - f, f);
-      break;
-    case "triangle":
-      var k = f;
-      var g = f * 2 / Math.sqrt(3);
-      b.moveTo(0, k);
-      b.lineTo(g, -k);
-      b.lineTo( - g, -k);
-      b.closePath();
-      break;
-    case "diamond":
-      f *= Math.sqrt(2);
-      b.moveTo(0, -f);
-      b.lineTo(f, 0);
-      b.lineTo(0, f);
-      b.lineTo( - f, 0);
-      b.closePath();
-      break;
-    case "square":
-      b.moveTo( - f, -f);
-      b.lineTo(f, -f);
-      b.lineTo(f, f);
-      b.lineTo( - f, f);
-      b.closePath();
-      break;
-    case "tick":
-      b.moveTo(0, 0);
-      b.lineTo(0, -j);
-      break;
-    default:
-      b.arc(0, 0, f, 0, 2 * Math.PI, false);
-      break
+
+pv.Dot.prototype.renderInstance = function(g, s) {
+  function path(shape, size) {
+    g.beginPath();
+    var radius = Math.sqrt(size);
+    switch (shape) {
+      case "cross": {
+        g.moveTo(-radius, -radius);
+        g.lineTo(radius, radius);
+        g.moveTo(radius, -radius);
+        g.lineTo(-radius, radius);
+        break;
+      }
+      case "triangle": {
+        var h = radius;
+        var w = radius * 2 / Math.sqrt(3);
+        g.moveTo(0, h);
+        g.lineTo(w, -h);
+        g.lineTo(-w, -h);
+        g.closePath();
+        break;
+      }
+      case "diamond": {
+        radius *= Math.sqrt(2);
+        g.moveTo(0, -radius);
+        g.lineTo(radius, 0);
+        g.lineTo(0, radius);
+        g.lineTo(-radius, 0);
+        g.closePath();
+        break;
+      }
+      case "square": {
+        g.moveTo(-radius, -radius);
+        g.lineTo(radius, -radius);
+        g.lineTo(radius, radius);
+        g.lineTo(-radius, radius);
+        g.closePath();
+        break;
+      }
+      case "tick": {
+        g.moveTo(0, 0);
+        g.lineTo(0, -size);
+        break;
+      }
+      default: {
+        g.arc(0, 0, radius, 0, 2.0 * Math.PI, false);
+        break;
+      }
     }
   }
-  b.save();
-  b.translate(a.left, a.top);
-  b.rotate(a.angle);
-  d(a.shape, a.size);
-  if (a.fillStyle) {
-    b.fillStyle = a.fillStyle;
-    b.fill()
+
+  g.save();
+  g.translate(s.left, s.top);
+  g.rotate(s.angle);
+  path(s.shape, s.size);
+  if (s.fillStyle) {
+    g.fillStyle = s.fillStyle;
+    g.fill();
   }
-  if (a.strokeStyle) {
-    b.lineWidth = a.lineWidth;
-    b.strokeStyle = a.strokeStyle;
-    b.stroke()
+  if (s.strokeStyle) {
+    g.lineWidth = s.lineWidth;
+    g.strokeStyle = s.strokeStyle;
+    g.stroke();
   }
-  b.restore()
+  g.restore();
 };
 pv.Label = function() {
-  pv.Mark.call(this)
+  pv.Mark.call(this);
 };
+
 pv.Label.toString = function() {
-  return "label"
+  return "label";
 };
+
 pv.Label.prototype = pv.Mark.extend();
 pv.Label.prototype.type = pv.Label;
 pv.Label.prototype.defineProperty("text");
@@ -1417,525 +1435,565 @@ pv.Label.prototype.defineProperty("textStyle");
 pv.Label.prototype.defineProperty("textAlign");
 pv.Label.prototype.defineProperty("textBaseline");
 pv.Label.prototype.defineProperty("textMargin");
-pv.Label.defaults = new pv.Label().extend(pv.Mark.defaults).text(pv.identity).font("10px Sans-Serif").textAngle(0).textStyle("black").textAlign("left").textBaseline("bottom").textMargin(3);
-pv.Label.prototype.renderInstance = function(h, f) {
-  h.save();
-  h.font = f.font;
-  var b = 0;
-  switch (f.textAlign) {
-  case "center":
-    b += -h.measureText(f.text).width / 2;
-    break;
-  case "right":
-    b += -h.measureText(f.text).width - f.textMargin;
-    break;
-  case "left":
-    b += f.textMargin;
-    break
+
+pv.Label.defaults = new pv.Label().extend(pv.Mark.defaults)
+    .text(pv.identity)
+    .font("10px Sans-Serif")
+    .textAngle(0)
+    .textStyle("black")
+    .textAlign("left")
+    .textBaseline("bottom")
+    .textMargin(3);
+
+pv.Label.prototype.renderInstance = function(g, s) {
+  g.save();
+  g.font = s.font;
+
+  /* Horizontal alignment. */
+  var ox = 0;
+  switch (s.textAlign) {
+    case "center": ox += -g.measureText(s.text).width / 2; break;
+    case "right": ox += -g.measureText(s.text).width - s.textMargin; break;
+    case "left": ox += s.textMargin; break;
   }
-  var a = 0;
-  function d(g) {
-    return Number(/[0-9]+/.exec(g)[0]) * 0.68
+
+  /* Vertical alignment. */
+  var oy = 0;
+  function lineHeight(font) {
+    return Number(/[0-9]+/.exec(font)[0]) * .68;
   }
-  switch (f.textBaseline) {
-  case "middle":
-    a += d(f.font) / 2;
-    break;
-  case "top":
-    a += d(f.font) + f.textMargin;
-    break;
-  case "bottom":
-    a -= f.textMargin;
-    break
+  switch (s.textBaseline) {
+    case "middle": oy += lineHeight(s.font) / 2; break;
+    case "top": oy += lineHeight(s.font) + s.textMargin; break;
+    case "bottom": oy -= s.textMargin; break;
   }
-  h.translate(f.left, f.top);
-  h.rotate(f.textAngle);
-  h.fillStyle = f.textStyle;
-  h.fillText(f.text, b, a);
-  h.restore()
+
+  g.translate(s.left, s.top);
+  g.rotate(s.textAngle);
+  g.fillStyle = s.textStyle;
+  g.fillText(s.text, ox, oy);
+  g.restore();
 };
 pv.Line = function() {
-  pv.Mark.call(this)
+  pv.Mark.call(this);
 };
+
 pv.Line.toString = function() {
-  return "line"
+  return "line";
 };
+
 pv.Line.prototype = pv.Mark.extend();
 pv.Line.prototype.type = pv.Line;
 pv.Line.prototype.defineProperty("lineWidth");
 pv.Line.prototype.defineProperty("strokeStyle");
 pv.Line.prototype.defineProperty("fillStyle");
-pv.Line.defaults = new pv.Line().extend(pv.Mark.defaults).lineWidth(1.5).strokeStyle(pv.Colors.category10);
-pv.Line.prototype.render = function(f) {
-  f.save();
-  var a = true;
-  for (var b = 0; b < this.scene.length; b++) {
-    var d = this.scene[b];
-    if (!d.visible) {
-      continue
+
+pv.Line.defaults = new pv.Line().extend(pv.Mark.defaults)
+    .lineWidth(1.5)
+    .strokeStyle(pv.Colors.category10);
+
+pv.Line.prototype.render = function(g) {
+  g.save();
+  var move = true;
+
+  for (var i = 0; i < this.scene.length; i++) {
+    var s = this.scene[i];
+    if (!s.visible) {
+      continue; // TODO render fragment
     }
-    if (a) {
-      a = false;
-      f.beginPath();
-      f.moveTo(d.left, d.top)
+
+    if (move) {
+      move = false;
+      g.beginPath();
+      g.moveTo(s.left, s.top);
     } else {
-      f.lineTo(d.left, d.top)
+      g.lineTo(s.left, s.top);
     }
   }
-  if (d) {
-    if (d.fillStyle) {
-      f.fillStyle = d.fillStyle;
-      f.fill()
+
+  /* TODO variable fillStyle, strokeStyle, lineWidth */
+  if (s) {
+    if (s.fillStyle) {
+      g.fillStyle = s.fillStyle;
+      g.fill();
     }
-    if (d.strokeStyle) {
-      f.lineWidth = d.lineWidth;
-      f.strokeStyle = d.strokeStyle;
-      f.stroke()
+    if (s.strokeStyle) {
+      g.lineWidth = s.lineWidth;
+      g.strokeStyle = s.strokeStyle;
+      g.stroke();
     }
   }
-  f.restore()
+
+  g.restore();
 };
 pv.Rule = function() {
-  pv.Mark.call(this)
+  pv.Mark.call(this);
 };
+
 pv.Rule.toString = function() {
-  return "rule"
+  return "rule";
 };
+
 pv.Rule.prototype = pv.Mark.extend();
 pv.Rule.prototype.type = pv.Rule;
 pv.Rule.prototype.defineProperty("lineWidth");
 pv.Rule.prototype.defineProperty("strokeStyle");
-pv.Rule.defaults = new pv.Rule().extend(pv.Mark.defaults).lineWidth(1).strokeStyle("black");
+
+pv.Rule.defaults = new pv.Rule().extend(pv.Mark.defaults)
+    .lineWidth(1)
+    .strokeStyle("black");
+
 pv.Rule.Anchor = function() {
-  pv.Mark.Anchor.call(this)
+  pv.Mark.Anchor.call(this);
 };
+
 pv.Rule.Anchor.prototype = pv.Mark.Anchor.extend();
 pv.Rule.Anchor.prototype.type = pv.Rule;
-pv.Rule.Anchor.prototype.$left = function(b) {
-  var a = this.anchorTarget();
+
+pv.Rule.Anchor.prototype.$left = function(d) {
+  var rule = this.anchorTarget();
   switch (this.get("name")) {
-  case "bottom":
-  case "top":
-  case "left":
-    return a.left()
+    case "bottom":
+    case "top":
+    case "left": return rule.left();
   }
-  return null
+ return null;
 };
-pv.Rule.Anchor.prototype.$right = function(b) {
-  var a = this.anchorTarget();
+
+pv.Rule.Anchor.prototype.$right = function(d) {
+  var rule = this.anchorTarget();
   switch (this.get("name")) {
-  case "right":
-    return a.right()
+    case "right": return rule.right();
   }
-  return null
+  return null;
 };
-pv.Rule.Anchor.prototype.$top = function(b) {
-  var a = this.anchorTarget();
+
+pv.Rule.Anchor.prototype.$top = function(d) {
+  var rule = this.anchorTarget();
   switch (this.get("name")) {
-  case "left":
-  case "right":
-  case "top":
-    return a.top()
+    case "left":
+    case "right":
+    case "top": return rule.top();
   }
-  return null
+  return null;
 };
-pv.Rule.Anchor.prototype.$bottom = function(b) {
-  var a = this.anchorTarget();
+
+pv.Rule.Anchor.prototype.$bottom = function(d) {
+  var rule = this.anchorTarget();
   switch (this.get("name")) {
-  case "bottom":
-    return a.bottom()
+    case "bottom": return rule.bottom();
   }
-  return null
+  return null;
 };
-pv.Rule.Anchor.prototype.$textAlign = function(a) {
+
+pv.Rule.Anchor.prototype.$textAlign = function(d) {
   switch (this.get("name")) {
-  case "top":
-  case "bottom":
-    return "center";
-  case "right":
-    return "left";
-  case "left":
-    return "right"
+    case "top":
+    case "bottom": return "center";
+    case "right": return "left";
+    case "left": return "right";
   }
-  return null
+  return null;
 };
-pv.Rule.Anchor.prototype.$textBaseline = function(a) {
+
+pv.Rule.Anchor.prototype.$textBaseline = function(d) {
   switch (this.get("name")) {
-  case "right":
-  case "left":
-    return "middle";
-  case "top":
-    return "bottom";
-  case "bottom":
-    return "top"
+    case "right":
+    case "left": return "middle";
+    case "top": return "bottom";
+    case "bottom": return "top";
   }
-  return null
+  return null;
 };
-pv.Rule.prototype.buildImplied = function(g) {
-  g.width = g.height = 0;
-  var d = g.left;
-  var h = g.right;
-  var f = g.top;
-  var a = g.bottom;
-  if (((d == null) && (h == null)) || (h != null)) {
-    g.width = g.parent.width - (d = d || 0) - (h = h || 0)
-  } else {
-    if (((f == null) && (a == null)) || (a != null)) {
-      g.height = g.parent.height - (f = f || 0) - (a = a || 0)
-    }
+
+pv.Rule.prototype.buildImplied = function(s) {
+  s.width = s.height = 0;
+
+  var l = s.left;
+  var r = s.right;
+  var t = s.top;
+  var b = s.bottom;
+
+  /* Determine horizontal or vertical orientation. */
+  if (((l == null) && (r == null)) || (r != null)) {
+    s.width = s.parent.width - (l = l || 0) - (r = r || 0);
+  } else if (((t == null) && (b == null)) || (b != null)) {
+    s.height = s.parent.height - (t = t || 0) - (b = b || 0);
   }
-  g.left = d;
-  g.right = h;
-  g.top = f;
-  g.bottom = a;
-  pv.Mark.prototype.buildImplied.call(this, g)
+
+  s.left = l;
+  s.right = r;
+  s.top = t;
+  s.bottom = b;
+
+  pv.Mark.prototype.buildImplied.call(this, s);
 };
-pv.Rule.prototype.renderInstance = function(b, a) {
-  if (a.strokeStyle) {
-    b.save();
-    b.lineWidth = a.lineWidth;
-    b.strokeStyle = a.strokeStyle;
-    b.beginPath();
-    b.moveTo(a.left, a.top);
-    b.lineTo(a.left + a.width, a.top + a.height);
-    b.stroke();
-    b.restore()
+
+pv.Rule.prototype.renderInstance = function(g, s) {
+  if (s.strokeStyle) {
+    g.save();
+    g.lineWidth = s.lineWidth;
+    g.strokeStyle = s.strokeStyle;
+    g.beginPath();
+    g.moveTo(s.left, s.top);
+    g.lineTo(s.left + s.width, s.top + s.height);
+    g.stroke();
+    g.restore();
   }
 };
 pv.Panel = function() {
   pv.Bar.call(this);
   this.children = [];
   this.root = this;
-  this.$dom = pv.Panel.$dom
+  this.$dom = pv.Panel.$dom;
 };
+
 pv.Panel.toString = function() {
-  return "panel"
+  return "panel";
 };
+
 pv.Panel.prototype = pv.Bar.extend();
 pv.Panel.prototype.type = pv.Panel;
 pv.Panel.prototype.defineProperty("canvas");
-pv.Panel.defaults = new pv.Panel().extend(pv.Bar.defaults).top(0).left(0).bottom(0).right(0).fillStyle(null);
-pv.Panel.prototype.add = function(a) {
-  var b = new a();
-  b.parent = this;
-  b.root = this.root;
-  b.childIndex = this.children.length;
-  this.children.push(b);
-  return b
+
+pv.Panel.defaults = new pv.Panel().extend(pv.Bar.defaults)
+    .top(0).left(0).bottom(0).right(0)
+    .fillStyle(null);
+
+pv.Panel.prototype.add = function(type) {
+  var child = new type();
+  child.parent = this;
+  child.root = this.root;
+  child.childIndex = this.children.length;
+  this.children.push(child);
+  return child;
 };
+
 pv.Panel.prototype.clear = function() {
-  for (var a = 0; a < this.scene.length; a++) {
-    var b = this.scene[a].canvas;
-    if (!b.$clear) {
-      b.$clear = true;
-      b.getContext("2d").clearRect(0, 0, b.width, b.height)
+  for (var i = 0; i < this.scene.length; i++) {
+    var c = this.scene[i].canvas;
+    if (!c.$clear) {
+      c.$clear = true;
+      c.getContext("2d").clearRect(0, 0, c.width, c.height);
     }
   }
-  for (var a = 0; a < this.scene.length; a++) {
-    delete this.scene[a].canvas.$clear
+  for (var i = 0; i < this.scene.length; i++) {
+    delete this.scene[i].canvas.$clear;
   }
 };
-pv.Panel.prototype.createCanvas = function(a, b) {
-  function d(g) {
-    while (g.lastChild && g.lastChild.tagName) {
-      g = g.lastChild
+
+pv.Panel.prototype.createCanvas = function(w, h) {
+  function lastChild(node) {
+    while (node.lastChild && node.lastChild.tagName) {
+      node = node.lastChild;
     }
-    return (g == document.body) ? g: g.parentNode
+    return (node == document.body) ? node : node.parentNode;
   }
-  if (!this.$canvases) {
-    this.$canvases = []
+
+  /* Cache the canvas element to reuse across renders. */
+  if (!this.$canvases) this.$canvases = [];
+  var c = this.$canvases[this.index];
+  if (!c) {
+    this.$canvases[this.index] = c = document.createElement("canvas");
+    this.$dom // script element for text/javascript+protovis
+        ? this.$dom.parentNode.insertBefore(c, this.$dom)
+        : lastChild(document.body).appendChild(c);
   }
-  var f = this.$canvases[this.index];
-  if (!f) {
-    this.$canvases[this.index] = f = document.createElement("canvas");
-    this.$dom ? this.$dom.parentNode.insertBefore(f, this.$dom) : d(document.body).appendChild(f)
-  }
-  f.width = a;
-  f.height = b;
-  return f
+
+  c.width = w;
+  c.height = h;
+  return c;
 };
-pv.Panel.prototype.buildInstance = function(b, f) {
-  b = pv.Bar.prototype.buildInstance.call(this, b, f);
-  this.scene[this.index] = b;
-  b.children = [];
-  for (var a = 0; a < this.children.length; a++) {
-    b.children.push(this.children[a].build(b).scene)
+
+pv.Panel.prototype.buildInstance = function(s, d) {
+  s = pv.Bar.prototype.buildInstance.call(this, s, d);
+  this.scene[this.index] = s;
+  s.children = [];
+  for (var i = 0; i < this.children.length; i++) {
+    s.children.push(this.children[i].build(s).scene);
   }
-  for (var a = 0; a < this.children.length; a++) {
-    delete this.children[a].scene
+  for (var i = 0; i < this.children.length; i++) {
+    delete this.children[i].scene;
   }
-  return b
+  return s;
 };
-pv.Panel.prototype.buildImplied = function(a) {
-  var b = a.canvas;
-  if (b) {
-    if (typeof b == "string") {
-      a.canvas = b = document.getElementById(b)
+
+pv.Panel.prototype.buildImplied = function(s) {
+  var c = s.canvas;
+  if (c) {
+    if (typeof c == "string") {
+      s.canvas = c = document.getElementById(c);
     }
-    a.width = b.width - a.left - a.right;
-    a.height = b.height - a.top - a.bottom
+    s.width = c.width - s.left - s.right;
+    s.height = c.height - s.top - s.bottom;
+  } else if (s.parent.canvas) {
+    s.canvas = s.parent.canvas;
   } else {
-    if (a.parent.canvas) {
-      a.canvas = a.parent.canvas
-    } else {
-      a.canvas = this.createCanvas(a.width + a.left + a.right, a.height + a.top + a.bottom)
-    }
+    s.canvas = this.createCanvas(
+        s.width + s.left + s.right,
+        s.height + s.top + s.bottom);
   }
-  pv.Bar.prototype.buildImplied.call(this, a)
+  pv.Bar.prototype.buildImplied.call(this, s);
 };
-pv.Panel.prototype.render = function(a) {
+
+pv.Panel.prototype.render = function(g) {
   if (!this.parent) {
     delete this.scene;
     this.build();
-    this.listen()
+    this.listen();
   }
-  this.update(a)
+  this.update(g);
 };
-pv.Panel.prototype.update = function(h) {
+
+pv.Panel.prototype.update = function(g) {
   if (!this.parent) {
-    this.clear()
+    this.clear();
   }
-  for (var b = 0; b < this.scene.length; b++) {
-    var f = this.scene[b],
-    d = h || f.canvas.getContext("2d");
-    this.renderInstance(d, f);
-    d.save();
-    d.translate(f.left, f.top);
-    for (var a = 0; a < this.children.length; a++) {
-      var k = this.children[a];
-      k.scene = f.children[a];
-      k.render(d);
-      delete k.scene
+  for (var i = 0; i < this.scene.length; i++) {
+    var s = this.scene[i], sg = g || s.canvas.getContext("2d");
+    this.renderInstance(sg, s);
+    sg.save();
+    sg.translate(s.left, s.top);
+    for (var j = 0; j < this.children.length; j++) {
+      var c = this.children[j];
+      c.scene = s.children[j];
+      c.render(sg);
+      delete c.scene;
     }
-    d.restore()
+    sg.restore();
   }
 };
+
 pv.Panel.prototype.listen = function() {
-  if (!this.$interactive) {
-    return
-  }
-  var d = this;
-  function a(g) {
-    if (d.dispatch(g)) {
-      g.preventDefault()
+  if (!this.$interactive) return; // TODO selective listening
+  var that = this;
+  function dispatch(e) {
+    if (that.dispatch(e)) {
+      e.preventDefault();
     }
   }
-  for (var b = 0; b < this.scene.length; b++) {
-    var f = this.scene[b].canvas;
-    if (!f.$listen) {
-      f.$listen = true;
-      f.addEventListener("click", a, false);
-      f.addEventListener("mousemove", a, false);
-      f.addEventListener("mouseout", a, false);
-      f.addEventListener("mousedown", a, false)
+  for (var i = 0; i < this.scene.length; i++) {
+    var c = this.scene[i].canvas;
+    if (!c.$listen) {
+      c.$listen = true;
+      c.addEventListener("click", dispatch, false);
+      c.addEventListener("mousemove", dispatch, false);
+      c.addEventListener("mouseout", dispatch, false);
+      c.addEventListener("mousedown", dispatch, false);
     }
   }
   if (!self.$listen) {
     self.$listen = true;
-    self.addEventListener("mouseup", a, false)
+    self.addEventListener("mouseup", dispatch, false);
   }
 };
-pv.Panel.prototype.dispatch = function(g) {
-  var f = false;
-  function b(i) {
-    var n = {
-      left: pv.css(i, "padding-left") + pv.css(i, "border-left-width"),
-      top: pv.css(i, "padding-top") + pv.css(i, "border-top-width"),
-    };
-    while (i.offsetParent) {
-      n.left += i.offsetLeft;
-      n.top += i.offsetTop;
-      i = i.offsetParent
+
+pv.Panel.prototype.dispatch = function(e) {
+  var handled = false;
+
+  /* Recursively compute offset for DOM element. */
+  function offset(e) {
+    var o = {
+        left: pv.css(e, "padding-left") + pv.css(e, "border-left-width"),
+        top: pv.css(e, "padding-top") + pv.css(e, "border-top-width"),
+      };
+    while (e.offsetParent) {
+      o.left += e.offsetLeft;
+      o.top += e.offsetTop;
+      e = e.offsetParent;
     }
-    return n
+    return o;
   }
-  function l(n, v, t) {
-    if (this.contains(n, v, t)) {
-      if (!t.$mouseover) {
-        if ((g.type == "mousemove") && this.onmouseover) {
-          t.$mouseover = true;
-          this.onmouseover(t.data);
-          f = true
+
+  /* Recursively visit child panels. TODO prune tree */
+  function visit(x, y, s) {
+    if (this.contains(x, y, s)) {
+      if (!s.$mouseover) {
+        if ((e.type == "mousemove") && this.onmouseover) {
+          s.$mouseover = true;
+          this.onmouseover(s.data);
+          handled = true;
         }
       }
-      if ((g.type != "mouseup") && this["on" + g.type]) {
-        if (g.type == "mousedown") {
-          t.$mousedown = true
+      if ((e.type != "mouseup") && this["on" + e.type]) {
+        if (e.type == "mousedown") {
+          s.$mousedown = true;
         }
-        this["on" + g.type](t.data);
-        f = true
+        this["on" + e.type](s.data);
+        handled = true;
       }
-    } else {
-      if (t.$mouseover) {
-        if ((g.type == "mousemove") || (g.type == "mouseout")) {
-          this.onmouseout(t.data);
-          f = true;
-          delete t.$mouseover
-        }
+    } else if (s.$mouseover) {
+      if ((e.type == "mousemove") || (e.type == "mouseout")) {
+        this.onmouseout(s.data);
+        handled = true;
+        delete s.$mouseover;
       }
     }
-    if (t.$mousedown) {
-      if (g.type == "mouseup") {
-        this.onmouseup(t.data);
-        f = true;
-        delete t.$mousedown
+    if (s.$mousedown) {
+      if (e.type == "mouseup") {
+        this.onmouseup(s.data);
+        handled = true;
+        delete s.$mousedown;
       }
     }
-    if (t.children) {
-      n -= t.left;
-      v -= t.top;
-      for (var p = 0; p < t.children.length; p++) {
-        var u = this.children[p],
-        q = t.children[p];
-        u.scene = q;
-        for (var o = 0; o < q.length; o++) {
-          u.index = o;
-          l.call(u, n, v, q[o]);
-          delete u.index
+
+    if (s.children) {
+      x -= s.left;
+      y -= s.top;
+      for (var i = 0; i < s.children.length; i++) {
+        var c = this.children[i], cs = s.children[i];
+        c.scene = cs;
+        for (var j = 0; j < cs.length; j++) {
+          c.index = j;
+          visit.call(c, x, y, cs[j]);
+          delete c.index;
         }
-        delete u.scene
+        delete c.scene;
       }
     }
   }
-  var j = g.pageX,
-  h = g.pageY;
-  for (var d = 0; d < this.scene.length; d++) {
-    var m = this.scene[d],
-    k = m.canvas,
-    a = k.$offset;
-    if (!a) {
-      k.$offset = a = b(k)
-    }
-    this.index = d;
-    l.call(this, j - a.left, h - a.top, m);
-    delete this.index
+
+  /* Only root panels can have custom canvases. */
+  var ex = e.pageX, ey = e.pageY;
+  for (var i = 0; i < this.scene.length; i++) {
+    var s = this.scene[i], c = s.canvas, o = c.$offset;
+    if (!o) c.$offset = o = offset(c);
+    this.index = i;
+    visit.call(this, ex - o.left, ey - o.top, s);
+    delete this.index;
   }
-  for (var d = 0; d < this.scene.length; d++) {
-    delete this.scene[d].canvas.$offset
+
+  for (var i = 0; i < this.scene.length; i++) {
+    delete this.scene[i].canvas.$offset;
   }
+
   this.update();
-  return f
+  return handled;
 };
 pv.Image = function() {
-  pv.Bar.call(this)
+  pv.Bar.call(this);
 };
+
 pv.Image.toString = function() {
-  return "image"
+  return "image";
 };
+
 pv.Image.prototype = pv.Bar.extend();
 pv.Image.prototype.type = pv.Image;
 pv.Image.prototype.defineProperty("image");
 pv.Image.prototype.defineProperty("imageWidth");
 pv.Image.prototype.defineProperty("imageHeight");
-pv.Image.defaults = new pv.Image().extend(pv.Bar.defaults).fillStyle(null);
-pv.Image.prototype.renderInstance = function(j, i) {
-  var a = i.left,
-  k = i.top,
-  b = i.width,
-  f = i.height;
-  j.save();
-  j.translate(a, k);
-  if (i.fillStyle) {
-    j.fillStyle = pv.Bar.renderStyle(i.fillStyle, j, b, f);
-    j.fillRect(0, 0, b, f)
+
+pv.Image.defaults = new pv.Image().extend(pv.Bar.defaults)
+    .fillStyle(null);
+
+pv.Image.prototype.renderInstance = function(g, s) {
+  var x = s.left, y = s.top, w = s.width, h = s.height;
+  g.save();
+  g.translate(x, y);
+  if (s.fillStyle) {
+    g.fillStyle = pv.Bar.renderStyle(s.fillStyle, g, w, h);
+    g.fillRect(0, 0, w, h);
   }
   try {
-    j.drawImage(i.image, 0, 0, b, f)
-  } catch(d) {}
-  if (i.strokeStyle) {
-    j.lineWidth = i.lineWidth;
-    j.strokeStyle = pv.Bar.renderStyle(i.strokeStyle, j, b, f);
-    j.strokeRect(0, 0, b, f)
+    g.drawImage(s.image, 0, 0, w, h);
+  } catch (ignored) {}
+  if (s.strokeStyle) {
+    g.lineWidth = s.lineWidth;
+    g.strokeStyle = pv.Bar.renderStyle(s.strokeStyle, g, w, h);
+    g.strokeRect(0, 0, w, h);
   }
-  j.restore()
+  g.restore();
 };
-pv.Image.prototype.buildImplied = function(u) {
-  pv.Bar.prototype.buildImplied.call(this, u);
-  if (typeof u.image == "string") {
-    if (!pv.Image.cache) {
-      pv.Image.cache = {}
+
+pv.Image.prototype.buildImplied = function(s) {
+  pv.Bar.prototype.buildImplied.call(this, s);
+  if (typeof s.image == "string") {
+
+    /* Cache the image element to reuse across renders. */
+    if (!pv.Image.cache) pv.Image.cache = {};
+    var i = pv.Image.cache[s.image];
+
+    if (!i) {
+      i = new Image(), r = this.root;
+      i.src = s.image;
+      if (s.imageWidth) i.width = s.imageWidth;
+      if (s.imageHeight) i.height = s.imageHeight;
+      i.onload = function() { r.update(); }; // redraw on load
+      pv.Image.cache[s.image] = i;
     }
-    var f = pv.Image.cache[u.image];
-    if (!f) {
-      f = new Image(),
-      r = this.root;
-      f.src = u.image;
-      if (u.imageWidth) {
-        f.width = u.imageWidth
-      }
-      if (u.imageHeight) {
-        f.height = u.imageHeight
-      }
-      f.onload = function() {
-        r.update()
-      };
-      pv.Image.cache[u.image] = f
-    }
-    u.image = f
-  } else {
-    if (u.image instanceof Function) {
-      var m = document.createElement("canvas");
-      var t = u.imageWidth || u.width,
-      j = u.imageHeight || u.height;
-      m.width = t;
-      m.height = j;
-      var k = m.getContext("2d");
-      var b = k.getImageData(0, 0, t, j);
-      var o = this.root.scene.data;
-      o.unshift(null, null);
-      for (var q = 0, a = 0; q < t; q++) {
-        o[0] = q;
-        for (var n = 0; n < j; n++) {
-          o[1] = n;
-          var d = u.image.apply(this, o);
-          for (var l = 0; l < 4; l++, a++) {
-            b.data[a] = d[l]
-          }
+
+    s.image = i;
+  } else if (s.image instanceof Function) {
+    var c = document.createElement("canvas"); // TODO cache?
+
+    /* Update the canvas dimensions. */
+    var w = s.imageWidth || s.width, h = s.imageHeight || s.height;
+    c.width = w;
+    c.height = h;
+
+    var g = c.getContext("2d");
+    var image = g.getImageData(0, 0, w, h);
+    var stack = this.root.scene.data;
+    stack.unshift(null, null);
+    for (var x = 0, p = 0; x < w; x++) {
+      stack[0] = x;
+      for (var y = 0; y < h; y++) {
+        stack[1] = y;
+        var color = s.image.apply(this, stack);
+        for (var z = 0; z < 4; z++, p++) {
+          image.data[p] = color[z];
         }
       }
-      k.putImageData(b, 0, 0);
-      o.splice(0, 2);
-      u.image = m
     }
+    g.putImageData(image, 0, 0);
+    stack.splice(0, 2);
+
+    s.image = c;
   }
 };
-pv.Image.prototype.rgba = function(j, i, d, h) {
-  if (! (j instanceof Function)) {
-    return this.fillStyle("rgb(" + j + "," + i + "," + d + "," + h + ")")
+
+/* For consistency with other property functions, these support constants. */
+
+pv.Image.prototype.rgba = function(f, g, b, a) {
+  if (!(f instanceof Function)) {
+    return this.fillStyle("rgb(" + f + "," + g + "," + b + "," + a + ")");
   }
-  return this.image(function() {
-    return j
-  })
+  return this.image(function() { return f; });
 };
-pv.Image.prototype.rgb = function(h, d, a) {
-  if (! (h instanceof Function)) {
-    return this.fillStyle("rgb(" + h + "," + d + "," + a + ")")
+
+pv.Image.prototype.rgb = function(f, g, b) {
+  if (!(f instanceof Function)) {
+    return this.fillStyle("rgb(" + f + "," + g + "," + b + ")");
   }
   return this.image(function() {
-    return function() {
-      var b = h.apply(this, arguments);
-      b[3] = 255;
-      return b
-    }
-  })
+      return function() {
+          var rgb = f.apply(this, arguments);
+          rgb[3] = 255;
+          return rgb;
+        };
+    });
 };
-pv.Image.prototype.monochrome = function(a) {
-  if (! (a instanceof Function)) {
-    return this.fillStyle("rgb(" + a + "," + a + "," + a + ")")
+
+pv.Image.prototype.monochrome = function(f) {
+  if (!(f instanceof Function)) {
+    return this.fillStyle("rgb(" + f + "," + f + "," + f + ")");
   }
   return this.image(function() {
-    return function() {
-      var b = a.apply(this, arguments);
-      return [b, b, b, 255]
-    }
-  })
+      return function() {
+          var v = f.apply(this, arguments);
+          return [v, v, v, 255];
+        };
+    });
 };
 pv.Wedge = function() {
-  pv.Mark.call(this)
+  pv.Mark.call(this);
 };
+
 pv.Wedge.toString = function() {
-  return "wedge"
+  return "wedge";
 };
+
 pv.Wedge.prototype = pv.Mark.extend();
 pv.Wedge.prototype.type = pv.Wedge;
 pv.Wedge.prototype.defineProperty("startAngle");
@@ -1946,168 +2004,155 @@ pv.Wedge.prototype.defineProperty("outerRadius");
 pv.Wedge.prototype.defineProperty("lineWidth");
 pv.Wedge.prototype.defineProperty("strokeStyle");
 pv.Wedge.prototype.defineProperty("fillStyle");
-pv.Wedge.defaults = new pv.Wedge().extend(pv.Mark.defaults).startAngle(function() {
-  var a = this.sibling();
-  return a ? a.endAngle: -Math.PI / 2
-}).innerRadius(0).lineWidth(1.5).strokeStyle(null).fillStyle(pv.Colors.category20.unique);
+
+pv.Wedge.defaults = new pv.Wedge().extend(pv.Mark.defaults)
+    .startAngle(function() {
+        var s = this.sibling();
+        return s ? s.endAngle : -Math.PI / 2;
+      })
+    .innerRadius(0)
+    .lineWidth(1.5)
+    .strokeStyle(null)
+    .fillStyle(pv.Colors.category20.unique);
+
 pv.Wedge.prototype.midRadius = function() {
-  return (this.innerRadius() + this.outerRadius()) / 2
+  return (this.innerRadius() + this.outerRadius()) / 2;
 };
+
 pv.Wedge.prototype.midAngle = function() {
-  return (this.startAngle() + this.endAngle()) / 2
+  return (this.startAngle() + this.endAngle()) / 2;
 };
+
 pv.Wedge.Anchor = function() {
-  pv.Mark.Anchor.call(this)
+  pv.Mark.Anchor.call(this);
 };
+
 pv.Wedge.Anchor.prototype = pv.Mark.Anchor.extend();
 pv.Wedge.Anchor.prototype.type = pv.Wedge;
+
 pv.Wedge.Anchor.prototype.$left = function() {
-  var a = this.anchorTarget();
+  var w = this.anchorTarget();
   switch (this.get("name")) {
-  case "outer":
-    return a.left() + a.outerRadius() * Math.cos(a.midAngle());
-  case "inner":
-    return a.left() + a.innerRadius() * Math.cos(a.midAngle());
-  case "start":
-    return a.left() + a.midRadius() * Math.cos(a.startAngle());
-  case "center":
-    return a.left() + a.midRadius() * Math.cos(a.midAngle());
-  case "end":
-    return a.left() + a.midRadius() * Math.cos(a.endAngle())
+    case "outer": return w.left() + w.outerRadius() * Math.cos(w.midAngle());
+    case "inner": return w.left() + w.innerRadius() * Math.cos(w.midAngle());
+    case "start": return w.left() + w.midRadius() * Math.cos(w.startAngle());
+    case "center": return w.left() + w.midRadius() * Math.cos(w.midAngle());
+    case "end": return w.left() + w.midRadius() * Math.cos(w.endAngle());
   }
-  return null
+  return null;
 };
+
 pv.Wedge.Anchor.prototype.$right = function() {
-  var a = this.anchorTarget();
+  var w = this.anchorTarget();
   switch (this.get("name")) {
-  case "outer":
-    return a.right() + a.outerRadius() * Math.cos(a.midAngle());
-  case "inner":
-    return a.right() + a.innerRadius() * Math.cos(a.midAngle());
-  case "start":
-    return a.right() + a.midRadius() * Math.cos(a.startAngle());
-  case "center":
-    return a.right() + a.midRadius() * Math.cos(a.midAngle());
-  case "end":
-    return a.right() + a.midRadius() * Math.cos(a.endAngle())
+    case "outer": return w.right() + w.outerRadius() * Math.cos(w.midAngle());
+    case "inner": return w.right() + w.innerRadius() * Math.cos(w.midAngle());
+    case "start": return w.right() + w.midRadius() * Math.cos(w.startAngle());
+    case "center": return w.right() + w.midRadius() * Math.cos(w.midAngle());
+    case "end": return w.right() + w.midRadius() * Math.cos(w.endAngle());
   }
-  return null
+  return null;
 };
+
 pv.Wedge.Anchor.prototype.$top = function() {
-  var a = this.anchorTarget();
+  var w = this.anchorTarget();
   switch (this.get("name")) {
-  case "outer":
-    return a.top() + a.outerRadius() * Math.sin(a.midAngle());
-  case "inner":
-    return a.top() + a.innerRadius() * Math.sin(a.midAngle());
-  case "start":
-    return a.top() + a.midRadius() * Math.sin(a.startAngle());
-  case "center":
-    return a.top() + a.midRadius() * Math.sin(a.midAngle());
-  case "end":
-    return a.top() + a.midRadius() * Math.sin(a.endAngle())
+    case "outer": return w.top() + w.outerRadius() * Math.sin(w.midAngle());
+    case "inner": return w.top() + w.innerRadius() * Math.sin(w.midAngle());
+    case "start": return w.top() + w.midRadius() * Math.sin(w.startAngle());
+    case "center": return w.top() + w.midRadius() * Math.sin(w.midAngle());
+    case "end": return w.top() + w.midRadius() * Math.sin(w.endAngle());
   }
-  return null
+  return null;
 };
+
 pv.Wedge.Anchor.prototype.$bottom = function() {
-  var a = this.anchorTarget();
+  var w = this.anchorTarget();
   switch (this.get("name")) {
-  case "outer":
-    return a.bottom() + a.outerRadius() * Math.sin(a.midAngle());
-  case "inner":
-    return a.bottom() + a.innerRadius() * Math.sin(a.midAngle());
-  case "start":
-    return a.bottom() + a.midRadius() * Math.sin(a.startAngle());
-  case "center":
-    return a.bottom() + a.midRadius() * Math.sin(a.midAngle());
-  case "end":
-    return a.bottom() + a.midRadius() * Math.sin(a.endAngle())
+    case "outer": return w.bottom() + w.outerRadius() * Math.sin(w.midAngle());
+    case "inner": return w.bottom() + w.innerRadius() * Math.sin(w.midAngle());
+    case "start": return w.bottom() + w.midRadius() * Math.sin(w.startAngle());
+    case "center": return w.bottom() + w.midRadius() * Math.sin(w.midAngle());
+    case "end": return w.bottom() + w.midRadius() * Math.sin(w.endAngle());
   }
-  return null
+  return null;
 };
+
 pv.Wedge.Anchor.prototype.$textAlign = function() {
-  var a = this.anchorTarget();
+  var w = this.anchorTarget();
   switch (this.get("name")) {
-  case "outer":
-    return pv.Wedge.upright(a.midAngle()) ? "right": "left";
-  case "inner":
-    return pv.Wedge.upright(a.midAngle()) ? "left": "right";
-  default:
-    return "center"
+    case "outer": return pv.Wedge.upright(w.midAngle()) ? "right" : "left";
+    case "inner": return pv.Wedge.upright(w.midAngle()) ? "left" : "right";
+    default: return "center";
   }
 };
+
 pv.Wedge.Anchor.prototype.$textBaseline = function() {
-  var a = this.anchorTarget();
+  var w = this.anchorTarget();
   switch (this.get("name")) {
-  case "start":
-    return pv.Wedge.upright(a.startAngle()) ? "top": "bottom";
-  case "end":
-    return pv.Wedge.upright(a.endAngle()) ? "bottom": "top";
-  default:
-    return "middle"
+    case "start": return pv.Wedge.upright(w.startAngle()) ? "top" : "bottom";
+    case "end": return pv.Wedge.upright(w.endAngle()) ? "bottom" : "top";
+    default: return "middle";
   }
 };
+
 pv.Wedge.Anchor.prototype.$textAngle = function() {
-  var d = this.anchorTarget();
-  var b = 0;
+  var w = this.anchorTarget();
+  var a = 0;
   switch (this.get("name")) {
-  case "center":
-  case "inner":
-  case "outer":
-    b = d.midAngle();
-    break;
-  case "start":
-    b = d.startAngle();
-    break;
-  case "end":
-    b = d.endAngle();
-    break
+    case "center":
+    case "inner":
+    case "outer": a = w.midAngle(); break;
+    case "start": a = w.startAngle(); break;
+    case "end": a = w.endAngle(); break;
   }
-  return pv.Wedge.upright(b) ? b: (b + Math.PI)
+  return pv.Wedge.upright(a) ? a : (a + Math.PI);
 };
-pv.Wedge.upright = function(a) {
-  a = a % (2 * Math.PI);
-  a = (a < 0) ? (2 * Math.PI + a) : a;
-  return (a < Math.PI / 2) || (a > 3 * Math.PI / 2)
+
+pv.Wedge.upright = function(angle) {
+  angle = angle % (2 * Math.PI);
+  angle = (angle < 0) ? (2 * Math.PI + angle) : angle;
+  return (angle < Math.PI / 2) || (angle > 3 * Math.PI / 2);
 };
-pv.Wedge.prototype.buildImplied = function(a) {
-  pv.Mark.prototype.buildImplied.call(this, a);
-  if (a.endAngle == null) {
-    a.endAngle = a.startAngle + a.angle
+
+pv.Wedge.prototype.buildImplied = function(s) {
+  pv.Mark.prototype.buildImplied.call(this, s);
+  if (s.endAngle == null) {
+    s.endAngle = s.startAngle + s.angle;
   }
 };
-pv.Wedge.prototype.renderInstance = function(b, a) {
-  function d(h, f, i, g) {
-    if ((i + g) == 0) {
-      return
+
+pv.Wedge.prototype.renderInstance = function(g, s) {
+  function path(a0, a1, r0, r1) {
+    if ((r0 + r1) == 0) {
+      return;
     }
-    b.beginPath();
-    if (i == 0) {
-      b.moveTo(0, 0);
-      b.arc(0, 0, g, h, f, false)
+    g.beginPath();
+    if (r0 == 0) {
+      g.moveTo(0, 0);
+      g.arc(0, 0, r1, a0, a1, false);
+    } else if (r0 == r1) {
+      g.arc(0, 0, r0, a0, a1, false);
     } else {
-      if (i == g) {
-        b.arc(0, 0, i, h, f, false)
-      } else {
-        b.arc(0, 0, i, h, f, false);
-        b.arc(0, 0, g, f, h, true)
-      }
+      g.arc(0, 0, r0, a0, a1, false);
+      g.arc(0, 0, r1, a1, a0, true);
     }
-    if (h != f) {
-      b.closePath()
+    if (a0 != a1) {
+      g.closePath();
     }
   }
-  b.save();
-  b.translate(a.left, a.top);
-  d(a.startAngle, a.endAngle, a.innerRadius, a.outerRadius);
-  if (a.fillStyle) {
-    b.fillStyle = a.fillStyle;
-    b.fill()
+
+  g.save();
+  g.translate(s.left, s.top);
+  path(s.startAngle, s.endAngle, s.innerRadius, s.outerRadius);
+  if (s.fillStyle) {
+    g.fillStyle = s.fillStyle;
+    g.fill();
   }
-  if (a.strokeStyle) {
-    b.lineWidth = a.lineWidth;
-    b.strokeStyle = a.strokeStyle;
-    b.stroke()
+  if (s.strokeStyle) {
+    g.lineWidth = s.lineWidth;
+    g.strokeStyle = s.strokeStyle;
+    g.stroke();
   }
-  b.restore()
+  g.restore();
 };
