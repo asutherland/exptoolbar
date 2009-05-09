@@ -59,9 +59,13 @@
           // In general, we probably want something smarter to figure out
           // most relevant conversations first, but recency is a good first cut.
           
-          for each (let message in items) {
+          for each (let [,message] in Iterator(items)) {
+            if (message === undefined)
+              continue;
             this.hitMessageMap[message.id] = true;
             let conv = message.conversation;
+            if (conv === undefined)
+              continue;
             if (!(conv.id in conversationMap)) {
               let convInfo = {conv: conv, hitIds: {}, hits: [message]};
               convInfo.hitIds[message.id] = true;
@@ -69,17 +73,18 @@
               conversations.push(convInfo);
             }
             else {
-              let convInfo = this.conversationMap[conv.id];
+              let convInfo = conversationMap[conv.id];
               convInfo.hits.push(message);
               convInfo.hitIds[message.id] = true;
             }
           }
           conversationsNode.setAttribute("hidden", "true");
           let convcount = 0;
-          for (let i in conversations.slice(0, 20))
+          for (let [, convInfo] in Iterator(conversations))
           {
             convcount++;
-            let convInfo = conversations[i];
+            if (convcount >= 20)
+              break;
             let conv = convInfo.conv;
             let convid = 'conv'+conv.id.toString();
             let node = document.getElementById(convid);
